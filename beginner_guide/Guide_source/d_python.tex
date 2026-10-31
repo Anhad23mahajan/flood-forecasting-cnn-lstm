@@ -1,0 +1,117 @@
+% =========================================================== PYTHON PRIMER (short)
+\lstnewenvironment{pycode}{\lstset{style=nb,numbers=none,xleftmargin=0.4em,framexleftmargin=0.3em,aboveskip=2pt,belowskip=2pt}}{}
+
+\section{Python from zero: only what our notebooks use}\label{ch:python}
+You only need to read one line and say in your own words what it does. Our three notebooks use a small part of Python, listed here.
+
+\subsection{Colab}\label{py:colab}
+\term{Colab} is a free notebook in the browser made of \term{cells}: text cells (headings) and code cells (Python). Run a code cell with the play button or Shift+Enter. Its output stays saved under it. \cd{!pip install -q rasterio} (a line starting with \cd{!} is a computer command, not Python) installs a library. \cd{drive.mount("/content/drive")} connects Google Drive, so Drive is the folder \cd{/content/drive/MyDrive} where data and saved models live. \cd{/content} is a temporary disk wiped at the end of the session. \cd{userdata.get("HF\_TOKEN")} reads a secret key (Hugging Face token). A \term{GPU runtime} (T4) makes networks much faster.
+
+\subsection{The very basics}\label{py:basics}
+A line starting with \cd{\#} is a comment, ignored by Python. A \term{variable} is a name for a value, and \cd{=} means ``store under this name''. Names in CAPITALS (\cd{TILE\_SIZE}) are settings chosen once at the top, only a habit.
+\begin{pycode}
+step_hours = 0.5       # decimal number
+region = "UK"          # text in quotes
+train_new = False      # True or False
+print("Region:", region)
+\end{pycode}
+\cd{+ - * /} are the usual operations, \cd{**} is power (\cd{2**3} is 8), \cd{//} drops decimals (\cd{7//2} is 3), \cd{\%} is the remainder (\cd{7\%2} is 1). The remainder picks every 30-minute map: \cd{seconds \% 1800 == 0} is True for a file named 1800 and False for 2100. Comparisons \cd{== != < > <= >=} give True or False, joined by \cd{and}, \cd{or}, \cd{not}. \cd{None} means nothing. \cd{1e-6} is 0.000001 and the notebooks use \cd{-1e30} for ``no data''. Handy: \cd{len}, \cd{sum}, \cd{max}, \cd{min}, \cd{abs}, \cd{round}, \cd{int}, \cd{str}.
+
+\subsection{Lists and tuples}\label{py:lists}
+A \term{list} uses square brackets and counts from \textbf{0}. With \cd{seconds = [0,300,600,...,3600]}: \cd{seconds[0]} is 0, \cd{seconds[-1]} is 3600 (the last), \cd{seconds[2:5]} is 600, 900, 1200 (the end is excluded), \cd{seconds[::6]} is every sixth item, [0, 1800, 3600]. The exploration notebook uses this to keep one depth map in six: \cd{get\_depth\_files(dataset)[::DEPTH\_MAPS\_PER\_RAIN\_MAP]}. \cd{files.append(x)} adds an item and \cd{files.sort(key=get\_seconds)} orders by the number the function gives. A \term{tuple} such as \cd{(top, left)} is a fixed bundle. A \term{list comprehension} builds a list in one line: \cd{[f for f in files if get\_seconds(f) \% 1800 == 0]} means ``every f in files whose time is on a 30-minute mark''.
+
+\subsection{Dictionaries}\label{py:dicts}
+A \term{dictionary} holds name and value pairs in curly brackets: \cd{info = \{"region": "UK", "row\_offset": 5\}}, then \cd{info["row\_offset"]} is 5. \cd{DATASETS} is a dictionary of dictionaries, one entry per dataset (folder, square size, scale, offsets). \cd{for dataset, info in DATASETS.items():} walks through them. A list of dictionaries (one per row) is how tables are built (Section~\ref{py:pandas}).
+
+\subsection{Loops and decisions}\label{py:loops}
+A \term{for loop} repeats its \textbf{indented} lines for each item. Indentation (4 spaces) shows what belongs to a loop, \cd{if} or \cd{def}, and the line before it ends with a colon.
+\begin{pycode}
+for step in range(3):                 # 0, 1, 2 (the stop number is excluded)
+    print(step)
+if share_now < 0.01 and share_forecast < 0.01:
+    answer = "None"
+elif share_forecast >= share_now:
+    answer = "at least the current level"
+else:
+    answer = "keep the network's answer"    # only the first true branch runs
+\end{pycode}
+\cd{range(0,10,3)} is 0, 3, 6, 9. \cd{enumerate(files)} gives a counter and the item. \cd{zip(a, b)} walks two lists together. \cd{while len(inputs) < count:} repeats while true (the tile maker uses it until it has 4,000 tiles). \cd{break} leaves a loop, \cd{continue} skips to the next round.
+
+\subsection{Functions}\label{py:funcs}
+A \term{function} is named code, made with \cd{def} and used by calling its name. The names in brackets are \term{parameters}, and \cd{return} hands the answer back.
+\begin{pycode}
+def severity_class(share):
+    return int(np.digitize(share, [0.05, 0.15, 0.30]))
+severity_class(0.20)     # 2, which means Moderate
+\end{pycode}
+A function can return two things (\cd{scores, shifts = shift\_scores(...)}), a parameter can have a default (\cd{top=0}), and arguments can be named (\cd{build\_forecaster(height=64, width=64)}). The first comment inside each of our functions says what it does.
+
+\subsection{Libraries}\label{py:imports}
+\cd{import numpy as np} loads a library under a short nickname, and \cd{from keras import layers} takes one part.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Libraries used in the notebooks.}
+\begin{tabularx}{\linewidth}{|>{\bfseries}p{3.0cm}|Y|}
+\hline
+\rowcolor{black!12} \hd{Library} & \hd{What it is for}\\ \hline
+os, glob, shutil, json, time & Paths and folders, finding files, disk space, small settings files, timing.\\ \hline
+numpy (np) & Grids of numbers (arrays), used for almost every calculation on maps.\\ \hline
+pandas (pd) & Tables with named columns.\\ \hline
+matplotlib (plt) & Pictures and charts.\\ \hline
+scipy & Only \cd{uniform\_filter}, which averages each square with its neighbours.\\ \hline
+rasterio & Reads map files (\cd{.tif}) into arrays.\\ \hline
+huggingface\_hub & Downloads the dataset from Hugging Face.\\ \hline
+google.colab & Connects Google Drive and reads Colab secrets.\\ \hline
+sklearn & Only the confusion matrix tools.\\ \hline
+tensorflow (tf), keras & Build, train and run the neural networks (Keras sits on TensorFlow).\\ \hline
+gc & \cd{gc.collect()} frees unused memory.\\ \hline
+\end{tabularx}
+\end{table}
+
+\subsection{Files and folders}\label{py:files}
+A \term{path} is a file's address as text. \cd{os.path.join(a, b)} glues pieces, \cd{os.makedirs(path, exist\_ok=True)} makes a folder (no error if it exists), \cd{os.path.basename} (file name only).\cd{glob.glob(folder + "/*.tif")} finds all \cd{.tif} files (star means anything). \cd{"1800.tif".replace(".tif","")} gives \cd{"1800"} and \cd{int(...)} makes it the number 1800. \cd{with open(path) as file:} opens and closes a file automatically, \cd{json.load} and \cd{json.dump} read and write a dictionary. \cd{np.save} and \cd{np.load} store an array, and \cd{mmap\_mode="r"} reads pieces only when needed (files are gigabytes). File types: \cd{.tif} map, \cd{.npy} saved array, \cd{.json} settings, \cd{.csv} table, \cd{.h5} network weights.
+
+\subsection{Errors, tries and warnings}\label{py:errors}
+\cd{try:} ... \cd{except Exception as error:} means ``try this, and if it breaks do that instead of crashing''. The download cell loops \cd{for attempt in range(1, 6)} with \cd{try} around the download and \cd{break} on success, so a bad connection restarts up to 5 times. Red text under a cell is usually a harmless warning.
+
+\subsection{Classes}\label{py:classes}
+\cd{class ClassCapsules(layers.Layer):} is a blueprint for a new kind of network layer. \cd{\_\_init\_\_} stores its settings when it is created, \cd{build} creates the weights it will learn, \cd{call} is the maths when data flows through, and \cd{self} means this very layer.
+
+\subsection{Numpy}\label{py:numpy}
+An \term{array} is a grid of numbers. A map is 2-D (rows, columns), all maps of a flood are 3-D (time, rows, columns), and \term{shape} gives the size of each direction.
+\begin{pycode}
+x = np.array([[0.0, 0.2, 0.5], [1.0, 0.0, 0.4]])
+x.shape         # (2, 3)
+x.mean(axis=0)  # [0.5, 0.1, 0.45]  one average per column
+x.mean(axis=1)  # [0.233, 0.467]    one average per row
+\end{pycode}
+\begin{itemize}
+\item \textbf{Cut a tile:} \cd{depth[step, top:top+64, left:left+64]} is map \cd{step}, 64 rows by 64 columns.
+\item \textbf{Types:} \cd{.astype("float32")} (4 bytes), \cd{float16} (2 bytes, less exact), \cd{uint8} (0 to 255), \cd{bool}.
+\item \textbf{Make and join:} \cd{np.zeros}, \cd{np.full(shape, np.nan)}, \cd{np.arange(0,10,2)}, \cd{np.linspace(0,480,6)}. \cd{np.stack([a,b], axis=-1)} stacks maps into channels, which makes depth, rain and height one 3-layer input. \cd{np.concatenate} joins end to end.
+\item \textbf{New direction:} \cd{x[None]} adds a size-1 direction in front, so shape \cd{(4,64,64,3)} becomes \cd{(1,4,64,64,3)}, a batch of one.
+\item \textbf{Masks:} \cd{depth > 0.3} is a grid of True and False, and \cd{np.mean(depth > 0.3)} is the share of True (True counts as 1). \cd{depth[depth < 0.01] = np.nan} changes only the True squares.
+\item \textbf{Missing values:} \cd{np.isnan}, and \cd{np.nanmean}, \cd{np.nanmax} ignore nan (plain \cd{np.mean} would give nan).
+\item \textbf{Others:} \cd{np.diff} (steps between neighbours), \cd{np.argmax} (position of the biggest), \cd{np.argsort}, \cd{np.maximum(a,0)} (negatives to 0), \cd{np.clip(x,0,10)}, \cd{np.percentile(a,98)}, \cd{np.corrcoef(a,b)[0,1]} (how two lists move together, $-1$ to 1), \cd{np.where}.
+\item \cd{np.digitize(value, [0.05,0.15,0.30])} counts how many limits the value reached: 0.04 gives 0, 0.20 gives 2. This turns a flooded share into a severity class (0 None, 1 Minor, 2 Moderate, 3 Severe).
+\end{itemize}
+
+\subsection{Pandas}\label{py:pandas}
+A \term{DataFrame} is a table. The notebooks collect one dictionary per row in a list and call \cd{pd.DataFrame(rows)}. \cd{display(table)} shows it neatly, \cd{table["Maps"].sum()} adds a column, \cd{table.iloc[0]} is row 0, and \cd{table.to\_csv("maps.csv", index=False)} saves it.
+
+\subsection{Matplotlib}\label{py:plots}
+\begin{pycode}
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))      # a sheet with 3 picture slots
+picture = axes[0].imshow(ground_height, cmap="terrain")  # numbers drawn as colours
+fig.colorbar(picture, ax=axes[0], label="metres")    # the colour scale
+plt.show()
+\end{pycode}
+\cd{fig} is the sheet and \cd{axes} are the slots. \cd{cmap} is the colour scheme (\cd{Blues} water, \cd{terrain} height, \cd{RdBu} changes, \cd{PuOr} errors, \cd{inferno} heat maps). \cd{vmin} and \cd{vmax} fix the colour range so pictures compare, and \cd{alpha=0.6} makes a picture see-through. The other plot lines only draw bars, lines, dots, titles, the key, or save the file.
+
+\subsection{Keras}\label{py:keras}
+\begin{itemize}
+\item \cd{keras.Input(shape=(4,64,64,3))}: 4 maps, 64 by 64, 3 channels. \cd{layers.Conv2D(16, 3, padding="same", activation="relu")}: 16 filters of $3\times3$, a zero border keeps the size, ReLU turns negatives to 0 (Chapter~\ref{ch:cnn}). \cd{layers.TimeDistributed(layer)} applies a layer to each of the 4 maps separately. \cd{layers.ConvLSTM2D(32, 3, padding="same")} is the memory layer (Chapter~\ref{ch:lstm}).\item \cd{keras.Model(inputs, outputs)} joins the pieces and \cd{model.summary()} lists layers, shapes and parameters.
+\item \cd{model.compile(optimizer=keras.optimizers.Adam(0.001), loss="mse")} sets the learning method and the error measure (Chapter~\ref{ch:nn}). \cd{model.fit(x, y, validation\_data=..., epochs=20, batch\_size=16, callbacks=[...])} trains: \cd{epochs} are passes through the tiles, \cd{batch\_size} is tiles per weight nudge, \cd{validation\_data} is the mock test, and \cd{EarlyStopping(patience=4, restore\_best\_weights=True)} stops after 4 passes with no improvement and returns to the best weights.
+\item \cd{model.predict(x)} runs the network, \cd{save\_weights} and \cd{load\_weights} store what it learned, \cd{encoder.trainable = False} freezes a part, \cd{set\_random\_seed(42)} makes runs repeatable, and \cd{tf.GradientTape()} records the maths so \cd{tape.gradient(a, b)} gives the slope (used by Grad-CAM, Chapter~\ref{ch:gradcam}).
+\end{itemize}

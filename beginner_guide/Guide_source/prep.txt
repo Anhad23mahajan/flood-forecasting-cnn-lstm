@@ -1,0 +1,897 @@
+=== CELL 0 [MARKDOWN] ===
+# Data preparation
+
+DL Lab project by Anhad Mahajan and Aman Sumeet Saxena
+
+This notebook turns the raw FloodCastBench files into lined-up arrays, one folder per dataset:
+
+- water depth, one map every 30 minutes
+- rain on the same grid
+- ground height, land cover and permanent water (rivers and lakes)
+- map details (size, position, map projection)
+
+The prepared data that the model notebook uses is already on Google Drive. This notebook writes its own copy to the
+Colab disk (`/content/prepared_data`), so the copy on Drive is never changed. The last part compares the two copies.
+
+Parts of this notebook:
+
+1. Download only the files we need
+2. Check that every layer covers the depth map
+3. Save the depth maps
+4. Alignment check
+5. Save ground height, land cover and rain
+6. Save the map details
+7. Final check: look at the saved data
+8. Compare with the copy on Google Drive
+
+=== CELL 1 [MARKDOWN] ===
+## 0. Setup
+
+=== CELL 2 [CODE] ===
+# Install rasterio, the library that reads map files (.tif)
+!pip install -q rasterio
+--- OUTPUT ---
+
+=== CELL 3 [CODE] ===
+# Basic libraries
+import os
+import glob
+import json
+import time
+
+# Numbers, tables and plots
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
+
+# Averaging filter (used to find valleys)
+from scipy.ndimage import uniform_filter
+
+# Map files and the dataset download
+import rasterio
+from rasterio.enums import Resampling
+from rasterio.windows import Window
+from huggingface_hub import snapshot_download, HfApi
+
+# Google Drive (only read from, at the end)
+from google.colab import drive
+--- OUTPUT ---
+
+=== CELL 4 [MARKDOWN] ===
+### Settings
+
+Rain, ground height and land cover are all stored on one 30 m grid. Each depth map sits somewhere inside that grid:
+
+- `scale` = how many 30 m squares fit along one side of a depth square
+- `row_offset`, `col_offset` = where the depth map's top-left corner is on the 30 m grid
+
+These positions are tested against the data in the alignment check.
+
+=== CELL 5 [CODE] ===
+# Name of the dataset on Hugging Face
+REPO_ID = "mahajananhad/floodcastbench"
+
+# Where the raw files are downloaded on Colab
+RAW_DIR = "/content/floodcastbench"
+
+# Where this notebook saves the prepared data (the Colab disk, not Google Drive)
+SAVE_DIR = "/content/prepared_data"
+
+# The copy on Google Drive that the model notebook uses (only read, never written)
+DRIVE_PREPARED_DIR = "/content/drive/MyDrive/Flood_project/prepared_data"
+
+# Time between two prepared maps: 1800 seconds = 30 minutes, the same spacing as the rain maps
+STEP_SECONDS = 1800
+
+# Water above 1 cm counts as wet, above 30 cm counts as flooded
+WET_DEPTH_M = 0.01
+FLOOD_DEPTH_M = 0.30
+
+DATASETS = {
+    "Australia_30m": {"region": "Australia", "folder": "High-fidelity flood forecasting/30m/Australia",
+                      "resolution_m": 30, "scale": 1, "row_offset": 0, "col_offset": 0},
+    "UK_30m": {"region": "UK", "folder": "High-fidelity flood forecasting/30m/UK",
+               "resolution_m": 30, "scale": 1, "row_offset": 5, "col_offset": 5},
+    "Australia_60m": {"region": "Australia", "folder": "High-fidelity flood forecasting/60m/Australia",
+                      "resolution_m": 60, "scale": 2, "row_offset": 0, "col_offset": 0},
+    "UK_60m": {"region": "UK", "folder": "High-fidelity flood forecasting/60m/UK",
+               "resolution_m": 60, "scale": 2, "row_offset": 5, "col_offset": 5},
+    "Pakistan_480m": {"region": "Pakistan", "folder": "Low-fidelity flood forecasting/480m/Pakistan",
+                      "resolution_m": 480, "scale": 16, "row_offset": 42, "col_offset": 178},
+    "Mozambique_480m": {"region": "Mozambique", "folder": "Low-fidelity flood forecasting/480m/Mozambique",
+                        "resolution_m": 480, "scale": 16, "row_offset": 150, "col_offset": 50},
+}
+
+# Map projection code of each region (UTM zones listed in the dataset's Spatial_References.txt)
+EPSG_CODES = {"Australia": 32756, "UK": 32630, "Pakistan": 32642, "Mozambique": 32736}
+
+# Name and colour of each land-cover code
+LAND_COVER = {
+    1: ("Water", "#1f78b4"),
+    2: ("Trees", "#33a02c"),
+    4: ("Flooded vegetation", "#a6cee3"),
+    5: ("Crops", "#fdbf6f"),
+    7: ("Buildings", "#e31a1c"),
+    8: ("Bare ground", "#b15928"),
+    9: ("Snow / ice", "#ffffff"),
+    10: ("Clouds", "#bdbdbd"),
+    11: ("Rangeland", "#b2df8a"),
+}
+--- OUTPUT ---
+
+=== CELL 6 [CODE] ===
+# Folder for the prepared data on the Colab disk
+os.makedirs(SAVE_DIR, exist_ok=True)
+print("Prepared data will be saved in:", SAVE_DIR)
+
+# Load the Hugging Face token from Colab's secrets (key icon on the left), if there is one
+try:
+    from google.colab import userdata
+    HF_TOKEN = userdata.get("HF_TOKEN")
+    print("Token found")
+except Exception:
+    HF_TOKEN = None
+    print("No token found, downloading without one")
+--- OUTPUT ---
+Prepared data will be saved in: /content/prepared_data
+Token found
+
+
+=== CELL 7 [MARKDOWN] ===
+## 1. Download only the files we need
+
+One depth map every 30 minutes (the rain's spacing), plus all rain, ground-height, land-cover and map-position files.
+
+=== CELL 8 [CODE] ===
+api = HfApi()
+all_files = api.list_repo_files(REPO_ID, repo_type="dataset", token=HF_TOKEN)
+
+files_needed = []
+
+for file_name in all_files:
+    # Rain, ground height, land cover and map-position files
+    if file_name.startswith("Relevant data/Rainfall/"):
+        files_needed.append(file_name)
+    elif file_name.startswith("Relevant data/DEM/"):
+        files_needed.append(file_name)
+    elif file_name.startswith("Relevant data/Land use and land cover/"):
+        files_needed.append(file_name)
+    elif file_name.startswith("Relevant data/Georeferenced files/"):
+        files_needed.append(file_name)
+
+    # Depth maps: keep only the ones exactly on a 30-minute mark
+    elif file_name.startswith("High-fidelity") or file_name.startswith("Low-fidelity"):
+        seconds = int(os.path.basename(file_name).replace(".tif", ""))
+        if seconds % STEP_SECONDS == 0:
+            files_needed.append(file_name)
+
+print("Files in the dataset:", len(all_files))
+print("Files we need:       ", len(files_needed))
+--- OUTPUT ---
+Files in the dataset: 14870
+Files we need:        3822
+
+
+=== CELL 9 [CODE] ===
+start_time = time.time()
+
+# Try up to 5 times, because large downloads sometimes stop halfway.
+# This cell can sit quietly for a minute or two before the progress bar appears.
+for attempt in range(1, 6):
+    try:
+        snapshot_download(repo_id=REPO_ID, repo_type="dataset", local_dir=RAW_DIR, token=HF_TOKEN,
+                          allow_patterns=files_needed, max_workers=8)
+        print("Download complete")
+        break
+    except Exception as error:
+        print("Attempt", attempt, "failed:", error)
+        print("Waiting 60 seconds before trying again")
+        time.sleep(60)
+
+print("Time taken:", round((time.time() - start_time) / 60, 1), "minutes")
+--- OUTPUT ---
+Downloading bytes:           |  0.00B            
+Reconstructing (incomplete total...): |          |  0.00B /  0.00B            
+Fetching 3822 files:   0%|          | 0/3822 [00:00<?, ?it/s]
+Download complete
+Time taken: 9.1 minutes
+
+
+=== CELL 10 [CODE] ===
+# Check that every needed file arrived
+missing_files = []
+for file_name in files_needed:
+    if not os.path.exists(os.path.join(RAW_DIR, file_name)):
+        missing_files.append(file_name)
+
+print("Files missing:", len(missing_files))
+if len(missing_files) > 0:
+    print("Examples:", missing_files[:5])
+    print("Run the download cell again")
+--- OUTPUT ---
+Files missing: 0
+
+
+=== CELL 11 [MARKDOWN] ===
+### Small helper functions
+
+=== CELL 12 [CODE] ===
+def get_seconds(file_path):
+    # Turn a depth file name like "1800.tif" into the number 1800
+    return int(os.path.basename(file_path).replace(".tif", ""))
+
+
+def get_depth_files(dataset):
+    # The 30-minute depth maps of one dataset, in time order
+    folder = os.path.join(RAW_DIR, DATASETS[dataset]["folder"])
+    files = glob.glob(os.path.join(folder, "*.tif"))
+
+    # Keep only maps on a 30-minute mark
+    files = [f for f in files if get_seconds(f) % STEP_SECONDS == 0]
+    files.sort(key=get_seconds)
+    return files
+
+
+def get_rain_files(region):
+    # The rain maps of one region, in time order (names are date and time, so alphabetical order works)
+    folder = os.path.join(RAW_DIR, "Relevant data", "Rainfall", region + " flood")
+    files = glob.glob(os.path.join(folder, "*.tif"))
+    files.sort()
+    return files
+
+
+def dem_path(region):
+    # File with the ground height of a region
+    return os.path.join(RAW_DIR, "Relevant data", "DEM", region + "_DEM.tif")
+
+
+def land_cover_path(region):
+    # File with the land cover of a region
+    return os.path.join(RAW_DIR, "Relevant data", "Land use and land cover", region + ".tif")
+
+
+def read_on_depth_grid(file_path, dataset, rows, columns, method):
+    # Read the part of a 30 m map under the depth map, shrunk onto the depth map's grid with the given method
+    info = DATASETS[dataset]
+    scale = info["scale"]
+
+    # The area of the 30 m map that the depth map covers
+    window = Window(col_off=info["col_offset"], row_off=info["row_offset"],
+                    width=columns * scale, height=rows * scale)
+
+    with rasterio.open(file_path) as source:
+        data = source.read(1, window=window, out_shape=(rows, columns), resampling=method)
+
+    data = data.astype("float32")
+
+    # These files use a huge negative number to mean "no data". None should be under the depth map.
+    if np.any(data < -1e30):
+        raise ValueError("No-data values found under the depth map in " + file_path)
+
+    return data
+
+
+def land_cover_positions(land_cover):
+    # Turn land-cover codes (1, 2, 4, ...) into positions (0, 1, 2, ...) so each gets its own colour
+    positions = np.full(land_cover.shape, np.nan)
+    for position, code in enumerate(LAND_COVER.keys()):
+        positions[land_cover == code] = position
+    return positions
+
+
+# Colours used in the plots
+land_cover_colours = ListedColormap([colour for name, colour in LAND_COVER.values()])
+land_cover_names = [name for name, colour in LAND_COVER.values()]
+
+# Blue colours that start at light blue instead of white, so shallow water stays visible; dry squares grey
+water_colours = ListedColormap(plt.cm.Blues(np.linspace(0.3, 1.0, 256)))
+water_colours.set_bad("lightgrey")
+--- OUTPUT ---
+
+=== CELL 13 [MARKDOWN] ===
+## 2. Check that every layer covers the depth map
+
+=== CELL 14 [CODE] ===
+DEPTH_SHAPES = {}
+size_rows = []
+
+for dataset, info in DATASETS.items():
+    region = info["region"]
+
+    # Size of the depth map
+    with rasterio.open(get_depth_files(dataset)[0]) as source:
+        rows = source.height
+        columns = source.width
+    DEPTH_SHAPES[dataset] = (rows, columns)
+
+    # Area of the 30 m grid that the depth map needs
+    needed_rows = info["row_offset"] + rows * info["scale"]
+    needed_columns = info["col_offset"] + columns * info["scale"]
+
+    layers = {"Ground height": dem_path(region), "Land cover": land_cover_path(region), "Rain": get_rain_files(region)[0]}
+
+    for layer_name, path in layers.items():
+        with rasterio.open(path) as source:
+            fits = needed_rows <= source.height and needed_columns <= source.width
+            layer_size = str(source.height) + " x " + str(source.width)
+
+        size_rows.append({"Dataset": dataset, "Layer": layer_name, "Layer size": layer_size,
+                          "Area needed": str(needed_rows) + " x " + str(needed_columns), "Big enough?": fits})
+
+display(pd.DataFrame(size_rows))
+--- OUTPUT ---
+/usr/local/lib/python3.13/dist-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+
+            Dataset          Layer    Layer size   Area needed  Big enough?
+0     Australia_30m  Ground height   1073 x 1073   1073 x 1073         True
+1     Australia_30m     Land cover   1073 x 1073   1073 x 1073         True
+2     Australia_30m           Rain   1073 x 1073   1073 x 1073         True
+3            UK_30m  Ground height     180 x 285     175 x 280         True
+4            UK_30m     Land cover     180 x 285     175 x 280         True
+5            UK_30m           Rain     180 x 285     175 x 280         True
+6     Australia_60m  Ground height   1073 x 1073   1072 x 1072         True
+7     Australia_60m     Land cover   1073 x 1073   1072 x 1072         True
+8     Australia_60m           Rain   1073 x 1073   1072 x 1072         True
+9            UK_60m  Ground height     180 x 285     175 x 279         True
+10           UK_60m     Land cover     180 x 285     175 x 279         True
+11           UK_60m           Rain     180 x 285     175 x 279         True
+12    Pakistan_480m  Ground height  13035 x 7298  13002 x 7234         True
+13    Pakistan_480m     Land cover  13035 x 7298  13002 x 7234         True
+14    Pakistan_480m           Rain  13035 x 7298  13002 x 7234         True
+15  Mozambique_480m  Ground height   2624 x 2321   2566 x 2258         True
+16  Mozambique_480m     Land cover   2624 x 2321   2566 x 2258         True
+17  Mozambique_480m           Rain   2624 x 2321   2566 x 2258         True
+[HTML output omitted]
+
+=== CELL 15 [MARKDOWN] ===
+## 3. Save the depth maps
+
+=== CELL 16 [CODE] ===
+# Average depth of each square over the whole flood, used in the alignment check
+depth_averages = {}
+
+for dataset in DATASETS:
+    files = get_depth_files(dataset)
+    rows, columns = DEPTH_SHAPES[dataset]
+
+    # Check that no 30-minute map is missing
+    seconds = [get_seconds(f) for f in files]
+    if seconds != list(range(0, seconds[-1] + 1, STEP_SECONDS)):
+        print(dataset, "- WARNING: some 30-minute maps are missing")
+
+    # One map per 30 minutes
+    depth = np.zeros((len(files), rows, columns), dtype="float32")
+    for step, file_path in enumerate(files):
+        with rasterio.open(file_path) as source:
+            depth[step] = source.read(1)
+
+    # Save to this dataset's folder
+    dataset_dir = os.path.join(SAVE_DIR, dataset)
+    os.makedirs(dataset_dir, exist_ok=True)
+    np.save(os.path.join(dataset_dir, "depth.npy"), depth)
+
+    depth_averages[dataset] = depth.mean(axis=0)
+    print(dataset, "- saved", len(files), "maps of", rows, "x", columns)
+
+    # Free the memory before the next dataset
+    del depth
+--- OUTPUT ---
+/usr/local/lib/python3.13/dist-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+
+Australia_30m - saved 481 maps of 1073 x 1073
+UK_30m - saved 145 maps of 170 x 275
+Australia_60m - saved 481 maps of 536 x 536
+UK_60m - saved 145 maps of 85 x 137
+Pakistan_480m - saved 673 maps of 810 x 441
+Mozambique_480m - saved 289 maps of 151 x 138
+
+
+=== CELL 17 [MARKDOWN] ===
+## 4. Alignment check
+
+Two independent tests. Each one moves a 30 m map a little in every direction and measures how well it matches where the flood water sits.
+
+- Test 1: rivers and lakes on the land-cover map
+- Test 2: valleys in the ground-height map
+
+A red star marks the position we use, a black cross the best position found.
+
+=== CELL 18 [CODE] ===
+def read_full_map(file_path):
+    # Read a whole 30 m map. No-data values become the map's average so they don't disturb the tests
+    with rasterio.open(file_path) as source:
+        data = source.read(1).astype("float32")
+    no_data = data < -1e30
+    data[no_data] = data[~no_data].mean()
+    return data
+
+
+def rivers_map(region):
+    # 1 where the land-cover map shows a river or lake, 0 everywhere else
+    return (read_full_map(land_cover_path(region)) == 1).astype("float32")
+
+
+def valleys_map(region, scale):
+    # How much lower each 30 m square is than the ground around it (river channels and valleys score high)
+    ground = read_full_map(dem_path(region))
+
+    # Average ground height in a square around each point, about 10 depth squares wide
+    surroundings = uniform_filter(ground, size=10 * scale + 1)
+    return surroundings - ground
+
+
+def shift_scores(dataset, reference):
+    # Move a 30 m reference map a little in every direction and measure how well it matches the average depth
+    info = DATASETS[dataset]
+    scale = info["scale"]
+    rows, columns = DEPTH_SHAPES[dataset]
+
+    # Leave out a 3-square border of the depth map, so every move stays inside the reference map
+    border = 3
+    depth_inner = depth_averages[dataset][border:rows - border, border:columns - border]
+    inner_rows, inner_columns = depth_inner.shape
+
+    # Moves of up to 3 depth squares in every direction
+    largest_shift = border * scale
+    shift_step = max(1, scale // 4)
+    shifts = list(range(-largest_shift, largest_shift + 1, shift_step))
+
+    scores = np.full((len(shifts), len(shifts)), np.nan)
+
+    for i, row_shift in enumerate(shifts):
+        for j, column_shift in enumerate(shifts):
+            top = info["row_offset"] + border * scale + row_shift
+            left = info["col_offset"] + border * scale + column_shift
+            bottom = top + inner_rows * scale
+            right = left + inner_columns * scale
+
+            # Skip moves that would go past the edge of the reference map
+            if top < 0 or left < 0 or bottom > reference.shape[0] or right > reference.shape[1]:
+                continue
+
+            # Shrink the moved piece onto the depth grid and compare it with the average depth
+            piece = reference[top:bottom, left:right]
+            piece_on_depth_grid = piece.reshape(inner_rows, scale, inner_columns, scale).mean(axis=(1, 3))
+            scores[i, j] = np.corrcoef(piece_on_depth_grid.ravel(), depth_inner.ravel())[0, 1]
+
+    return scores, shifts
+--- OUTPUT ---
+
+=== CELL 19 [CODE] ===
+result_rows = []
+
+for dataset, info in DATASETS.items():
+    region = info["region"]
+    scale = info["scale"]
+
+    tests = {"Test 1: rivers on the land-cover map": rivers_map(region),
+             "Test 2: valleys in the ground-height map": valleys_map(region, scale)}
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6), layout="constrained")
+    fig.suptitle(dataset + ": which position lines up best with the flood?", fontsize=15)
+
+    best_moves = []
+
+    for ax, (test_name, reference) in zip(axes, tests.items()):
+        scores, shifts = shift_scores(dataset, reference)
+
+        # Move with the best match
+        best_i, best_j = np.unravel_index(np.nanargmax(scores), scores.shape)
+        best_moves.append((shifts[best_i], shifts[best_j]))
+
+        # Picture edges, so each square is centred on its move
+        half_step = (shifts[1] - shifts[0]) / 2
+        edges = [shifts[0] - half_step, shifts[-1] + half_step, shifts[-1] + half_step, shifts[0] - half_step]
+
+        picture = ax.imshow(scores, cmap="viridis", extent=edges)
+        ax.plot(0, 0, marker="*", markersize=18, color="red", linestyle="none")
+        ax.plot(shifts[best_j], shifts[best_i], marker="x", markersize=14, markeredgewidth=3, color="black", linestyle="none")
+
+        ax.set_title(test_name)
+        ax.set_xlabel("Move right (30 m squares)")
+        ax.set_ylabel("Move down (30 m squares)")
+        fig.colorbar(picture, ax=ax, label="Match (higher = better)")
+
+    # One legend for both pictures, under them
+    legend_items = [Line2D([], [], marker="*", markersize=14, color="red", linestyle="none", label="Position we are using"),
+                    Line2D([], [], marker="x", markersize=12, markeredgewidth=3, color="black", linestyle="none", label="Best position found")]
+    fig.legend(handles=legend_items, loc="outside lower center", ncol=2, fontsize=11)
+    plt.show()
+
+    # A move smaller than half a depth square makes no real difference
+    rivers_move, valleys_move = best_moves
+    rivers_close = max(abs(rivers_move[0]), abs(rivers_move[1])) <= scale / 2
+    valleys_close = max(abs(valleys_move[0]), abs(valleys_move[1])) <= scale / 2
+
+    # Do the two tests point to the same place?
+    shift_step = max(1, scale // 4)
+    tests_agree = abs(rivers_move[0] - valleys_move[0]) <= shift_step and abs(rivers_move[1] - valleys_move[1]) <= shift_step
+
+    if rivers_close and valleys_close:
+        decision = "Keep the position"
+    elif tests_agree:
+        decision = "Both tests say move it"
+    else:
+        decision = "Tests disagree, look closer"
+
+    result_rows.append({"Dataset": dataset, "Test 1 best move (down, right)": rivers_move,
+                        "Test 2 best move (down, right)": valleys_move, "Decision": decision})
+
+display(pd.DataFrame(result_rows))
+--- OUTPUT ---
+[IMAGE saved figs/prep_c19_1.png]
+[IMAGE saved figs/prep_c19_2.png]
+[IMAGE saved figs/prep_c19_3.png]
+[IMAGE saved figs/prep_c19_4.png]
+[IMAGE saved figs/prep_c19_5.png]
+[IMAGE saved figs/prep_c19_6.png]
+           Dataset Test 1 best move (down, right)  \
+0    Australia_30m                         (0, 1)   
+1           UK_30m                         (1, 1)   
+2    Australia_60m                         (1, 1)   
+3           UK_60m                         (1, 1)   
+4    Pakistan_480m                         (0, 0)   
+5  Mozambique_480m                         (0, 8)   
+
+  Test 2 best move (down, right)                Decision  
+0                         (0, 0)  Both tests say move it  
+1                         (0, 0)  Both tests say move it  
+2                         (0, 0)       Keep the position  
+3                         (0, 0)       Keep the position  
+4                         (0, 4)       Keep the position  
+5                         (0, 0)       Keep the position  
+[HTML output omitted]
+
+=== CELL 20 [MARKDOWN] ===
+## 5. Save ground height, land cover and rain
+
+How rain is stored: `rain[t]` is the rain that falls **between** depth map t and depth map t+1.
+
+    depth map 0         depth map 1         depth map 2
+         |----- rain[0] -----|----- rain[1] -----|
+       0 min              30 min              60 min
+
+=== CELL 21 [CODE] ===
+for dataset, info in DATASETS.items():
+    region = info["region"]
+    rows, columns = DEPTH_SHAPES[dataset]
+    dataset_dir = os.path.join(SAVE_DIR, dataset)
+
+    # Ground height: the average height inside each depth square
+    terrain = read_on_depth_grid(dem_path(region), dataset, rows, columns, Resampling.average)
+    np.save(os.path.join(dataset_dir, "terrain.npy"), terrain)
+
+    # Land cover is a category, so each depth square takes the most common category inside it
+    land_cover = read_on_depth_grid(land_cover_path(region), dataset, rows, columns, Resampling.mode).astype("uint8")
+    np.save(os.path.join(dataset_dir, "land_cover.npy"), land_cover)
+
+    # Rivers and lakes that are there even without a flood
+    permanent_water = land_cover == 1
+    np.save(os.path.join(dataset_dir, "permanent_water.npy"), permanent_water)
+
+    # Rain on the depth grid, one map per 30 minutes.
+    # Stored as float16 to halve the file size: rain stays below about 20 mm per hour, where float16 is accurate to about 0.02 mm per hour.
+    number_of_maps = len(get_depth_files(dataset))
+    rain_files = get_rain_files(region)
+    rain = np.zeros((number_of_maps, rows, columns), dtype="float16")
+    missing_rain = 0
+
+    for step in range(number_of_maps):
+        if step < len(rain_files):
+            rain[step] = read_on_depth_grid(rain_files[step], dataset, rows, columns, Resampling.average)
+        else:
+            missing_rain += 1
+
+        if step % 100 == 0:
+            print(dataset, "- rain map", step, "of", number_of_maps)
+
+    np.save(os.path.join(dataset_dir, "rain.npy"), rain)
+    print(dataset, "- saved. Rain maps missing at the end (left as 0):", missing_rain)
+--- OUTPUT ---
+Australia_30m - rain map 0 of 481
+Australia_30m - rain map 100 of 481
+Australia_30m - rain map 200 of 481
+Australia_30m - rain map 300 of 481
+Australia_30m - rain map 400 of 481
+Australia_30m - saved. Rain maps missing at the end (left as 0): 0
+UK_30m - rain map 0 of 145
+UK_30m - rain map 100 of 145
+UK_30m - saved. Rain maps missing at the end (left as 0): 0
+Australia_60m - rain map 0 of 481
+Australia_60m - rain map 100 of 481
+Australia_60m - rain map 200 of 481
+Australia_60m - rain map 300 of 481
+Australia_60m - rain map 400 of 481
+Australia_60m - saved. Rain maps missing at the end (left as 0): 0
+UK_60m - rain map 0 of 145
+UK_60m - rain map 100 of 145
+UK_60m - saved. Rain maps missing at the end (left as 0): 0
+Pakistan_480m - rain map 0 of 673
+Pakistan_480m - rain map 100 of 673
+Pakistan_480m - rain map 200 of 673
+Pakistan_480m - rain map 300 of 673
+Pakistan_480m - rain map 400 of 673
+Pakistan_480m - rain map 500 of 673
+Pakistan_480m - rain map 600 of 673
+Pakistan_480m - saved. Rain maps missing at the end (left as 0): 1
+Mozambique_480m - rain map 0 of 289
+Mozambique_480m - rain map 100 of 289
+Mozambique_480m - rain map 200 of 289
+Mozambique_480m - saved. Rain maps missing at the end (left as 0): 0
+
+
+=== CELL 22 [MARKDOWN] ===
+## 6. Save the map details
+
+Needed later to draw predictions on top of real maps.
+
+=== CELL 23 [CODE] ===
+coordinate_rows = []
+
+for dataset, info in DATASETS.items():
+    region = info["region"]
+    rows, columns = DEPTH_SHAPES[dataset]
+    scale = info["scale"]
+
+    # A world file (.tfw) describes the 30 m grid in 6 numbers:
+    # square width, two rotation terms, square height (negative), and the x and y of the top-left square's centre
+    tfw_path = os.path.join(RAW_DIR, "Relevant data", "DEM", region + "_DEM.tfw")
+    with open(tfw_path) as file:
+        numbers = [float(line) for line in file if line.strip()]
+    cell_width, rotation_a, rotation_b, cell_height, centre_x, centre_y = numbers
+
+    # Top-left corner of the 30 m grid (the world file gives the centre of the first square, so move half a square)
+    grid_left = centre_x - cell_width / 2
+    grid_top = centre_y - cell_height / 2
+
+    # Top-left corner of the depth map inside the 30 m grid
+    left = grid_left + info["col_offset"] * cell_width
+    top = grid_top + info["row_offset"] * cell_height
+
+    map_info = {
+        "dataset": dataset,
+        "region": region,
+        "resolution_m": info["resolution_m"],
+        "rows": rows,
+        "columns": columns,
+        "number_of_maps": len(get_depth_files(dataset)),
+        "step_seconds": STEP_SECONDS,
+        "epsg": EPSG_CODES[region],
+        "transform": [cell_width * scale, 0.0, left, 0.0, cell_height * scale, top],
+        "rain_meaning": "rain[t] is the rain in mm per hour falling between depth map t and depth map t+1",
+    }
+
+    with open(os.path.join(SAVE_DIR, dataset, "map_info.json"), "w") as file:
+        json.dump(map_info, file, indent=2)
+
+    coordinate_rows.append({"Dataset": dataset, "Square size from world file (m)": abs(cell_width * scale),
+                            "Expected square size (m)": info["resolution_m"], "Map rotated?": rotation_a != 0 or rotation_b != 0})
+
+display(pd.DataFrame(coordinate_rows))
+--- OUTPUT ---
+           Dataset  Square size from world file (m)  Expected square size (m)  \
+0    Australia_30m                             30.0                        30   
+1           UK_30m                             30.0                        30   
+2    Australia_60m                             60.0                        60   
+3           UK_60m                             60.0                        60   
+4    Pakistan_480m                            480.0                       480   
+5  Mozambique_480m                            480.0                       480   
+
+   Map rotated?  
+0         False  
+1         False  
+2         False  
+3         False  
+4         False  
+5         False  
+[HTML output omitted]
+
+=== CELL 24 [MARKDOWN] ===
+## 7. Final check: look at the saved data
+
+For each dataset, the moment with the largest area under more than 30 cm of water: do all the layers line up?
+
+=== CELL 25 [CODE] ===
+for dataset in DATASETS:
+    dataset_dir = os.path.join(SAVE_DIR, dataset)
+
+    # mmap_mode="r" reads from the file only when needed, so big arrays don't fill the memory
+    depth = np.load(os.path.join(dataset_dir, "depth.npy"), mmap_mode="r")
+    rain = np.load(os.path.join(dataset_dir, "rain.npy"), mmap_mode="r")
+    terrain = np.load(os.path.join(dataset_dir, "terrain.npy"))
+    land_cover = np.load(os.path.join(dataset_dir, "land_cover.npy"))
+    permanent_water = np.load(os.path.join(dataset_dir, "permanent_water.npy"))
+
+    # Moment when the largest area is under more than 30 cm of water
+    flooded_area = [np.mean(depth[step] > FLOOD_DEPTH_M) for step in range(depth.shape[0])]
+    wettest = int(np.argmax(flooded_area))
+    hours = wettest * STEP_SECONDS / 3600
+
+    # Heaviest rain in the whole flood, so the rain picture uses a fixed scale
+    heaviest_rain = max(float(np.max(rain)), 1.0)
+
+    fig, axes = plt.subplots(2, 2, figsize=(15, 12), layout="constrained")
+    fig.suptitle(dataset + ", " + str(round(hours)) + " hours after the start", fontsize=17)
+
+    # Top left: water depth, with rivers and lakes from the land-cover map outlined in red
+    water = np.array(depth[wettest])
+    water[water < WET_DEPTH_M] = np.nan
+    picture = axes[0, 0].imshow(water, cmap=water_colours, vmin=0, vmax=np.nanpercentile(water, 98))
+    axes[0, 0].contour(permanent_water, levels=[0.5], colors="red", linewidths=0.7)
+    axes[0, 0].set_title("Water depth", fontsize=13)
+    fig.colorbar(picture, ax=axes[0, 0], label="metres")
+    depth_legend = [Patch(color="lightgrey", label="Dry (less than 1 cm of water)"),
+                    Line2D([], [], color="red", label="Rivers and lakes on the land-cover map")]
+    axes[0, 0].legend(handles=depth_legend, loc="upper center", bbox_to_anchor=(0.5, -0.02), ncol=2, fontsize=9)
+
+    # Top right: ground height
+    picture = axes[0, 1].imshow(terrain, cmap="terrain")
+    axes[0, 1].set_title("Ground height", fontsize=13)
+    fig.colorbar(picture, ax=axes[0, 1], label="metres above sea level")
+
+    # Bottom left: what covers the ground
+    picture = axes[1, 0].imshow(land_cover_positions(land_cover), cmap=land_cover_colours,
+                                vmin=-0.5, vmax=len(LAND_COVER) - 0.5, interpolation="nearest")
+    axes[1, 0].set_title("What covers the ground", fontsize=13)
+    colour_bar = fig.colorbar(picture, ax=axes[1, 0], ticks=range(len(LAND_COVER)))
+    colour_bar.ax.set_yticklabels(land_cover_names)
+
+    # Bottom right: rain falling in the next 30 minutes
+    rain_now = np.array(rain[wettest], dtype="float32")
+    picture = axes[1, 1].imshow(rain_now, cmap="Purples", vmin=0, vmax=heaviest_rain)
+    axes[1, 1].set_title("Rain in the next 30 minutes", fontsize=13)
+    fig.colorbar(picture, ax=axes[1, 1], label="mm per hour")
+    if rain_now.max() == 0:
+        axes[1, 1].text(0.5, 0.5, "No rain in this half hour", transform=axes[1, 1].transAxes,
+                        ha="center", va="center", fontsize=14, backgroundcolor="white")
+
+    for ax in axes.flat:
+        ax.axis("off")
+
+    plt.show()
+--- OUTPUT ---
+[IMAGE saved figs/prep_c25_7.png]
+[IMAGE saved figs/prep_c25_8.png]
+[IMAGE saved figs/prep_c25_9.png]
+[IMAGE saved figs/prep_c25_10.png]
+[IMAGE saved figs/prep_c25_11.png]
+[IMAGE saved figs/prep_c25_12.png]
+
+=== CELL 26 [CODE] ===
+# Every saved file and its size
+file_rows = []
+
+for dataset in DATASETS:
+    dataset_dir = os.path.join(SAVE_DIR, dataset)
+    for file_name in sorted(os.listdir(dataset_dir)):
+        size_mb = os.path.getsize(os.path.join(dataset_dir, file_name)) / 1e6
+        file_rows.append({"Dataset": dataset, "File": file_name, "Size (MB)": round(size_mb, 1)})
+
+file_table = pd.DataFrame(file_rows)
+display(file_table)
+print("Total saved:", round(file_table["Size (MB)"].sum() / 1000, 2), "GB")
+--- OUTPUT ---
+            Dataset                 File  Size (MB)
+0     Australia_30m            depth.npy     2215.2
+1     Australia_30m       land_cover.npy        1.2
+2     Australia_30m        map_info.json        0.0
+3     Australia_30m  permanent_water.npy        1.2
+4     Australia_30m             rain.npy     1107.6
+5     Australia_30m          terrain.npy        4.6
+6            UK_30m            depth.npy       27.1
+7            UK_30m       land_cover.npy        0.0
+8            UK_30m        map_info.json        0.0
+9            UK_30m  permanent_water.npy        0.0
+10           UK_30m             rain.npy       13.6
+11           UK_30m          terrain.npy        0.2
+12    Australia_60m            depth.npy      552.8
+13    Australia_60m       land_cover.npy        0.3
+14    Australia_60m        map_info.json        0.0
+15    Australia_60m  permanent_water.npy        0.3
+16    Australia_60m             rain.npy      276.4
+17    Australia_60m          terrain.npy        1.1
+18           UK_60m            depth.npy        6.8
+19           UK_60m       land_cover.npy        0.0
+20           UK_60m        map_info.json        0.0
+21           UK_60m  permanent_water.npy        0.0
+22           UK_60m             rain.npy        3.4
+23           UK_60m          terrain.npy        0.0
+24    Pakistan_480m            depth.npy      961.6
+25    Pakistan_480m       land_cover.npy        0.4
+26    Pakistan_480m        map_info.json        0.0
+27    Pakistan_480m  permanent_water.npy        0.4
+28    Pakistan_480m             rain.npy      480.8
+29    Pakistan_480m          terrain.npy        1.4
+30  Mozambique_480m            depth.npy       24.1
+31  Mozambique_480m       land_cover.npy        0.0
+32  Mozambique_480m        map_info.json        0.0
+33  Mozambique_480m  permanent_water.npy        0.0
+34  Mozambique_480m             rain.npy       12.0
+35  Mozambique_480m          terrain.npy        0.1
+[HTML output omitted]
+Total saved: 5.69 GB
+
+
+=== CELL 27 [MARKDOWN] ===
+## 8. Compare with the copy on Google Drive
+
+The model notebook loads the prepared data from Google Drive. Here we check that this notebook made exactly the same arrays.
+Drive is only read, nothing on it is changed.
+
+=== CELL 28 [CODE] ===
+# Connect Google Drive (read only use)
+drive.mount("/content/drive")
+--- OUTPUT ---
+Mounted at /content/drive
+
+
+=== CELL 29 [CODE] ===
+def same_array(path_a, path_b):
+    # True if two saved arrays are exactly the same (compared one map at a time, to save memory)
+    a = np.load(path_a, mmap_mode="r")
+    b = np.load(path_b, mmap_mode="r")
+    if a.shape != b.shape or a.dtype != b.dtype:
+        return False
+    if a.ndim < 3:
+        return bool(np.array_equal(a, b, equal_nan=True))
+    for step in range(a.shape[0]):
+        if not np.array_equal(a[step], b[step], equal_nan=True):
+            return False
+    return True
+
+
+compare_rows = []
+
+for dataset in DATASETS:
+    for file_name in ["depth.npy", "rain.npy", "terrain.npy", "land_cover.npy", "permanent_water.npy"]:
+        ours = os.path.join(SAVE_DIR, dataset, file_name)
+        on_drive = os.path.join(DRIVE_PREPARED_DIR, dataset, file_name)
+
+        if not os.path.exists(on_drive):
+            result = "not on Drive"
+        elif same_array(ours, on_drive):
+            result = "identical"
+        else:
+            result = "DIFFERENT"
+
+        compare_rows.append({"Dataset": dataset, "File": file_name, "Same as the copy on Drive?": result})
+
+display(pd.DataFrame(compare_rows))
+--- OUTPUT ---
+            Dataset                 File Same as the copy on Drive?
+0     Australia_30m            depth.npy                  identical
+1     Australia_30m             rain.npy                  identical
+2     Australia_30m          terrain.npy                  identical
+3     Australia_30m       land_cover.npy                  identical
+4     Australia_30m  permanent_water.npy                  identical
+5            UK_30m            depth.npy                  identical
+6            UK_30m             rain.npy                  identical
+7            UK_30m          terrain.npy                  identical
+8            UK_30m       land_cover.npy                  identical
+9            UK_30m  permanent_water.npy                  identical
+10    Australia_60m            depth.npy                  identical
+11    Australia_60m             rain.npy                  identical
+12    Australia_60m          terrain.npy                  identical
+13    Australia_60m       land_cover.npy                  identical
+14    Australia_60m  permanent_water.npy                  identical
+15           UK_60m            depth.npy                  identical
+16           UK_60m             rain.npy                  identical
+17           UK_60m          terrain.npy                  identical
+18           UK_60m       land_cover.npy                  identical
+19           UK_60m  permanent_water.npy                  identical
+20    Pakistan_480m            depth.npy                  identical
+21    Pakistan_480m             rain.npy                  identical
+22    Pakistan_480m          terrain.npy                  identical
+23    Pakistan_480m       land_cover.npy                  identical
+24    Pakistan_480m  permanent_water.npy                  identical
+25  Mozambique_480m            depth.npy                  identical
+26  Mozambique_480m             rain.npy                  identical
+27  Mozambique_480m          terrain.npy                  identical
+28  Mozambique_480m       land_cover.npy                  identical
+29  Mozambique_480m  permanent_water.npy                  identical
+[HTML output omitted]

@@ -1,0 +1,6 @@
+243 jobs in batches ['C', 'CG', 'OPT', 'S2', 'F', 'BX', 'LC', 'LCB', 'EP', 'RB', 'RN', 'SX', 'D', 'OPTX']: 40 already done, 6 previously aborted by the dead-network guard (recorded, not re-run), 197 to run
+[start] E30_v1_hybrid_full_noguard_f1of3_s1013_ep30  (192 queued)
+[start] E30_v1_hybrid_full_noguard_f2of3_s1023_ep30  (191 queued)
+[start] E480_local_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  (190 queued)
+[done] E480_local_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  rc=0  3.8 min
+[start] E480_local_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  (189 queued)

@@ -1,0 +1,25 @@
+{
+ "region": "Mozambique",
+ "res": 480,
+ "frame": 1329,
+ "wet_fraction": 0.20601785200115175,
+ "adopted": [
+  150,
+  50
+ ],
+ "argmin": [
+  157,
+  64
+ ],
+ "E_min": 1.3175796270370483,
+ "E_adopted": 1.4675248861312866,
+ "E_median": 1.4252793788909912,
+ "robust_sd": 0.04488410539627075,
+ "z_below_median": 2.3995075963548387,
+ "n_candidates": 841,
+ "n_near_min": 26,
+ "offset_of_argmin_from_adopted": [
+  7,
+  14
+ ]
+}

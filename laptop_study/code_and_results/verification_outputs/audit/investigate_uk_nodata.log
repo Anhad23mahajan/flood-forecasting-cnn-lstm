@@ -1,0 +1,17 @@
+
+=== Australia: depth grid 1073x1073, layer offset (0, 0)
+DEM (1073, 1073): 0 sentinel pixels (0.00%)
+rainfall: 0 of 481 files contain sentinel pixels; worst file 0.00% of pixels; sentinel bbox rows/cols None
+valid patches used by the pipeline: 62 of 64 tiles
+   patches whose DEM window contains a sentinel: 0
+   tiles dropped by the flat-DEM filter: 2
+
+=== UK: depth grid 170x275, layer offset (5, 5)
+DEM (180, 285): 1452 sentinel pixels (2.83%)
+   sentinel rows 0..179, cols 0..284
+   inside the depth-aligned crop [5:175, 5:280]: 0 pixels
+rainfall: 145 of 145 files contain sentinel pixels; worst file 2.83% of pixels; sentinel bbox rows/cols (np.int64(0), np.int64(179), np.int64(0), np.int64(284))
+valid patches used by the pipeline: 2 of 2 tiles
+   patches whose DEM window contains a sentinel: 0
+   tiles dropped by the flat-DEM filter: 0
+   max sentinel pixels inside any used UK rainfall window (all 145 files): 0

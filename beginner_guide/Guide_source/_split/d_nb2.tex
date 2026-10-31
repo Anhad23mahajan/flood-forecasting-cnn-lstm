@@ -1,0 +1,165 @@
+\section{Notebook 2: Data preparation}\label{ch:nb-prep}
+\begingroup\emergencystretch=5em
+
+\subsection{The big picture}
+
+The raw FloodCastBench files are map pictures of different sizes that lie in different places. The network needs, for each flood, a few tidy blocks of numbers where position $(i,j)$ is the same patch of ground in every block. This notebook builds those blocks and saves them as \cd{.npy} files (\xref{Section}{py:files}). The model notebook (\xref{Chapter}{ch:nb-model}) only loads them. Nothing is learned here.
+
+It downloads 3,822 of the 14,870 files of \cd{mahajananhad/floodcastbench} (depth, rain, ground height (DEM), land cover and position files) in 9.1 minutes, and saves 5.69 GB. Six \emph{datasets} (one flood at one resolution) come out. The project models use four of them (\xref{Chapter}{ch:data}), the 60 m ones were prepared for the laptop study.
+
+\begin{center}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\hd{Dataset} & \hd{Square} & \hd{Maps} & \hd{Map size (rows $\times$ columns)}\\
+\midrule
+Australia\_30m & 30 m & 481 & 1073 $\times$ 1073\\
+UK\_30m & 30 m & 145 & 170 $\times$ 275\\
+Australia\_60m & 60 m & 481 & 536 $\times$ 536\\
+UK\_60m & 60 m & 145 & 85 $\times$ 137\\
+Pakistan\_480m & 480 m & 673 & 810 $\times$ 441\\
+Mozambique\_480m & 480 m & 289 & 151 $\times$ 138\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Every folder gets the same files. \cd{depth.npy} (float32, metres) and \cd{rain.npy} (float16, mm per hour) are 3-D: (maps, rows, columns), one map per 30 minutes. \cd{terrain.npy} (float32, metres), \cd{land\_cover.npy} (uint8 code) and \cd{permanent\_water.npy} (True/False, river or lake) are 2-D: (rows, columns), because the ground does not change in a flood. \cd{map\_info.json} holds size, position and projection. All arrays have the rows and columns of the depth map, so square $(i,j)$ is the same ground everywhere. Getting this right is the whole job.
+
+\qq{What does this notebook produce?}{For each of six floods, five aligned \cd{.npy} arrays (depth, rain, terrain, land cover, permanent water) on the depth map's grid, plus a \cd{map\_info.json}.}{}
+
+\subsection{Section 0: Setup}
+
+Boilerplate: \cd{!pip install -q rasterio} installs the library that opens \cd{.tif} map files (\xref{Section}{py:colab}), and the imports bring in file tools, \cd{numpy}, \cd{pandas}, \cd{matplotlib}, \cd{uniform\_filter}, the \cd{rasterio} tools \cd{Resampling} (rules for shrinking a map) and \cd{Window} (a rectangle cut from a big map) and the Hugging Face tools. Nothing is printed.
+
+\textbf{Settings} (capital letters mean fixed values, \xref{Section}{py:basics}). \cd{STEP\_SECONDS = 1800} is the 30 minutes between maps. \cd{WET\_DEPTH\_M = 0.01} greys out dry squares in the final figures and \cd{FLOOD\_DEPTH\_M = 0.30} finds the wettest moment. \cd{RAW\_DIR}, \cd{SAVE\_DIR} and \cd{DRIVE\_PREPARED\_DIR} are the raw, saved and Drive folders. The token (the \cd{HF\_TOKEN} secret) is read in a \cd{try} block and not typed into the notebook, so nobody who gets the notebook sees it.
+
+\textbf{The \cd{DATASETS} dictionary} has six entries, each with \cd{region}, \cd{folder}, \cd{resolution\_m}, \cd{scale}, \cd{row\_offset} and \cd{col\_offset}.
+
+\begin{plainbox}
+Rain, ground height and land cover are all drawn on one fine grid of 30 m squares. A depth map is a sheet laid on that grid. \textbf{scale} is the number of 30 m squares along one depth square: 1, 2 or 16 (resolution divided by 30). At scale 16 one depth square covers 256 fine squares. \textbf{row\_offset} and \textbf{col\_offset} are how many 30 m squares down and right the depth map's top-left corner lies from the corner of the 30 m files, always counted in 30 m squares.
+\end{plainbox}
+
+The offsets are 0 and 0 (Australia), 5 and 5 (UK), 42 and 178 (Pakistan) and 150 and 50 (Mozambique). The notebook does not say how they were found, so do not claim an earlier search. They are tested in the alignment check.
+
+\subsection{Section 1: Download only the files we need}
+
+\cd{api.list\_repo\_files(...)} lists all file names without downloading. A loop with four \cd{startswith} tests keeps everything under the Rainfall, DEM, land cover and Georeferenced folders. Depth maps are named by their time in seconds (for example \cd{1800.tif}), and \cd{seconds \% STEP\_SECONDS == 0} keeps only those on a 30-minute mark (the remainder after dividing by 1800 is 0). Output: \cd{Files in the dataset: 14,870}, \cd{Files we need: 3,822}, of which 2,214 are depth maps (481 + 145 + 481 + 145 + 673 + 289) and 1,608 are rain, ground, land cover and position files.
+
+The download cell tries up to 5 times (\cd{range(1, 6)}). \cd{snapshot\_download} with \cd{allow\_patterns=files\_needed} fetches only the needed files, \cd{max\_workers=8} fetches 8 at once, \cd{break} leaves the loop on success and \cd{except} waits 60 seconds and tries again. No failed attempt is printed, so the first try worked. A check then prints \cd{Files missing: 0}.
+
+\subsection{Helper functions}
+
+Nothing is printed. \cd{get\_depth\_files} lists and sorts the depth maps by time with \cd{key=get\_seconds}, because as text \cd{10800.tif} would sort before \cd{1800.tif}. \cd{get\_rain\_files}, \cd{dem\_path} and \cd{land\_cover\_path} list or build paths by region.
+
+\textbf{\cd{read\_on\_depth\_grid}} is the key helper. It reads one 30 m map, only the rectangle under the depth map (\cd{Window} at the offsets, width \cd{columns * scale}, height \cd{rows * scale}), and shrinks it onto the depth grid with \cd{out\_shape=(rows, columns)} and the rule \cd{resampling=method}. It converts to float32 and stops with \cd{ValueError} if a no-data value (below $-10^{30}$) appears, which never happened.
+
+\begin{thinkbox}
+\textbf{Average versus mode.} To turn 16 $\times$ 16 small squares into one big one, \cd{average} adds the 256 numbers and divides by 256. That is right for a quantity (height, rain rate). \cd{mode} takes the most common value, like a vote. That is right for categories, where a mean is meaningless: the mean of Water (1) and Buildings (7) is 4, which is Flooded vegetation. At scale 1 nothing is merged.
+\end{thinkbox}
+
+\qq{Why average for terrain and rain but mode for land cover?}{Height and rain are quantities, so a mean makes sense. Land cover is a category code, so the most common code wins.}{}
+
+\subsection{Section 2: Do the layers cover the depth map?}
+
+For each dataset the loop reads the depth map size from the file header (\cd{source.height}, \cd{source.width}) into \cd{DEPTH\_SHAPES}. The area needed is \cd{row\_offset + rows * scale} by \cd{col\_offset + columns * scale}, for example 5 + 170 = 175 and 5 + 275 = 280 for UK\_30m. For the ground, land cover and first rain file, \cd{fits} is True if the layer is at least that big. A \cd{pandas} table shows 18 rows (6 datasets times 3 layers) and all 18 are True. Australia\_30m fits exactly (1073 by 1073). The \cd{NotGeoreferencedWarning} is harmless, only sizes are used here.
+
+\subsection{Section 3: Save the depth maps}
+
+For each dataset, \cd{np.zeros((len(files), rows, columns), dtype="float32")} makes an empty 3-D block, a loop reads each map with \cd{source.read(1)} into slot \cd{step}, so slot 0 is minute 0 and slot 1 is minute 30. A check warns if the time list differs from 0, 1800, 3600 and so on, and no warning appears. \cd{np.save} writes \cd{depth.npy}. \cd{depth.mean(axis=0)} averages over time and keeps each square's average depth for the alignment check, and \cd{del depth} frees memory. Australia\_30m is 481 $\times$ 1073 $\times$ 1073 numbers at 4 bytes, about 2.2 GB. The six saved sizes match the table above. The counts are flood length in half hours plus one: 10 days (Australia), 3 (UK), 14 (Pakistan) and 6 (Mozambique).
+
+\subsection{Section 4: Alignment check}
+
+\begin{plainbox}
+\textbf{The idea.} The offsets say where each depth map lies on the 30 m grid, but we do not only trust them. We ask the flood itself. Water collects in rivers and valleys, so squares that are deep on average should be where the land cover map shows a river (\textbf{Test 1}) and where the ground map shows a valley (\textbf{Test 2}). We slide the river map and the valley map a little in every direction and measure the match. It should be best at the position we use. Like wiggling tracing paper of a river over a photo of a flood until the lines fit. The two tests use different information, so agreement is unlikely to be chance.
+\end{plainbox}
+
+\cd{read\_full\_map} reads a whole 30 m map and fills no-data squares with the mean so they pull neither way. \cd{rivers\_map} is \cd{land\_cover == 1} as 1.0 and 0.0 (Test 1). \cd{valleys\_map} averages the ground in a block about 10 depth squares wide (\cd{uniform\_filter}) and subtracts each square's own height, so valley floors score high and hilltops low (Test 2).
+
+\textbf{\cd{shift\_scores}.} A border of 3 depth squares is left out so every move stays inside the reference map. The biggest move is \cd{border * scale} 30 m squares (3, 6 or 48) with step \cd{max(1, scale // 4)} (1, 1, 4), giving 7, 13 or 25 moves per direction. Two loops try every (row move, column move) pair. For each, the matching piece of the 30 m map is cut out, shrunk onto the depth grid (\cd{reshape(..., scale, ..., scale).mean(axis=(1, 3))}, which is \cd{Resampling.average} done by hand), and \cd{np.corrcoef} compares it with the average depth map. Correlation is a number from $-1$ to 1 that says whether two maps go up and down together. Results go into a table \cd{scores}, and out-of-range pieces are skipped with \cd{continue}.
+
+For each dataset one figure has two panels, one per test. \cd{np.nanargmax} and \cd{np.unravel\_index} find the best (down, right) move. \cd{imshow} paints the score table (dark purple low, yellow high), with a \textbf{red star} at move (0, 0), the position we use, and a \textbf{black cross} at the best move.
+
+\nbfig{prep_c19_2.jpg}{0.36}{Alignment check for UK\_30m. Axes: move right and move down, in 30 m squares. Colour: correlation, purple low and yellow high. Left: Test 1 (rivers). Right: Test 2 (valleys).}
+
+\textbf{Say this:} in each panel the match is a bright blob centred at or right next to the red star, falling away smoothly, so the assumed offsets are about right. In Test 1 (left) the cross is one square right and one down of the star but the neighbouring cells are almost as bright. In Test 2 (right) star and cross share a cell.
+
+\textbf{Decision rule.} A move below half a depth square makes no real difference. \cd{rivers\_close} and \cd{valleys\_close} are True when the larger of \cd{abs(down)} and \cd{abs(right)} is at most \cd{scale / 2} (0.5, 1, 8). \cd{tests\_agree} is True if the two best moves are within one \cd{shift\_step}. Both close gives ``Keep the position''. Otherwise, if the tests agree, ``Both tests say move it''. Otherwise ``Tests disagree, look closer''. Best moves are (down, right) in 30 m squares.
+
+\begin{center}
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\hd{Dataset} & \hd{Test 1 (rivers)} & \hd{Test 2 (valleys)} & \hd{Decision}\\
+\midrule
+Australia\_30m & (0, 1) & (0, 0) & Both tests say move it\\
+UK\_30m & (1, 1) & (0, 0) & Both tests say move it\\
+Australia\_60m & (1, 1) & (0, 0) & Keep the position\\
+UK\_60m & (1, 1) & (0, 0) & Keep the position\\
+Pakistan\_480m & (0, 0) & (0, 4) & Keep the position\\
+Mozambique\_480m & (0, 8) & (0, 0) & Keep the position\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+At 60 m and 480 m the best moves are at most half a depth square, so they count as close. At 30 m the smallest possible move (30 m) is more than half a square (15 m), so only an exact 0 counts as close.
+
+\begin{carefulbox}
+``Both tests say move it'' sounds stronger than the numbers. In both 30 m rows Test 2 says (0, 0), which means keep. Only Test 1 asks for a move, by one 30 m square, the smallest move that exists. Read it as ``the tests agree within one square, and one prefers a one-square shift''. The report says: ``Two independent checks agreed within about one cell.'' Nothing is moved. Later cells read the offsets from \cd{DATASETS}. We think the authors judged one square small enough to ignore, but the notebook does not say so.
+\end{carefulbox}
+
+\qq{What is the alignment check for?}{It tests that each depth map really sits where we assume on the 30 m grid, by sliding river and valley maps and seeing where they best match the average water depth.}{}
+\qq{Two datasets say ``Both tests say move it''. Did you move them?}{No. The best move is one 30 m square, the smallest possible, and Test 2 puts the best position at exactly zero, so the tests agree within about one cell and we kept the offsets.}{}
+
+\subsection{Section 5: Ground height, land cover and rain}
+
+For each dataset, \cd{read\_on\_depth\_grid} with \cd{average} gives \cd{terrain.npy} of shape (rows, columns). Land cover uses \cd{mode} and \cd{.astype("uint8")} (a whole number from 0 to 255, enough for codes up to 11, 1 byte per square). \cd{permanent\_water = land\_cover == 1} is True for rivers and lakes.
+
+\textbf{Rain timing.} Rain file $j$ is the rain in the 30 minutes after depth map $j$: \cd{rain[0]} lies between depth maps 0 and 1, \cd{rain[1]} between 1 and 2. The text cell says so, and the report (Section 3.2) says it was measured: the files are mm per hour, so half an hour should raise the average depth by 0.5 times the file value, and on the active steps the measured rise was 0.494 to 0.502 times the file value in all four floods. This notebook does not repeat that test, it only stores the maps in this order. The code makes \cd{np.zeros(..., dtype="float16")}, and for each \cd{step} with a rain file (\cd{step < len(rain\_files)}) reads it with \cd{average} into slot \cd{step}. Otherwise the slot stays 0 and \cd{missing\_rain} goes up by one. \textbf{Pakistan\_480m reports 1 missing}, so its last rain map (number 672) is all zeros. We think it has 673 depth maps but 672 rain files, but the notebook does not say so. The other five report 0.
+
+\begin{plainbox}
+\textbf{Why float16.} 2 bytes instead of 4, so every \cd{rain.npy} is exactly half of the \cd{depth.npy} of the same dataset (1107.6 MB against 2215.2 MB for Australia\_30m). The comment says rain stays below about 20 mm per hour, where float16 is accurate to about 0.02 mm per hour.
+\end{plainbox}
+
+\qq{What does \cd{rain[t]} mean?}{It is the rain in mm per hour that falls in the half hour after depth map $t$, between map $t$ and map $t+1$.}{}
+
+\subsection{Section 6: Map details}
+
+A world file (\cd{.tfw}) is a tiny text file with 6 numbers: square width (30), two rotation terms (0), square height (negative, rows go down), and the x and y of the \emph{centre} of the top-left square in the region's projection. The code moves half a square left and up to get the outer corner, then adds \cd{col\_offset} and \cd{row\_offset} squares to get the depth map's corner. This is where the offsets become a real position. \cd{map\_info.json} stores the name, region, size, rows, columns, number of maps, 1800 seconds, the EPSG code (a number naming the projection), a rain note and a six-number \cd{"transform"} that turns row and column into a position on Earth. The check table shows that for all six datasets the world file's square size times the scale equals the expected size (30, 30, 60, 60, 480, 480 m) and \cd{Map rotated?} is False, so the maps are plain north-up grids.
+
+\subsection{Section 7: Final check on the saved data}
+
+\cd{np.load(path, mmap\_mode="r")} opens the big arrays as a read-only window on the disk, so only the maps asked for are read (\cd{depth.npy} of Australia is 2.2 GB). For each flood the code finds the share of squares deeper than 30 cm for every map, takes the biggest (\cd{np.argmax}) as the wettest moment, and draws four panels: depth (squares under 1 cm set to \cd{nan} and drawn grey, colour scale ended at the 98th percentile so the deepest 2 percent do not stretch it, red contour at the permanent water), ground height, land cover and \cd{rain[wettest]}. The wettest moments are Australia\_30m 181 h, UK\_30m 41, Australia\_60m 181, UK\_60m 40, Pakistan\_480m 180 and Mozambique\_480m 108.
+
+\nbfig{prep_c25_7.jpg}{0.34}{Australia\_30m at 181 hours. Top left: depth, light blue shallow to dark blue deep, grey dry, red line permanent water. Top right: ground height. Bottom left: land cover. Bottom right: rain in the next 30 minutes.}
+
+\textbf{Say this:} the deepest water (up to about 2.9 m) lies in the river channels and the red outlines sit on the dark blue channels, so depth, ground and land cover line up. The rain panel is almost white because there is almost no rain at that moment.
+
+The last cell lists all files with \cd{os.listdir} and \cd{os.path.getsize} (36 rows, 6 files in 6 folders) and prints \cd{Total saved: 5.69 GB}. \cd{depth.npy} is the biggest, every \cd{rain.npy} is half of its depth file, and \cd{terrain.npy} is four times \cd{land\_cover.npy} (4 bytes against 1 per square, for example 4.6 MB against 1.2 MB for Australia\_30m). Pakistan\_480m is depth 961.6 MB and rain 480.8 MB.
+
+\qq{What does \cd{mmap\_mode="r"} do?}{It opens a big \cd{.npy} file without loading it all into memory. Only the parts the code asks for are read, and the file is read-only.}{}
+
+\subsection{Section 8: Compare with the copy on Google Drive}
+
+\cd{drive.mount} connects Drive (output \cd{Mounted at /content/drive}). \cd{same\_array} opens both files with \cd{mmap\_mode="r"}, returns \cd{False} if shape or type differ, compares 2-D arrays in one go with \cd{np.array\_equal(..., equal\_nan=True)} and 3-D arrays one map at a time to save memory. Two loops cover 6 datasets times 5 arrays and mark each \cd{identical}, \cd{DIFFERENT} or \cd{not on Drive}. \textbf{All 30 say \cd{identical}.}
+
+\begin{plainbox}
+Each pair has the same shape, type and value in every square of every map. So the data this notebook builds from the raw files is exactly what the model notebook loads from Drive and what the models were trained and tested on, and anyone can rerun this to get the model's input. It does not prove the data are physically right (the alignment check and final pictures are for that), and \cd{map\_info.json} is not compared.
+\end{plainbox}
+
+\qq{Why compare with the Drive copy?}{The model notebook uses the Drive copy, and this shows the raw files produce exactly that copy, so the data behind the results can be recreated.}{Drive is only read.}
+
+\subsection{This notebook in ten lines}
+
+\begin{enumerate}
+\item It installs \cd{rasterio}, imports libraries and writes its settings, including \cd{DATASETS} with scale and offsets.
+\item It lists the 14,870 files and keeps the 3,822 it needs, depth maps only on a 30-minute mark.
+\item It downloads them in 9.1 minutes and finds 0 missing.
+\item It checks that every layer covers the depth map's rectangle: all 18 checks True.
+\item It saves each flood as one block \cd{depth.npy}, for example 481 maps of 1073 by 1073 for Australia at 30 m.
+\item It slides river and valley maps and finds the best match with the average depth. Both tests agree within one cell of the assumed place, and the offsets are kept.
+\item It cuts ground height (average), land cover (mode) and rain (average, float16) down to the depth grid. Rain file $j$ is the rain after depth map $j$.
+\item Pakistan has its last rain map missing, left as zero.
+\item It saves size, projection and position in \cd{map\_info.json}, loads the data back and draws the wettest moment of each flood to see that all layers line up.
+\item It lists 5.69 GB of files and finds all 30 arrays identical to the Drive copy.
+\end{enumerate}
+\endgroup

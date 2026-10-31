@@ -1,0 +1,37 @@
+Australia_30m maps 481 grid 1073 1073 rain files 481
+UK_30m maps 145 grid 170 275 rain files 145
+fitting beta on Australia_30m targets 5 to 335
+  beta = 0.9207
+   Australia_30m last15% step 25 of 73 (3s)
+   Australia_30m last15% step 50 of 73 (6s)
+   UK_30m whole step 25 of 140 (0s)
+   UK_30m whole step 50 of 140 (0s)
+   UK_30m whole step 75 of 140 (0s)
+   UK_30m whole step 100 of 140 (1s)
+   UK_30m whole step 125 of 140 (1s)
+=== done 30m
+Australia_30m {'trend1': 0.994, 'trend_beta': 0.99, 'rain_unif': 0.0, 'trendb_rule': 0.99} copy rmse cm whole/wet 0.112 0.164 wet share 0.465 csi-zero steps 0 of 73
+UK_30m {'trend1': 0.949, 'trend_beta': 0.947, 'rain_unif': 0.053, 'trendb_rule': 0.947} copy rmse cm whole/wet 0.52 0.928 wet share 0.313 csi-zero steps 0 of 140
+Pakistan_480m maps 673 grid 810 441 rain files 672
+Mozambique_480m maps 289 grid 151 138 rain files 289
+fitting beta on Pakistan_480m targets 5 to 470
+  beta = 0.9485
+   Pakistan_480m last15% step 25 of 101 (31s)
+   Pakistan_480m last15% step 50 of 101 (69s)
+   Pakistan_480m last15% step 75 of 101 (108s)
+   Pakistan_480m last15% step 100 of 101 (149s)
+   Mozambique_480m whole step 25 of 284 (3s)
+   Mozambique_480m whole step 50 of 284 (6s)
+   Mozambique_480m whole step 75 of 284 (8s)
+   Mozambique_480m whole step 100 of 284 (10s)
+   Mozambique_480m whole step 125 of 284 (13s)
+   Mozambique_480m whole step 150 of 284 (16s)
+   Mozambique_480m whole step 175 of 284 (18s)
+   Mozambique_480m whole step 200 of 284 (20s)
+   Mozambique_480m whole step 225 of 284 (22s)
+   Mozambique_480m whole step 250 of 284 (25s)
+   Mozambique_480m whole step 275 of 284 (27s)
+=== done 480m
+Pakistan_480m {'trend1': 0.906, 'trend_beta': 0.908, 'rain_unif': 0.142, 'trendb_rule': 0.905} copy rmse cm whole/wet 0.103 0.128 wet share 0.644 csi-zero steps 0 of 101
+Mozambique_480m {'trend1': 0.942, 'trend_beta': 0.942, 'rain_unif': 0.051, 'trendb_rule': 0.942} copy rmse cm whole/wet 0.548 0.773 wet share 0.501 csi-zero steps 18 of 284
+ALL DONE

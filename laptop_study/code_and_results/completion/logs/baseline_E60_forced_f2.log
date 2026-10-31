@@ -1,0 +1,4 @@
+Australia: 16 valid tiles -> fold 2/3: 11 train tiles, 5 held-out tiles; wet windows: train pool 880, held-out pool 391; using 400 train / 300 held-out / 120 UK windows
+E60 forced fold 2: S1 heldout +0.2715  test +0.3135
+E60 forced fold 2: S2 heldout +0.2577  test +0.2315
+E60 forced fold 2: S3 heldout +0.3744  test +0.3557

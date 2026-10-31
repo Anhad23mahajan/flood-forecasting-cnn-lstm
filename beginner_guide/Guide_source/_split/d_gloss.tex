@@ -1,0 +1,84 @@
+\section{A to Z of new words}\label{ch:gloss}
+\begin{multicols}{3}
+\scriptsize
+\setlength{\parskip}{0.05em}
+\raggedright
+\textbf{Ablation.} Removing one input or part to see how much the score falls.\par
+\textbf{Adam.} A method that adjusts the learning step during training.\par
+\textbf{Array.} A grid of numbers in numpy, with a shape.\par
+\textbf{Augmentation.} Extra training examples made by rotating and flipping.\par
+\textbf{Baseline.} A simple forecast a model must beat.\par
+\textbf{Batch.} Examples looked at before each weight nudge.\par
+\textbf{Capsule.} A unit giving a short list of numbers, whose length says how sure it is.\par
+\textbf{Capsule network.} Capsules that vote for each other (routing by agreement).\par
+\textbf{Causal rain.} Only rain that has already fallen.\par
+\textbf{Cell.} One box of a Colab notebook, code or writing.\par
+\textbf{Channel.} One layer of a map (depth, rain, height).\par
+\textbf{CNN.} Convolutional network, slides small filters over a map.\par
+\textbf{Colab.} Free online notebook that lends a GPU.\par
+\textbf{Confusion matrix.} Table of right and wrong answers of a classifier.\par
+\textbf{ConvLSTM.} An LSTM whose memory is a map and whose gates use filters.\par
+\textbf{Copy forecast.} Next map equals last map (persistence).\par
+\textbf{CPU and GPU.} Normal processor and graphics chip, the GPU is much faster for networks.\par
+\textbf{DataFrame.} A pandas table with named columns.\par
+\textbf{Deletion test.} Removing the hottest heat-map cells to see if the forecast changes more than for random cells.\par
+\textbf{Dense layer.} Every neuron sees every number of the layer before.\par
+\textbf{E60, E30, E480.} Part 2 experiments: Australia to UK at 60 m and 30 m, Pakistan to Mozambique at 480 m.\par
+\textbf{Early stopping.} Stop when the mock-test score stops improving.\par
+\textbf{Epoch.} One pass through all training examples.\par
+\textbf{Explainable AI.} Tools that show what a model is doing.\par
+\textbf{FABDEM.} Ground height map used by the simulator.\par
+\textbf{Filter.} Small window of weights sliding over a map.\par
+\textbf{FloodCastBench.} Public dataset of four simulated floods.\par
+\textbf{Fold.} One of three rounds with a different third of tiles held out.\par
+\textbf{Forced rain.} The next five rain maps are given too.\par
+\textbf{Frozen.} Weights not changed in training.\par
+\textbf{GPM-IMERG.} Satellite rain data used by the simulator.\par
+\textbf{Grad-CAM.} Heat map of which places mattered for an answer.\par
+\textbf{Gradient.} Slope telling which way to change a weight to lower the loss.\par
+\textbf{Grid.} A map made of squares holding numbers.\par
+\textbf{Hugging Face.} Website that stores datasets and models.\par
+\textbf{Hybrid rain.} The original input, with up to 30 minutes of rain not yet fallen.\par
+\textbf{Hypothesis.} A guess we test, written down before the final runs.\par
+\textbf{Keras, TensorFlow.} Free libraries for building networks.\par
+\textbf{Kernel.} Another word for filter.\par
+\textbf{Label.} The right answer used to train a classifier.\par
+\textbf{Learning rate.} Size of each weight step.\par
+\textbf{Linear model.} A weighted sum of inputs.\par
+\textbf{Lookup table.} Average answer looked up for each pair of values.\par
+\textbf{Loss.} How wrong the network is, learning makes it small.\par
+\textbf{LSTM.} Long short-term memory, with forget, write and read gates.\par
+\textbf{Margin loss.} Capsule loss: correct capsule above 0.9, others below 0.1.\par
+\textbf{Mean squared error.} Average of squared mistakes.\par
+\textbf{MLP.} Multilayer perceptron, small network of dense layers.\par
+\textbf{Model A, Model B.} Part 1 forecasters, A starts from the last map, B from the trend.\par
+\textbf{Neural network.} Many simple neurons with learned weights.\par
+\textbf{NeuroSymbolic AI.} A network checked by written rules.\par
+\textbf{Never-seen flood.} Flood hidden during training (UK, Mozambique).\par
+\textbf{Notebook.} Colab file of cells, outputs stay saved.\par
+\textbf{NPY file.} One saved numpy array.\par
+\textbf{Overfitting.} Memorising practice examples and failing on new ones.\par
+\textbf{Parameter.} A number the network learns, such as a weight.\par
+\textbf{Pass.} One run through all training examples.\par
+\textbf{Pixel.} One square of a picture or map.\par
+\textbf{Rank correlation.} How alike two maps order places, 1 same, near 0 none.\par
+\textbf{Rasterio.} Library that reads map files (tif) into arrays.\par
+\textbf{ReLU.} Turns negative numbers into zero.\par
+\textbf{Ridge regression.} Linear fit with a penalty keeping weights small.\par
+\textbf{RMSE.} Root mean square error, typical mistake in the original unit.\par
+\textbf{Routing by agreement.} Capsules whose votes agree get more weight.\par
+\textbf{Seed.} Number that fixes the random start so a run repeats.\par
+\textbf{Shape.} Size of an array in each direction, e.g. 4, 64, 64, 3.\par
+\textbf{Skill.} 1 minus forecast error divided by copy error.\par
+\textbf{Spatiotemporal.} In both space and time.\par
+\textbf{Squash.} Shrinks a vector to length 0 to 1, keeping its direction.\par
+\textbf{Strict split.} Test where a block of time is also hidden from training.\par
+\textbf{Tile or patch.} Small square cut from a big map.\par
+\textbf{Token.} Secret key (Hugging Face) kept in Colab secrets.\par
+\textbf{Training, validation, test.} Practice questions, mock test, final exam.\par
+\textbf{TRAIN\_NEW.} Model notebook switch: False loads saved models, True trains again.\par
+\textbf{Trend forecast.} Last map plus a fraction of the last 30-minute change.\par
+\textbf{Water-balance rule.} Shifts a forecast so its total rise matches the rain.\par
+\textbf{Weight.} Number a neuron multiplies an input by.\par
+\textbf{Window.} Part 2 example: a 128 by 128 patch with its maps in time.\par
+\end{multicols}

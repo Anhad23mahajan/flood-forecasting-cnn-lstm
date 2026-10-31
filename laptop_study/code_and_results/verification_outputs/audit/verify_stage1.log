@@ -1,0 +1,8 @@
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+label        row   col   hist_depth_max  future_depth_max          DEM_range     rainfall_range  severity
+dry          600  1000            0.268             0.270  [  0.00,  0.00]     [ 6.470, 6.470]      none
+moderate     600     0            4.068             4.138  [  1.00, 41.79]     [ 5.870, 5.870]      severe
+wet            0   600           10.917            10.964  [ 25.81,182.56]     [ 5.560, 5.560]      severe
+
+Shape checks passed: input_sequence (t_in, 64, 64, 3), depth_targets (horizon, 64, 64)

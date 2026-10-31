@@ -1,0 +1,25 @@
+{
+ "region": "Australia",
+ "res": 30,
+ "frame": 2215,
+ "wet_fraction": 0.3900596614868556,
+ "adopted": [
+  0,
+  0
+ ],
+ "argmin": [
+  0,
+  0
+ ],
+ "E_min": 1.6835514307022095,
+ "E_adopted": 1.6835514307022095,
+ "E_median": 1.6835514307022095,
+ "robust_sd": 0.0,
+ "z_below_median": 0.0,
+ "n_candidates": 1,
+ "n_near_min": 1,
+ "offset_of_argmin_from_adopted": [
+  0,
+  0
+ ]
+}

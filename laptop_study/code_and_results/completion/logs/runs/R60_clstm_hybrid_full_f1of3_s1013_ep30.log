@@ -1,0 +1,47 @@
+=== R60_clstm_hybrid_full_f1of3_s1013_ep30: UK 60 m -> Australia 60 m
+UK 60 m (time-block folds, no tile folds): fold 1/3: wet windows train pool 68, held-out time-block pool 40; using 68 train / 40 time-held-out / 953 Australia windows
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789942464.562798    5140 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789942469.378081    5140 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789942475.110765    5140 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+arch clstm, regime hybrid, variant full, T=5, 4,741 trainable params; persistence MSE on training windows 1.592e-04 m^2 (RMSE 12.6 mm); epoch 0 val skill +0.0000 (must be 0)
+epoch  1/30  train/persist 0.4365  val skill +0.0401  (12.6s)
+epoch  2/30  train/persist 0.3303  val skill +0.4034  (10.1s)
+epoch  3/30  train/persist 0.1980  val skill +0.5674  (10.2s)
+epoch  4/30  train/persist 0.1303  val skill +0.6488  (10.1s)
+epoch  5/30  train/persist 0.0946  val skill +0.7022  (10.0s)
+epoch  6/30  train/persist 0.0781  val skill +0.7424  (10.2s)
+epoch  7/30  train/persist 0.0660  val skill +0.7522  (10.0s)
+epoch  8/30  train/persist 0.0695  val skill +0.7678  (10.1s)
+epoch  9/30  train/persist 0.0560  val skill +0.7546  (10.1s)
+epoch 10/30  train/persist 0.0491  val skill +0.7803  (10.4s)
+epoch 11/30  train/persist 0.0471  val skill +0.7827  (10.1s)
+epoch 12/30  train/persist 0.0439  val skill +0.7591  (9.9s)
+epoch 13/30  train/persist 0.0430  val skill +0.7796  (10.2s)
+epoch 14/30  train/persist 0.0432  val skill +0.8032  (10.3s)
+epoch 15/30  train/persist 0.0400  val skill +0.7967  (10.1s)
+epoch 16/30  train/persist 0.0378  val skill +0.8067  (10.2s)
+epoch 17/30  train/persist 0.0373  val skill +0.8052  (10.1s)
+epoch 18/30  train/persist 0.0363  val skill +0.8049  (10.3s)
+epoch 19/30  train/persist 0.0353  val skill +0.7996  (10.7s)
+epoch 20/30  train/persist 0.0348  val skill +0.8122  (10.8s)
+epoch 21/30  train/persist 0.0336  val skill +0.8072  (10.2s)
+epoch 22/30  train/persist 0.0338  val skill +0.8067  (10.3s)
+epoch 23/30  train/persist 0.0332  val skill +0.8085  (10.1s)
+epoch 24/30  train/persist 0.0327  val skill +0.8068  (10.1s)
+epoch 25/30  train/persist 0.0325  val skill +0.8051  (10.3s)
+epoch 26/30  train/persist 0.0323  val skill +0.8078  (10.0s)
+epoch 27/30  train/persist 0.0321  val skill +0.8082  (10.0s)
+epoch 28/30  train/persist 0.0320  val skill +0.8088  (10.6s)
+epoch 29/30  train/persist 0.0319  val skill +0.8086  (10.1s)
+epoch 30/30  train/persist 0.0319  val skill +0.8092  (10.0s)
+train_subset: skill +0.9286  rmse model 3.37 mm / persistence 12.62 mm; CSI(1 mm) 0.927/0.960; lead skill +0.962 +0.954 +0.943 +0.931 +0.917
+heldout: skill +0.8092  rmse model 7.84 mm / persistence 17.96 mm; CSI(1 mm) 0.918/0.961; lead skill +0.858 +0.845 +0.829 +0.810 +0.792
+test: skill +0.7021  rmse model 6.85 mm / persistence 12.55 mm; CSI(1 mm) 0.875/0.941; lead skill +0.788 +0.747 +0.719 +0.700 +0.687
+ablation_heldout: none +0.809  rain_removed +0.786  terrain_removed +0.809  depth_hist_scrambled -1.206  depth_hist_frozen -0.015  rain_hist_frozen +0.792  rain_shifted_cells +0.809  rain_shifted_earlier +0.799
+ablation_test: none +0.709  rain_removed +0.675  terrain_removed +0.714  depth_hist_scrambled -2.701  depth_hist_frozen -0.056  rain_hist_frozen +0.633  rain_shifted_cells +0.709  rain_shifted_earlier +0.663
+saved completion\results\runs\R60_clstm_hybrid_full_f1of3_s1013_ep30.json

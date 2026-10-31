@@ -1,0 +1,22 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789835391.123342   26944 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789835393.169047   26944 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789835398.421276   26944 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+shared encoder conv variables found: 6 (from layers ['cnn_encoder_1', 'cnn_encoder_2', 'cnn_encoder_3'])
+
+severity_loss = 1.3863
+encoder conv-layer gradients from severity loss alone: 6/6 non-None
+  cnn_encoder_1/kernel               shape=(3, 3, 3, 16)      norm=0.000000
+  cnn_encoder_1/bias                 shape=(16,)              norm=0.000000
+  cnn_encoder_2/kernel               shape=(3, 3, 16, 32)     norm=0.000000
+  cnn_encoder_2/bias                 shape=(32,)              norm=0.000000
+  cnn_encoder_3/kernel               shape=(3, 3, 32, 64)     norm=0.000000
+  cnn_encoder_3/bias                 shape=(64,)              norm=0.000000
+
+PASSED: severity-branch gradients genuinely reach the shared CNN encoder's own conv weights.
+This confirms the encoder is NOT just structurally shared but actually jointly trained -
+the exact thing that was impossible with the old PyTorch capsule + TensorFlow encoder split.

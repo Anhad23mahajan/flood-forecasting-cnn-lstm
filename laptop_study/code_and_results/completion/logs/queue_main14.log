@@ -1,0 +1,41 @@
+228 jobs in batches ['C', 'CG', 'FXG', 'OPT', 'S2', 'F', 'BX', 'LC', 'LCB', 'EP', 'EXS', 'EPC', 'RN', 'SX', 'D', 'OPTX']: 191 already done, 6 previously aborted by the dead-network guard (recorded, not re-run), 31 to run
+[start] E480_local_hybrid_blk_seed11_f0  (30 queued)
+[start] E480_local_hybrid_blk_seed12_f0  (29 queued)
+[start] E480_local_hybrid_blk_seed13_f0  (28 queued)
+[start] E480_local_hybrid_blk_seed14_f0  (27 queued)
+[done] E480_local_hybrid_blk_seed11_f0  rc=0  3.2 min
+[start] E480_local_hybrid_full_blk_b8_lr0.003_f0of3_s1003_ep30  (26 queued)
+[done] E480_local_hybrid_blk_seed12_f0  rc=0  3.1 min
+[start] E480_clstm_hybrid_ep90_f1  (21 queued)
+[done] E480_local_hybrid_blk_seed13_f0  rc=0  3.1 min
+[start] E480_clstm_hybrid_ep90_f2  (20 queued)
+[done] E480_local_hybrid_blk_seed14_f0  rc=0  3.1 min
+[start] R60_clstm_hybrid_full_f1of3_s1013_ep30  (19 queued)
+[done] E480_local_hybrid_full_blk_b8_lr0.003_f0of3_s1003_ep30  rc=0  2.0 min
+[start] R60_clstm_hybrid_full_f2of3_s1023_ep30  (18 queued)
+[done] R60_clstm_hybrid_full_f1of3_s1013_ep30  rc=0  9.6 min
+[start] R30_clstm_hybrid_full_f0of3_s1003_ep30  (17 queued)
+[done] R60_clstm_hybrid_full_f2of3_s1023_ep30  rc=0  9.9 min
+[start] R30_clstm_hybrid_full_f1of3_s1013_ep30  (16 queued)
+[done] R30_clstm_hybrid_full_f1of3_s1013_ep30  rc=0  16.6 min
+[start] R30_clstm_hybrid_full_f2of3_s1023_ep30  (15 queued)
+[start] SEV_causal_capsule_f0of3_s2003_ep30  (14 queued)
+[done] R30_clstm_hybrid_full_f0of3_s1003_ep30  rc=0  17.2 min
+[start] SEV_causal_capsule_f1of3_s2013_ep30  (13 queued)
+[done] R30_clstm_hybrid_full_f2of3_s1023_ep30  rc=0  16.9 min
+[done] E480_clstm_hybrid_ep90_f1  rc=0  56.0 min
+[start] SEV_causal_capsule_f2of3_s2023_ep30  (12 queued)
+[done] SEV_causal_capsule_f0of3_s2003_ep30  rc=0  29.6 min
+[start] SEV_causal_dense_f0of3_s2003_ep30  (11 queued)
+[start] SEV_causal_dense_f1of3_s2013_ep30  (10 queued)
+[done] E480_clstm_hybrid_ep90_f2  rc=0  56.6 min
+[done] SEV_causal_capsule_f1of3_s2013_ep30  rc=0  30.6 min
+[start] SEV_causal_dense_f2of3_s2023_ep30  (9 queued)
+[done] SEV_causal_capsule_f2of3_s2023_ep30  rc=0  33.1 min
+[start] E60_v2lin_hybrid_full_f0of3_s1003_ep30  (8 queued)
+[done] SEV_causal_dense_f0of3_s2003_ep30  rc=0  32.3 min
+[done] SEV_causal_dense_f1of3_s2013_ep30  rc=0  32.3 min
+[start] E60_v2lin_hybrid_full_f1of3_s1013_ep30  (7 queued)
+[start] E60_v2lin_hybrid_full_f2of3_s1023_ep30  (6 queued)
+[done] SEV_causal_dense_f2of3_s2023_ep30  rc=0  38.2 min
+[start] E480_v2lin_hybrid_full_f0of3_s1003_ep30  (5 queued)

@@ -1,0 +1,8 @@
+UK 30 depth frames 865 rain files 145 first rain 2015-12-04 12:00:00
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+rain mean per file: max 8.308 mm, total 217.4 mm
+mass balance k=0: depth gain (mm) = 0.502 * rain (mm) + -0.044 ; total gain 102.8 mm vs total rain 217.4 mm
+lag k : -6 -5 -4 -3 -2 -1 +0 +1 +2 +3 +4 +5 +6
+corr dV  : +0.66 +0.71 +0.78 +0.83 +0.88 +0.94 +1.00 +0.95 +0.89 +0.84 +0.78 +0.72 +0.67   best k = 0
+corr dWet: +0.28 +0.37 +0.46 +0.54 +0.64 +0.76 +0.85 +0.81 +0.78 +0.75 +0.70 +0.63 +0.58   best k = 0

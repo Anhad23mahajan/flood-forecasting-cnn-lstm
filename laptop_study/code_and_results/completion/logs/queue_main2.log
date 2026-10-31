@@ -1,0 +1,8 @@
+221 jobs in batches ['A', 'BL', 'K', 'S', 'E', 'B', 'FX', 'C', 'OPT', 'S2', 'F']: 111 already done, 110 to run
+[start] E60_local_hybrid_full_blk_f1of3_s1013_ep30  (105 queued)
+[start] E60_clstm_hybrid_full_blk_f1of3_s1013_ep30  (104 queued)
+[start] E60_local_hybrid_full_blk_f2of3_s1023_ep30  (103 queued)
+[done] E60_local_hybrid_full_blk_f1of3_s1013_ep30  rc=0  6.7 min
+[start] E60_clstm_hybrid_full_blk_f2of3_s1023_ep30  (102 queued)
+[done] E60_local_hybrid_full_blk_f2of3_s1023_ep30  rc=0  6.7 min
+[start] E30_local_hybrid_full_blk_f0of3_s1003_ep30  (101 queued)

@@ -1,0 +1,4 @@
+217 jobs in batches ['FXR2', 'C', 'OPT', 'SX', 'BX', 'FXX', 'EX', 'AX', 'OPTX', 'B2', 'S2', 'F', 'LC', 'LCB', 'EP', 'D', 'SXF']: 1 already done, 216 to run
+[start] E60_clstm_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  (199 queued)
+[start] E60_local_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  (198 queued)
+[start] E60_clstm_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  (197 queued)

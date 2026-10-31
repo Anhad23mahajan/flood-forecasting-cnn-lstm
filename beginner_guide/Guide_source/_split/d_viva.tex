@@ -1,0 +1,73 @@
+% =========================================================== ONE-LINE ANSWERS (last chapter)
+\section{One-line answers to the questions mam may ask}\label{ch:viva}\label{ch:oneliners}
+
+Say the bold line. The small print is only for when she asks for more. Questions about each layer and number of the model (why 16 filters, why a second convolution) are in \xref{Chapter}{ch:design}.
+
+\subsection{The project and the data}
+\qq{What is your project about?}{We forecast flood depth maps 30 minutes ahead with a CNN-LSTM and test whether it beats very simple forecasts like copying the last map.}{Input: the last four maps plus rain that has already fallen plus ground height. Tested on floods the model never saw.}
+\qq{Why this dataset?}{FloodCastBench gives the water depth every 5 minutes for four floods in four countries at several map sizes, with rain and ground height, so we always know the right answer.}{Its own benchmark has U-Net and FNO but no recurrent model and no simple-forecast comparison.}
+\qq{Is the data real?}{It is simulated from real terrain, land cover and satellite rain, so our models learn to imitate the simulator.}{We say this on the limits slide.}
+\qq{What is the novelty?}{A careful test of a convolutional-recurrent model on FloodCastBench against simple forecasts on never-seen floods, plus one pipeline with written rules and heat maps.}{We did not invent a new architecture.}
+\qq{What is your result in one line?}{A trend forecast with one fitted number scores 0.91 to 0.99 at 30 minutes, matching our network, so always compare a model with simple forecasts.}{Model A scored 0.15 to 0.35 and $-1.449$ in late Australia. Model B matches the trend.}
+\qq{Is it useful in real life?}{Not yet as a warning system, but it is a fair test of whether such a network is worth using, and it answers in seconds while the simulator takes days.}{}
+\qq{Why CNN-LSTM?}{The CNN sees neighbouring squares and the LSTM remembers how the water has been moving, and it was the model in our project title.}{}
+\qq{Why only 30 minutes ahead?}{Rain maps come every 30 minutes, so it is the natural step and the simplest fair test, and longer forecasts are our next step.}{The laptop study went up to 2.5 hours.}
+\qq{Why train on Australia and Pakistan, test on UK and Mozambique?}{The test is a flood in another country that the model never saw, and the 30 m and 480 m maps need separate models.}{}
+\qq{Why a 70, 15, 15 split?}{The first 70\% of a flood trains, the next 15\% decides when to stop, the last 15\% tests, and splitting in time makes the test part truly later.}{}
+\qq{Is there data leakage?}{No, beta is fitted only on the training part, early stopping uses only the checking part, and the tests use unseen time and unseen floods.}{In the notebook we did not choose a setting by looking at test scores.}
+
+\subsection{Score, trend forecast and models}
+\qq{What is skill?}{One minus the error of the forecast divided by the error of copying the last map, so 0 is the same as copying, 1 is perfect, below 0 is worse.}{Accuracy does not suit depth maps, which hold a number in every square.}
+\qq{What is CSI?}{Of the squares flooded (above 30 cm) in the forecast or in reality, the share where both agree.}{}
+\qq{What is the trend forecast?}{The last map plus beta times the last change, never below zero, with no network, and beta is 0.921 for 30 m and 0.948 for 480 m.}{}
+\qq{Model A against Model B?}{Same layers, 62,833 parameters, but A starts from the last map and B starts from the trend and learns only a small correction.}{}
+\qq{Why did you build Model B?}{The trend forecast beat Model A by a lot, so we asked whether a network that starts from the trend could improve on it.}{}
+\qq{Why does Model B only match the trend?}{At 30 minutes only 1, 5, 9 and 6\% of copying's error is left after the trend, so there is almost nothing to add.}{A fair test of the memory needs 6 to 24 hours.}
+\qq{Why is Model A negative in Australia?}{In the last part of that flood the water hardly moves and copying is off by about a millimetre, while Model A adds a little water almost everywhere.}{We first thought it never saw draining water, but 73 of 331 training steps had falling water.}
+\qq{Skill numbers?}{Trend 0.990, 0.947, 0.908, 0.942, Model A $-1.449$, 0.305, 0.345, 0.150, Model B 0.989, 0.948, 0.908, 0.943.}{Order: Australia last 15\%, UK, Pakistan last 15\%, Mozambique.}
+\qq{What did the 310-run laptop study show?}{Up to 2.5 hours the depth history carries almost all the skill: lookup table 0.74 to 0.79, best networks 0.81 to 0.87.}{}
+\qq{Does the LSTM memory help?}{Not at equal training length: the difference is $+0.004$ on the UK and $-0.014$ on Mozambique, inside our $\pm0.03$ band.}{With the 30-pass training it lost less skill at longer lead times and stayed stable when the flood start was hidden. We did not test why.}
+\qq{What did the ridge mistake do?}{It made the linear baseline score 0.15 to 0.36 instead of 0.79 to 0.82, and Aman found and fixed it.}{Slide 10 shows the corrected numbers.}
+
+\subsection{NeuroSymbolic AI, capsule network, Grad-CAM}
+\qq{What is NeuroSymbolic AI and what did you do?}{A neural network checked by written rules people can read: the water-balance rule plus three severity rules, each with a written reason.}{Rule 1: under 1\% flooded now and forecast means None. Rule 2: the class cannot fall below the current one if the forecast is not less flooded and over 1 mm per hour of rain fell in the last hour. Rule 3: if network and forecast map differ by more than one class, the forecast map wins.}
+\qq{What is the water-balance rule?}{It shifts the forecast so the total rise of the water matches the rain of the last 30 minutes times 0.5 hours.}{It halved the Australian failure ($-1.449$ to $-0.710$) but adds nothing to Model B. The law holds closely, ratios 0.999, 0.946, 1.028, 1.045.}
+\qq{Where is Grad-CAM?}{In the flood model notebook, Section 6, the function \cd{grad\_cam}, shown for the forecaster and for the capsule network.}{}
+\qq{What is Grad-CAM?}{A heat map of which places mattered most for an answer, from the gradient of one number with respect to the ConvLSTM memory maps.}{Bright follows rivers and flood edges. The capsule heat maps were weak, so they are pictures, not proof.}
+\qq{What is a capsule network?}{A network whose units give a short vector whose length tells how sure it is, with votes combined by routing by agreement.}{}
+\qq{Did the capsule network work?}{Partly: 60.9, 50.0, 87.4, 63.5\% and with the rules 67.9, 56.1, 89.1, 70.7\%, but the forecast map's own class is right about 99\%.}{It did not beat a plain layer once we used augmentation.}
+\qq{Is Pakistan's 87.4\% great?}{No, 698 of the 1,000 test tiles are severe, so always answering severe is right 69.8\% of the time.}{}
+
+\subsection{Why not, and what next}
+\qq{Why not real flood data?}{Real depth maps every few minutes over a region do not exist, since satellites pass every few days, so a simulator gives the complete maps.}{}
+\qq{Why not 6 to 24 hours?}{It needs forecasts fed back as input and an assumption about future rain, so it is our main next step.}{}
+\qq{Why not more floods or seeds?}{FloodCastBench has only four floods, so only two independent train and test pairs, and the Colab results are single runs.}{}
+\qq{Why not tune more?}{Differences below about 0.02 were inside seed noise in the laptop study, so tuning could not change the conclusion.}{}
+\qq{Next steps?}{Forecast 6 to 24 hours ahead, rebuild the capsule network and Grad-CAM on Model B, and repeat with several seeds.}{}
+
+\subsection{The work and the notebooks}
+\qq{What problems did you face?}{A one-hour 27 GB download with rate limits, aligning the layers, our first model failing against the trend, big maps in Grad-CAM, a bad severity label and the ridge mistake.}{}
+\qq{Why three notebooks?}{Downloading and exploring, preparing, and modelling are three big slow jobs, and the prepared data is saved so each can start from files.}{}
+\qq{Did the notebook train the models?}{No, it loads the saved models from Drive, and setting \cd{TRAIN\_NEW} to True trains them again with the \cd{fit} cell.}{The notebook does not show the training time. Training stops early, after at most 20 epochs.}
+\qq{Who did what?}{Aman built and ran the Colab notebooks, Anhad ran the laptop study, both wrote the report, and Aman found the ridge mistake.}{}
+\qq{How do you know the data preparation is right?}{Every file arrived, every layer covers the depth map, two independent alignment tests agree, and all 30 saved files are identical to the copy on Drive.}{}
+\qq{Why is your model worse than a trivial baseline, and why present it?}{That is the finding: beating copying looked like success until we compared with the trend, and showing it is more useful than hiding it.}{}
+\qq{Where is the code for the 310 runs?}{It was a separate 20-hour run on a laptop, its results are on slides 10 and 11, and the code we show you is in the three Colab notebooks.}{}
+\qq{Why trust a simulator?}{We do not take it as truth, it follows basic water-flow rules with real ground and rain and is published, and our models only imitate it.}{}
+
+\subsection{Reading the code}
+\qq{What does None mean in (None, 4, 64, 64, 3)?}{It is the batch size, which can be any number, and the rest is one example: 4 maps of 64 by 64 with 3 layers.}{}
+\qq{What does inputs[:, -1, :, :, 0:1] select?}{The depth layer of the newest map for every example, keeping the layer axis.}{All batch items, last map in time, all rows and columns, first layer only.}
+\qq{What does [None] do?}{It adds a batch axis of length 1, so one map (4, H, W, 3) becomes (1, 4, H, W, 3).}{}
+\qq{What does model(x, training=False).numpy()[0, :, :, 0] do?}{It runs the model in prediction mode and takes the one example and its one layer, leaving a 2D depth map.}{}
+\qq{What does set\_random\_seed(42) do?}{It fixes the random numbers so a rerun gives the same result.}{}
+\qq{What do np.load and np.save do?}{They read an array from a file and save one to a file, and \cd{mmap\_mode="r"} reads a big file piece by piece.}{}
+\qq{What do glob.glob and [::6] do?}{\cd{glob.glob} lists files matching a pattern, and \cd{[::6]} keeps every sixth item, one map every 30 minutes from every 5.}{}
+\qq{What does uniform\_filter(size=15) do?}{It replaces each square by the average of the 15 by 15 squares around it, used to get the local ground height.}{}
+\qq{What does np.stack do?}{It puts arrays on top of each other along a new axis, here depth, rain and height as 3 layers.}{}
+\qq{What do compile, fit and predict do?}{Compile chooses optimiser and loss, fit trains on the training tiles, predict runs the trained network on new inputs.}{}
+\qq{What does set\_weights(get\_weights()) do?}{It copies the learned numbers into a model with the same layers, for example one the size of a whole map.}{}
+\qq{What does tf.GradientTape do?}{It records the calculation so we can find gradients, which Grad-CAM needs.}{}
+\qq{What does np.digitize do?}{It turns a flooded share into a severity class from 0 to 3 using the limits 5, 15, 30\%.}{}
+\qq{What does confusion\_matrix do?}{It counts how many tiles of each true class got each answer, and the diagonal is correct.}{}
+\qq{What are the harmless warnings?}{\cd{NotGeoreferencedWarning} means the map file has no position inside it, the HTTP 429 lines mean the server asked us to slow down, and the Adam warning means the saved optimiser memory is skipped.}{}

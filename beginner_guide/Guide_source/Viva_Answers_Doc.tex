@@ -1,0 +1,110 @@
+\documentclass[9pt,a4paper]{extarticle}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage{courier}
+\usepackage[margin=1.4cm,top=1.35cm,bottom=1.3cm,headsep=0.4cm,headheight=11pt]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{graphicx,float,booktabs,array,tabularx,enumitem,amsmath,microtype}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,fit,backgrounds}
+\usepackage{titlesec}
+\usepackage{multicol}
+\usepackage{needspace}
+\usepackage{listings}
+\usepackage{longtable}
+\usepackage[font=small,labelfont=bf,labelsep=period,justification=raggedright,singlelinecheck=false,skip=4pt]{caption}
+\usepackage{fancyhdr}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=black,citecolor=black,pdftitle={Flood Forecasting Project: the complete viva guide},pdfauthor={Anhad Mahajan and Aman Sumeet Saxena}]{hyperref}
+
+\definecolor{maroon}{HTML}{7A1F2B}
+\definecolor{teal}{HTML}{0E6670}
+\definecolor{amber}{HTML}{B9770E}
+\definecolor{brick}{HTML}{A8322D}
+\definecolor{leaf}{HTML}{2E7D4F}
+\definecolor{ink}{HTML}{1B2A38}
+\definecolor{mist}{HTML}{EAF0F3}
+
+% ---------------------------------------------------------------- page, text, floats
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.35em}
+\linespread{1.0}
+\setlist{nosep,leftmargin=1.6em,itemsep=1pt,topsep=2pt}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.75}
+\setlength{\textfloatsep}{9pt plus 2pt minus 3pt}
+\setlength{\floatsep}{9pt plus 2pt minus 3pt}
+\setlength{\intextsep}{9pt plus 2pt minus 3pt}
+\raggedbottom
+\emergencystretch=5em
+\tolerance=1800
+\let\origsection\section
+\renewcommand{\section}{\Needspace{6\baselineskip}\origsection}
+\let\origsubsection\subsection
+\renewcommand{\subsection}{\Needspace{3\baselineskip}\origsubsection}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{maroon}How a Computer Learns to Forecast a Flood}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\section}{\large\bfseries\color{maroon}}{\thesection}{0.7em}{}[{\color{maroon}\titlerule[0.8pt]}]
+\titlespacing*{\section}{0pt}{9pt}{4pt}
+\titleformat{\subsection}{\normalsize\bfseries\color{teal}}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
+\titleformat{\paragraph}[runin]{\bfseries\color{ink}}{}{0pt}{}[\ ]
+\titlespacing*{\paragraph}{0pt}{4pt}{0.4em}
+
+% ---------------------------------------------------------------- coloured boxes
+\newtcolorbox{plainbox}{enhanced,colback=teal!5,colframe=teal,boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,
+  title={In plain words},fonttitle=\bfseries\small,coltitle=white,colbacktitle=teal,toptitle=1pt,bottomtitle=1pt}
+\newtcolorbox{thinkbox}{enhanced,colback=amber!7,colframe=amber,boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,
+  title={Think of it like this},fonttitle=\bfseries\small,coltitle=white,colbacktitle=amber,toptitle=1pt,bottomtitle=1pt}
+\newtcolorbox{carefulbox}{enhanced,colback=brick!6,colframe=brick,boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,
+  title={Be careful here},fonttitle=\bfseries\small,coltitle=white,colbacktitle=brick,toptitle=1pt,bottomtitle=1pt}
+\newtcolorbox{oneline}{enhanced,colback=leaf!7,colframe=leaf,boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,
+  title={This chapter in one line},fonttitle=\bfseries\small,coltitle=white,colbacktitle=leaf,toptitle=1pt,bottomtitle=1pt}
+
+% ---------------------------------------------------------------- helpers
+\newcommand{\fig}[3]{\begin{figure}[!htbp]\centering\includegraphics[width=#2\linewidth]{img/#1}\caption{#3}\end{figure}}
+\newcommand{\figl}[4]{\begin{figure}[!htbp]\centering\includegraphics[width=#2\linewidth]{img/#1}\caption{#3}\label{#4}\end{figure}}
+
+% ---------------------------------------------------------------- code listings and notebook figures
+\lstdefinestyle{nb}{language=Python,basicstyle=\ttfamily\fontsize{6.3}{7.3}\selectfont,numbers=left,numberstyle=\tiny\color{black!55},numbersep=5pt,
+  frame=single,rulecolor=\color{black!25},backgroundcolor=\color{mist!55},breaklines=true,columns=fullflexible,keepspaces=true,showstringspaces=false,
+  commentstyle=\color{leaf!75!black}\itshape,keywordstyle=\color{maroon}\bfseries,stringstyle=\color{teal},xleftmargin=1.7em,framexleftmargin=1.3em,
+  aboveskip=4pt,belowskip=4pt,upquote=true}
+\newcommand{\codelines}[3]{\lstinputlisting[style=nb,firstline=#2,lastline=#3,firstnumber=#2]{nbcode/#1.py}}
+\newcommand{\nbfig}[3]{\begin{figure}[!htbp]\centering\includegraphics[width=#2\linewidth]{nbfigs/#1}\caption{#3}\end{figure}}
+\newcommand{\cd}[1]{\texttt{#1}}
+\newcommand{\term}[1]{\textbf{#1}}
+\renewcommand{\arraystretch}{1.18}
+\newcommand{\hd}[1]{\textbf{#1}}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\gridcell}[4]{\node[draw=black!55,fill=blue!#4!white,minimum size=7.2mm,inner sep=0pt] at (#1,#2) {\small #3};}
+
+
+\newcommand{\qq}[3]{\par\noindent\textbf{Q. #1}\\\textbf{A. #2} {\small #3}\par}
+
+\makeatletter
+\newcommand{\xref}[2]{\@ifundefined{r@#2}{the main guide}{#1~\ref{#2}}}
+\makeatother
+\begin{document}
+\begin{center}
+{\fontsize{20}{24}\selectfont\bfseries\color{maroon} Viva answers}\\[2pt]
+{\normalsize\itshape One-line answers, the design choices and the weak spots}\\[2pt]
+{\footnotesize CNN-LSTM Based Spatiotemporal Flood Evolution Forecasting \textperiodcentered{} Anhad Mahajan and Aman Sumeet Saxena \textperiodcentered{} Deep Learning CA3}
+\end{center}
+{\color{maroon}\hrule height 1pt}\vspace{3pt}
+\setcounter{section}{0}
+\input{_split/d_risks}
+\input{_split/d_viva}
+\input{_split/d_design}
+\end{document}

@@ -1,0 +1,67 @@
+63 jobs in batches ['RB', 'RN']: 0 already done, 63 to run
+[start] base_R480_hybrid_f0  (62 queued)
+[start] base_R480_hybrid_f1  (61 queued)
+[done] base_R480_hybrid_f0  rc=0  11.3 min
+[start] base_R480_hybrid_f2  (60 queued)
+[done] base_R480_hybrid_f1  rc=0  7.9 min
+[start] base_R480_causal_f0  (59 queued)
+[start] base_R480_causal_f1  (58 queued)
+[done] base_R480_hybrid_f2  rc=0  7.9 min
+[start] base_R480_causal_f2  (57 queued)
+[done] base_R480_causal_f0  rc=0  8.3 min
+[start] base_R480_forced_f0  (56 queued)
+[done] base_R480_causal_f1  rc=0  8.1 min
+[start] base_R480_forced_f1  (55 queued)
+[done] base_R480_causal_f2  rc=0  7.3 min
+[start] base_R480_forced_f2  (54 queued)
+[done] base_R480_forced_f0  rc=0  7.9 min
+[start] base_R60_hybrid_f0  (53 queued)
+[done] base_R480_forced_f1  rc=0  7.9 min
+[start] base_R60_hybrid_f1  (52 queued)
+[start] base_R60_hybrid_f2  (51 queued)
+[done] base_R480_forced_f2  rc=0  6.9 min
+[start] base_R60_causal_f0  (50 queued)
+[start] base_R60_causal_f1  (49 queued)
+[done] base_R60_hybrid_f0  rc=0  5.3 min
+[done] base_R60_hybrid_f1  rc=0  5.2 min
+[start] base_R60_causal_f2  (48 queued)
+[done] base_R60_hybrid_f2  rc=0  5.0 min
+[start] base_R60_forced_f0  (47 queued)
+[start] base_R60_forced_f1  (46 queued)
+[done] base_R60_causal_f0  rc=0  4.9 min
+[done] base_R60_causal_f1  rc=0  5.0 min
+[start] base_R60_forced_f2  (45 queued)
+[done] base_R60_causal_f2  rc=0  5.1 min
+[start] base_R30_hybrid_f0  (44 queued)
+[done] base_R60_forced_f0  rc=0  5.5 min
+[start] base_R30_hybrid_f1  (43 queued)
+[done] base_R60_forced_f1  rc=0  5.5 min
+[start] base_R30_hybrid_f2  (42 queued)
+[done] base_R60_forced_f2  rc=0  5.6 min
+[start] base_R30_causal_f0  (41 queued)
+[done] base_R30_hybrid_f0  rc=0  18.7 min
+[start] base_R30_causal_f1  (40 queued)
+[done] base_R30_hybrid_f1  rc=0  19.6 min
+[start] base_R30_causal_f2  (39 queued)
+[done] base_R30_hybrid_f2  rc=0  20.3 min
+[start] base_R30_forced_f0  (38 queued)
+[done] base_R30_causal_f0  rc=0  21.0 min
+[done] base_R30_causal_f1  rc=0  28.2 min
+[start] base_R30_forced_f1  (37 queued)
+[done] base_R30_causal_f2  rc=0  27.7 min
+[done] base_R30_forced_f0  rc=0  32.4 min
+[start] base_R30_forced_f2  (36 queued)
+[start] R480_local_hybrid_full_f0of3_s1003_ep30  (35 queued)
+[done] R480_local_hybrid_full_f0of3_s1003_ep30  rc=0  4.0 min
+[start] R480_local_hybrid_full_f1of3_s1013_ep30  (34 queued)
+[done] R480_local_hybrid_full_f1of3_s1013_ep30  rc=0  4.0 min
+[start] R480_local_hybrid_full_f2of3_s1023_ep30  (33 queued)
+[done] R480_local_hybrid_full_f2of3_s1023_ep30  rc=0  3.3 min
+[start] R480_local_causal_full_f0of3_s1003_ep30  (32 queued)
+[done] R480_local_causal_full_f0of3_s1003_ep30  rc=0  3.6 min
+[start] R480_local_causal_full_f1of3_s1013_ep30  (31 queued)
+[done] R480_local_causal_full_f1of3_s1013_ep30  rc=0  3.4 min
+[done] base_R30_forced_f1  rc=0  36.9 min
+[start] R480_local_causal_full_f2of3_s1023_ep30  (30 queued)
+[done] R480_local_causal_full_f2of3_s1023_ep30  rc=0  5.1 min
+[start] R480_local_forced_full_f0of3_s1003_ep30  (29 queued)

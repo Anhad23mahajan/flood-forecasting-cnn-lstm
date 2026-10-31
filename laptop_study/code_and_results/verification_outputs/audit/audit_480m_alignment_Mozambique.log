@@ -1,0 +1,10 @@
+Mozambique: depth 151x138 (wet fraction 35.0%, frame 1728/1729), DEM (2624, 2321), NoData pixels 1.7%
+searched 5985 (phase, crop) combinations
+strongest (most negative) depth-terrain correlations:
+   r=-0.174  phase=(6,4)  crop offset in 480 m cells=(9,0)
+   r=-0.174  phase=(4,4)  crop offset in 480 m cells=(9,0)
+   r=-0.174  phase=(8,4)  crop offset in 480 m cells=(9,0)
+   r=-0.174  phase=(2,4)  crop offset in 480 m cells=(9,0)
+   r=-0.174  phase=(10,4)  crop offset in 480 m cells=(9,0)
+median r over all combinations: -0.147; 5th-best vs median gap: +0.027
+VERDICT: no clear peak - alignment NOT recoverable by this method

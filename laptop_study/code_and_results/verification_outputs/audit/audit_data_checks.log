@@ -1,0 +1,33 @@
+
+A1. raw raster sanity (a NoData or NaN value would silently corrupt normalization and losses)
+  [PASS] Australia depth: no NaN, non-negative, plausible metres (dtype float32, min 0.000, max 18.97 m, nodata tag {None}, 5 frames)
+  [PASS] Australia DEM inside the aligned crop: no NaN, no NoData sentinel (nodata tag -3.4028234663852886e+38; min -3.7, max 216.3 m; sentinel pixels outside the crop: 0)
+  [PASS] Australia rainfall inside the aligned crop: no NaN, non-negative (min 0.000, max 1.12 mm per file; sentinel pixels outside the crop over 4 files: 0)
+        Australia land-use codes present: [1, 2, 4, 5, 7, 8, 9, 10, 11]
+  [PASS] UK depth: no NaN, non-negative, plausible metres (dtype float32, min 0.000, max 6.11 m, nodata tag {None}, 5 frames)
+  [PASS] UK DEM inside the aligned crop: no NaN, no NoData sentinel (nodata tag -3.4028234663852886e+38; min 5.7, max 63.8 m; sentinel pixels outside the crop: 1452)
+  [PASS] UK rainfall inside the aligned crop: no NaN, non-negative (min 0.000, max 9.57 mm per file; sentinel pixels outside the crop over 4 files: 5808)
+        UK land-use codes present: [1, 2, 4, 5, 7, 8, 10, 11, 15]
+
+A2. spatial split: are training and validation patches disjoint? (leakage check, replicating the notebook's procedure)
+  [PASS] seed 42: 46 train / 16 val patches share no tile 
+  [PASS] seed 7: 46 train / 16 val patches share no tile 
+
+A3. window indexing: history strictly before forecast, correct spacing, correct rainfall file
+  [PASS] history < future, uniform 30-min spacing, one new rainfall file per step (5 windows incl. first/last) 
+  [PASS] a window that runs past the end is rejected 
+
+A4. loader vs direct reads (inputs, targets, rainfall, DEM, severity label, persistence baseline)
+  [PASS] 24 random windows (12 Australia + 12 UK): every array and both labels match an independent read (0 mismatches)
+
+A5. UK offset (5,5): is the depth raster really a crop of the terrain grid?
+  [PASS] aligned (5,5) is the strongest depth-terrain relationship among all 121 candidate offsets (r aligned -0.252 | r unaligned (0,0) +0.007 | best offset (5, 5))
+
+A6. window scan vs an independent census on 3 time points x every valid Australian patch
+  [PASS] 186 scanned windows: every severity and baseline label matches (class mix here: none 25% minor 8% moderate 5% severe 62%)
+
+A7. NoData guard: the UK layers have a NoData padding ring; a window that reaches it must be refused
+  [PASS] window reaching the NoData ring is refused 
+  [PASS] the patches the project actually uses are unchanged by the guard (Australia 62 / UK 2 valid patches)
+
+ALL DATA CHECKS PASSED

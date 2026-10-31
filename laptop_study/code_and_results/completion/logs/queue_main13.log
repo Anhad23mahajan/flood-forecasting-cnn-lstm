@@ -1,0 +1,5 @@
+223 jobs in batches ['C', 'CG', 'FXG', 'OPT', 'S2', 'F', 'BX', 'LC', 'LCB', 'EP', 'EPC', 'RN', 'SX', 'D', 'OPTX']: 187 already done, 6 previously aborted by the dead-network guard (recorded, not re-run), 30 to run
+[start] E60_clstm_hybrid_ep90_f0  (29 queued)
+[start] E60_clstm_hybrid_ep90_f1  (28 queued)
+[start] E60_clstm_hybrid_ep90_f2  (27 queued)
+[start] E480_clstm_hybrid_ep90_f0  (26 queued)

@@ -1,0 +1,59 @@
+========================================================================================================================
+DEPTH FRAMES
+30m / Australia: first 0 s, last 864000 s (10.00 days), step set [300]
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+30m / Australia                                       2881 files  shapes [(1073, 1073)]  dtype ['float32']  range [0, 19.2]  files with NaN 0, NoData 0, negative 0  (54s)
+30m / UK: first 0 s, last 259200 s (3.00 days), step set [300]
+30m / UK                                               865 files  shapes [(170, 275)]  dtype ['float32']  range [0, 6.11]  files with NaN 0, NoData 0, negative 0  (5s)
+60m / Australia: first 0 s, last 864000 s (10.00 days), step set [300]
+60m / Australia                                       2881 files  shapes [(536, 536)]  dtype ['float32']  range [0, 15]  files with NaN 0, NoData 0, negative 0  (31s)
+60m / UK: first 0 s, last 259200 s (3.00 days), step set [300]
+60m / UK                                               865 files  shapes [(85, 137)]  dtype ['float32']  range [0, 4.88]  files with NaN 0, NoData 0, negative 0  (3s)
+480m / Pakistan: first 0 s, last 1209600 s (14.00 days), step set [300]
+480m / Pakistan                                       4033 files  shapes [(810, 441)]  dtype ['float32']  range [0, 26.7]  files with NaN 0, NoData 0, negative 0  (34s)
+480m / Mozambique: first 0 s, last 518400 s (6.00 days), step set [300]
+480m / Mozambique                                     1729 files  shapes [(151, 138)]  dtype ['float32']  range [0, 12.4]  files with NaN 0, NoData 0, negative 0  (12s)
+
+RAINFALL
+Australia: first file 20220220-S190000.tif, last file 20220302-S190000.tif
+rainfall / Australia                                   481 files  shapes [(1073, 1073)]  dtype ['float32']  range [0, 26.3]  files with NaN 0, NoData 0, negative 0  (7s)
+UK: first file 20151204-S120000.tif, last file 20151207-S120000.tif
+rainfall / UK                                          145 files  shapes [(180, 285)]  dtype ['float32']  range [0, 9.83]  files with NaN 0, NoData 145, negative 0  (1s)
+Pakistan: first file 20220818-S000000.tif, last file 20220831-S233000.tif
+rainfall / Pakistan                                    672 files  shapes [(13035, 7298)]  dtype ['float32']  range [0, 56.8]  files with NaN 0, NoData 672, negative 0  (981s)
+Mozambique: first file 20190314-S030000.tif, last file 20190320-S030000.tif
+rainfall / Mozambique                                  289 files  shapes [(2624, 2321)]  dtype ['float32']  range [0, 31.5]  files with NaN 0, NoData 289, negative 0  (25s)
+
+STATIC LAYERS
+DEM / Australia_DEM.tif                                  1 files  shapes [(1073, 1073)]  dtype ['float32']  range [-3.68, 216]  files with NaN 0, NoData 0, negative 1  (0s)
+DEM / Mozambique_DEM.tif                                 1 files  shapes [(2624, 2321)]  dtype ['float32']  range [0, 186]  files with NaN 0, NoData 1, negative 0  (0s)
+DEM / Pakistan_DEM.tif                                   1 files  shapes [(13035, 7298)]  dtype ['float32']  range [-1.5, 1.55e+03]  files with NaN 0, NoData 1, negative 1  (1s)
+DEM / UK_DEM.tif                                         1 files  shapes [(180, 285)]  dtype ['float32']  range [5.65, 63.8]  files with NaN 0, NoData 1, negative 0  (0s)
+land use / Australia.tif                                 1 files  shapes [(1073, 1073)]  dtype ['int32']  range [1, 11]  files with NaN 0, NoData 0, negative 0  (0s)
+land use / Mozambique.tif                                1 files  shapes [(2624, 2321)]  dtype ['uint8']  range [0, 11]  files with NaN 0, NoData 0, negative 0  (0s)
+land use / Pakistan.tif                                  1 files  shapes [(13035, 7298)]  dtype ['uint8']  range [1, 15]  files with NaN 0, NoData 0, negative 0  (2s)
+land use / UK.tif                                        1 files  shapes [(180, 285)]  dtype ['uint8']  range [1, 15]  files with NaN 0, NoData 0, negative 0  (0s)
+initial conditions / Australia_30m.tif                   1 files  shapes [(1073, 1073)]  dtype ['float32']  range [2.44e-05, 1.06]  files with NaN 0, NoData 0, negative 0  (0s)
+initial conditions / Australia_60m.tif                   1 files  shapes [(536, 536)]  dtype ['float32']  range [2.9e-05, 0.609]  files with NaN 0, NoData 0, negative 0  (0s)
+initial conditions / UK_30m.tif                          1 files  shapes [(170, 275)]  dtype ['float32']  range [0, 2.48]  files with NaN 0, NoData 0, negative 0  (0s)
+initial conditions / UK_60m.tif                          1 files  shapes [(85, 137)]  dtype ['float32']  range [0, 1.88]  files with NaN 0, NoData 0, negative 0  (0s)
+initial conditions / Mozambique_480m.tif                 1 files  shapes [(151, 138)]  dtype ['float32']  range [0, 0.00125]  files with NaN 0, NoData 0, negative 0  (0s)
+initial conditions / Pakistan_480m.tif                   1 files  shapes [(810, 441)]  dtype ['float32']  range [0, 11.7]  files with NaN 0, NoData 0, negative 0  (0s)
+
+WORLD FILES
+DEM\Australia_DEM.tfw                            pixel 30.000 x -30.000 m, origin (517452.19, 6808598.86)
+DEM\Mozambique_DEM.tfw                           pixel 30.000 x -30.000 m, origin (617322.49, 7829063.50)
+DEM\Pakistan_DEM.tfw                             pixel 30.000 x -30.000 m, origin (337127.92, 3192398.14)
+DEM\UK_DEM.tfw                                   pixel 30.000 x -30.000 m, origin (502156.97, 6087446.31)
+Georeferenced files\Australia.tfw                pixel 30.000 x -30.000 m, origin (517452.19, 6808598.86)
+Georeferenced files\Mozambique.tfw               pixel 30.000 x -30.000 m, origin (617322.49, 7829063.50)
+Georeferenced files\Pakistan.tfw                 pixel 30.000 x -30.000 m, origin (337127.92, 3192398.14)
+Georeferenced files\UK.tfw                       pixel 30.000 x -30.000 m, origin (502156.97, 6087446.31)
+Land use and land cover\Australia.tfw            pixel 30.000 x -30.000 m, origin (517452.19, 6808598.86)
+Land use and land cover\Mozambique.tfw           pixel 30.000 x -30.000 m, origin (617322.49, 7829063.50)
+Land use and land cover\Pakistan.tfw             pixel 30.000 x -30.000 m, origin (337127.92, 3192398.14)
+Land use and land cover\UK.tfw                   pixel 30.000 x -30.000 m, origin (502156.97, 6087446.31)
+
+========================================================================================================================
+NO ANOMALIES FOUND (beyond the documented NoData sentinel in DEM/rainfall padding).

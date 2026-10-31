@@ -1,0 +1,45 @@
+=== E60_local_hybrid_full_f1of3_s4313_ep30: Australia 60 m -> UK 60 m
+Australia: 16 valid tiles -> fold 1/3: 11 train tiles, 5 held-out tiles; wet windows: train pool 871, held-out pool 400; using 600 train / 300 held-out / 120 UK windows
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789933558.661019    5988 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789933564.892487    5988 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789933572.562843    5988 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+arch local, regime hybrid, variant full, T=5, 4,101 trainable params; persistence MSE on training windows 1.461e-04 m^2 (RMSE 12.1 mm); epoch 0 val skill +0.0000 (must be 0)
+epoch  1/30  train/persist 0.5152  val skill -0.9130  (12.1s)
+epoch  2/30  train/persist 0.3223  val skill -1.0566  (10.0s)
+epoch  3/30  train/persist 0.3137  val skill -0.1277  (9.3s)
+epoch  4/30  train/persist 0.2918  val skill +0.1365  (9.1s)
+epoch  5/30  train/persist 0.2800  val skill -0.3579  (8.2s)
+epoch  6/30  train/persist 0.2932  val skill +0.0086  (9.2s)
+epoch  7/30  train/persist 0.2692  val skill -0.1318  (9.9s)
+epoch  8/30  train/persist 0.2720  val skill -0.0287  (10.4s)
+epoch  9/30  train/persist 0.2648  val skill +0.0078  (9.4s)
+epoch 10/30  train/persist 0.2627  val skill -0.0608  (9.4s)
+epoch 11/30  train/persist 0.2646  val skill +0.2458  (9.8s)
+epoch 12/30  train/persist 0.2542  val skill -0.0765  (9.6s)
+epoch 13/30  train/persist 0.2514  val skill +0.0984  (9.5s)
+epoch 14/30  train/persist 0.2482  val skill -0.1936  (10.2s)
+epoch 15/30  train/persist 0.2541  val skill +0.1415  (9.9s)
+epoch 16/30  train/persist 0.2473  val skill -0.1803  (9.8s)
+epoch 17/30  train/persist 0.2525  val skill +0.1765  (9.9s)
+epoch 18/30  train/persist 0.2458  val skill +0.1768  (9.1s)
+epoch 19/30  train/persist 0.2398  val skill +0.0492  (9.1s)
+epoch 20/30  train/persist 0.2386  val skill +0.0896  (10.3s)
+epoch 21/30  train/persist 0.2365  val skill +0.1844  (10.1s)
+epoch 22/30  train/persist 0.2365  val skill -0.1304  (10.0s)
+epoch 23/30  train/persist 0.2337  val skill +0.1260  (9.6s)
+epoch 24/30  train/persist 0.2355  val skill +0.2235  (9.1s)
+epoch 25/30  train/persist 0.2348  val skill +0.1191  (9.4s)
+epoch 26/30  train/persist 0.2334  val skill +0.1576  (9.8s)
+epoch 27/30  train/persist 0.2325  val skill +0.1341  (10.4s)
+epoch 28/30  train/persist 0.2313  val skill +0.0982  (10.7s)
+epoch 29/30  train/persist 0.2314  val skill +0.1316  (10.0s)
+epoch 30/30  train/persist 0.2311  val skill +0.1307  (10.1s)
+train_subset: skill +0.4371  rmse model 0.74 mm / persistence 0.98 mm; CSI(1 mm) 0.868/0.964; lead skill +0.623 +0.632 +0.555 +0.434 +0.313
+heldout: skill +0.8057  rmse model 5.35 mm / persistence 12.13 mm; CSI(1 mm) 0.909/0.948; lead skill +0.893 +0.862 +0.836 +0.805 +0.783
+test: skill +0.8638  rmse model 5.79 mm / persistence 15.70 mm; CSI(1 mm) 0.935/0.963; lead skill +0.948 +0.922 +0.893 +0.865 +0.839
+saved completion\results\runs\E60_local_hybrid_full_f1of3_s4313_ep30.json

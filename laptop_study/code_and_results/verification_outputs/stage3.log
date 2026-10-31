@@ -1,0 +1,40 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789544637.574332   21192 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789544639.724321   21192 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+I0000 00:00:1789544648.270396   21192 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+loading examples and checking severity label distribution...
+severity label distribution: {'none': 6, 'minor': 2, 'moderate': 0, 'severe': 48} (n=56)
+train: 44  holdout: 12
+
+training 8 epochs on 44 real examples (combined depth+severity loss)...
+  epoch 1/8  depth_loss=0.18563  severity_loss=0.97690  (14.4s)
+  epoch 2/8  depth_loss=0.17675  severity_loss=0.95652  (14.4s)
+  epoch 3/8  depth_loss=0.17620  severity_loss=0.96684  (14.7s)
+  epoch 4/8  depth_loss=0.17588  severity_loss=0.94879  (14.2s)
+  epoch 5/8  depth_loss=0.17490  severity_loss=0.94899  (13.8s)
+  epoch 6/8  depth_loss=0.17448  severity_loss=0.95500  (14.0s)
+  epoch 7/8  depth_loss=0.17402  severity_loss=0.92148  (13.6s)
+  epoch 8/8  depth_loss=0.17112  severity_loss=0.89423  (13.5s)
+
+evaluating on holdout...
+  true=severe     pred=severe     depth_loss=0.0262
+  true=severe     pred=severe     depth_loss=0.2504
+  true=severe     pred=severe     depth_loss=0.2130
+  true=none       pred=severe     depth_loss=0.0267
+  true=severe     pred=severe     depth_loss=0.2102
+  true=severe     pred=severe     depth_loss=0.1210
+  true=severe     pred=severe     depth_loss=0.6353
+  true=severe     pred=severe     depth_loss=0.2062
+  true=minor      pred=severe     depth_loss=0.0247
+  true=severe     pred=severe     depth_loss=0.1708
+  true=severe     pred=severe     depth_loss=0.5275
+  true=severe     pred=severe     depth_loss=0.2535
+
+holdout depth RMSE: 0.4713 m
+holdout severity accuracy: 10/12 = 83.33%

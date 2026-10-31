@@ -1,0 +1,45 @@
+=== E480_local_hybrid_full_blk_b8_lr0.003_f0of3_s1003_ep30: Pakistan 480 m -> Mozambique 480 m
+Pakistan: 18 valid tiles -> fold 0/3: 12 train tiles, 6 held-out tiles; wet windows: train pool 624, held-out pool 162; using 300 train / 162 held-out / 238 Mozambique windows
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789942353.297455    9224 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789942358.169335    9224 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789942363.465590    9224 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+arch local, regime hybrid, variant full, T=5, 4,101 trainable params; persistence MSE on training windows 4.722e-05 m^2 (RMSE 6.9 mm); epoch 0 val skill +0.0000 (must be 0)
+epoch  1/30  train/persist 0.9397  val skill +0.0898  (4.3s)
+epoch  2/30  train/persist 0.6068  val skill -0.1798  (3.1s)
+epoch  3/30  train/persist 0.4610  val skill -0.4328  (3.0s)
+epoch  4/30  train/persist 0.3519  val skill -1.5802  (3.1s)
+epoch  5/30  train/persist 0.2700  val skill -2.5643  (3.0s)
+epoch  6/30  train/persist 0.3308  val skill -2.9358  (3.2s)
+epoch  7/30  train/persist 0.3136  val skill -2.9967  (3.4s)
+epoch  8/30  train/persist 0.2676  val skill -4.6229  (3.3s)
+epoch  9/30  train/persist 0.2299  val skill -4.7425  (3.5s)
+epoch 10/30  train/persist 0.2284  val skill -5.2686  (3.5s)
+epoch 11/30  train/persist 0.2035  val skill -5.7445  (3.4s)
+epoch 12/30  train/persist 0.2001  val skill -6.4261  (3.3s)
+epoch 13/30  train/persist 0.1790  val skill -6.3564  (3.4s)
+epoch 14/30  train/persist 0.1986  val skill -6.4362  (3.2s)
+epoch 15/30  train/persist 0.1801  val skill -6.1864  (3.3s)
+epoch 16/30  train/persist 0.1983  val skill -6.6572  (3.2s)
+epoch 17/30  train/persist 0.1817  val skill -7.1647  (3.4s)
+epoch 18/30  train/persist 0.1823  val skill -6.6034  (3.3s)
+epoch 19/30  train/persist 0.1702  val skill -6.9674  (3.4s)
+epoch 20/30  train/persist 0.1705  val skill -7.3056  (3.4s)
+epoch 21/30  train/persist 0.1696  val skill -7.5771  (3.4s)
+epoch 22/30  train/persist 0.1664  val skill -7.5235  (3.4s)
+epoch 23/30  train/persist 0.1644  val skill -7.4856  (3.3s)
+epoch 24/30  train/persist 0.1589  val skill -7.6302  (3.3s)
+epoch 25/30  train/persist 0.1603  val skill -7.8747  (3.1s)
+epoch 26/30  train/persist 0.1601  val skill -7.8351  (3.0s)
+epoch 27/30  train/persist 0.1573  val skill -7.8834  (3.0s)
+epoch 28/30  train/persist 0.1570  val skill -7.8697  (3.0s)
+epoch 29/30  train/persist 0.1562  val skill -7.9203  (3.1s)
+epoch 30/30  train/persist 0.1047  val skill -7.9071  (2.6s)
+train_subset: skill +0.8477  rmse model 4.17 mm / persistence 10.68 mm; CSI(1 mm) 0.987/0.997; lead skill +0.940 +0.912 +0.880 +0.849 +0.820
+heldout: skill -5.7299  rmse model 43.72 mm / persistence 16.85 mm; CSI(1 mm) 0.981/0.988; lead skill -4.473 -5.022 -5.448 -5.786 -6.013
+test: skill +0.7634  rmse model 8.31 mm / persistence 17.08 mm; CSI(1 mm) 0.923/0.975; lead skill +0.892 +0.846 +0.801 +0.763 +0.731
+saved completion\results\runs\E480_local_hybrid_full_blk_b8_lr0.003_f0of3_s1003_ep30.json

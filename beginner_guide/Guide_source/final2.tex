@@ -1,0 +1,148 @@
+\documentclass[9pt,a4paper]{extarticle}
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx}
+\usepackage{courier}
+\usepackage[margin=1.4cm,top=1.35cm,bottom=1.3cm,headsep=0.4cm,headheight=11pt]{geometry}
+\usepackage[table]{xcolor}
+\usepackage{graphicx,float,booktabs,array,tabularx,enumitem,amsmath,microtype}
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,fit,backgrounds}
+\usepackage{titlesec}
+\usepackage{multicol}
+\usepackage{needspace}
+\usepackage{listings}
+\usepackage{longtable}
+\usepackage[font=small,labelfont=bf,labelsep=period,justification=raggedright,singlelinecheck=false,skip=4pt]{caption}
+\usepackage{fancyhdr}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=black,citecolor=black,pdftitle={Flood Forecasting Project: the complete viva guide},pdfauthor={Anhad Mahajan and Aman Sumeet Saxena}]{hyperref}
+
+\definecolor{maroon}{HTML}{7A1F2B}
+\definecolor{teal}{HTML}{0E6670}
+\definecolor{amber}{HTML}{B9770E}
+\definecolor{brick}{HTML}{A8322D}
+\definecolor{leaf}{HTML}{2E7D4F}
+\definecolor{ink}{HTML}{1B2A38}
+\definecolor{mist}{HTML}{EAF0F3}
+
+% ---------------------------------------------------------------- page, text, floats
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.35em}
+\linespread{1.0}
+\setlist{nosep,leftmargin=1.6em,itemsep=1pt,topsep=2pt}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.75}
+\setlength{\textfloatsep}{9pt plus 2pt minus 3pt}
+\setlength{\floatsep}{9pt plus 2pt minus 3pt}
+\setlength{\intextsep}{9pt plus 2pt minus 3pt}
+\raggedbottom
+\emergencystretch=5em
+\tolerance=1800
+\let\origsection\section
+\renewcommand{\section}{\Needspace{6\baselineskip}\origsection}
+\let\origsubsection\subsection
+\renewcommand{\subsection}{\Needspace{3\baselineskip}\origsubsection}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{maroon}How a Computer Learns to Forecast a Flood}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\section}{\large\bfseries\color{maroon}}{\thesection}{0.7em}{}[{\color{maroon}\titlerule[0.8pt]}]
+\titlespacing*{\section}{0pt}{9pt}{4pt}
+\titleformat{\subsection}{\normalsize\bfseries\color{teal}}{\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{6pt}{2pt}
+\titleformat{\paragraph}[runin]{\bfseries\color{ink}}{}{0pt}{}[\ ]
+\titlespacing*{\paragraph}{0pt}{4pt}{0.4em}
+
+% ---------------------------------------------------------------- coloured boxes
+\newtcolorbox{plainbox}{enhanced,colback=teal!5,colframe=teal,boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,
+  title={In plain words},fonttitle=\bfseries\small,coltitle=white,colbacktitle=teal,toptitle=1pt,bottomtitle=1pt}
+\newtcolorbox{thinkbox}{enhanced,colback=amber!7,colframe=amber,boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,
+  title={Think of it like this},fonttitle=\bfseries\small,coltitle=white,colbacktitle=amber,toptitle=1pt,bottomtitle=1pt}
+\newtcolorbox{carefulbox}{enhanced,colback=brick!6,colframe=brick,boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,
+  title={Be careful here},fonttitle=\bfseries\small,coltitle=white,colbacktitle=brick,toptitle=1pt,bottomtitle=1pt}
+\newtcolorbox{oneline}{enhanced,colback=leaf!7,colframe=leaf,boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,
+  title={This chapter in one line},fonttitle=\bfseries\small,coltitle=white,colbacktitle=leaf,toptitle=1pt,bottomtitle=1pt}
+
+% ---------------------------------------------------------------- helpers
+\newcommand{\fig}[3]{\begin{figure}[!htbp]\centering\includegraphics[width=#2\linewidth]{img/#1}\caption{#3}\end{figure}}
+\newcommand{\figl}[4]{\begin{figure}[!htbp]\centering\includegraphics[width=#2\linewidth]{img/#1}\caption{#3}\label{#4}\end{figure}}
+
+% ---------------------------------------------------------------- code listings and notebook figures
+\lstdefinestyle{nb}{language=Python,basicstyle=\ttfamily\fontsize{6.3}{7.3}\selectfont,numbers=left,numberstyle=\tiny\color{black!55},numbersep=5pt,
+  frame=single,rulecolor=\color{black!25},backgroundcolor=\color{mist!55},breaklines=true,columns=fullflexible,keepspaces=true,showstringspaces=false,
+  commentstyle=\color{leaf!75!black}\itshape,keywordstyle=\color{maroon}\bfseries,stringstyle=\color{teal},xleftmargin=1.7em,framexleftmargin=1.3em,
+  aboveskip=4pt,belowskip=4pt,upquote=true}
+\newcommand{\codelines}[3]{\lstinputlisting[style=nb,firstline=#2,lastline=#3,firstnumber=#2]{nbcode/#1.py}}
+\newcommand{\nbfig}[3]{\begin{figure}[!htbp]\centering\includegraphics[width=#2\linewidth]{nbfigs/#1}\caption{#3}\end{figure}}
+\newcommand{\cd}[1]{\texttt{#1}}
+\newcommand{\term}[1]{\textbf{#1}}
+\renewcommand{\arraystretch}{1.18}
+\newcommand{\hd}[1]{\textbf{#1}}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\gridcell}[4]{\node[draw=black!55,fill=blue!#4!white,minimum size=7.2mm,inner sep=0pt] at (#1,#2) {\small #3};}
+
+
+\newcommand{\qq}[3]{\par\noindent\textbf{Q. #1}\\\textbf{A. #2} {\small #3}\par}
+\begin{document}
+\begin{center}
+{\fontsize{22}{26}\selectfont\bfseries\color{maroon} How a Computer Learns to Forecast a Flood}\\[3pt]
+{\normalsize\itshape The project, the three notebooks, the design choices and the viva, explained from zero}\\[3pt]
+{\footnotesize CNN-LSTM Based Spatiotemporal Flood Evolution Forecasting $\cdot$ Deep Learning CA3 $\cdot$ Anhad Mahajan (PRN 24070126031) and Aman Sumeet Saxena (PRN 24070126030) $\cdot$ AIML A2 $\cdot$ October 2026}
+\end{center}
+{\color{maroon}\hrule height 1pt}
+\vspace{3pt}
+\subsection*{Contents}
+{\footnotesize\begin{multicols}{2}\setlength{\parskip}{0pt}\raggedright
+\noindent\makebox[1.3em][l]{\ref{ch:start}}Start here: your plan for tonight\dotfill\pageref{ch:start}\par
+\noindent\makebox[1.3em][l]{\ref{ch:whole}}The whole project in five minutes\dotfill\pageref{ch:whole}\par
+\noindent\makebox[1.3em][l]{\ref{ch:why}}Floods, forecasts and the long title\dotfill\pageref{ch:why}\par
+\noindent\makebox[1.3em][l]{\ref{ch:grid}}A picture is just a grid of numbers\dotfill\pageref{ch:grid}\par
+\noindent\makebox[1.3em][l]{\ref{ch:nn}}What is a neural network, and how does it learn?\dotfill\pageref{ch:nn}\par
+\noindent\makebox[1.3em][l]{\ref{ch:cnn}}Teaching a network to look at maps: the CNN\dotfill\pageref{ch:cnn}\par
+\noindent\makebox[1.3em][l]{\ref{ch:lstm}}Teaching a network to remember: LSTM and ConvLSTM\dotfill\pageref{ch:lstm}\par
+\noindent\makebox[1.3em][l]{\ref{ch:data}}The data: four floods\dotfill\pageref{ch:data}\par
+\noindent\makebox[1.3em][l]{\ref{ch:score}}The task and how we keep score\dotfill\pageref{ch:score}\par
+\noindent\makebox[1.3em][l]{\ref{ch:test}}How we tested fairly\dotfill\pageref{ch:test}\par
+\noindent\makebox[1.3em][l]{\ref{ch:build}}Part 1: building the forecaster\dotfill\pageref{ch:build}\par
+\noindent\makebox[1.3em][l]{\ref{ch:res1}}Part 1 results: the surprise\dotfill\pageref{ch:res1}\par
+\noindent\makebox[1.3em][l]{\ref{ch:p2set}}Part 2: the big laptop study\dotfill\pageref{ch:p2set}\par
+\noindent\makebox[1.3em][l]{\ref{ch:res2}}Part 2 results: what really matters\dotfill\pageref{ch:res2}\par
+\noindent\makebox[1.3em][l]{\ref{ch:bug}}A mistake we found, and how we fixed it\dotfill\pageref{ch:bug}\par
+\noindent\makebox[1.3em][l]{\ref{ch:capsule}}Capsule network and written rules\dotfill\pageref{ch:capsule}\par
+\noindent\makebox[1.3em][l]{\ref{ch:gradcam}}Grad-CAM and explainable AI\dotfill\pageref{ch:gradcam}\par
+\noindent\makebox[1.3em][l]{\ref{ch:limits}}Limits, lessons and what comes next\dotfill\pageref{ch:limits}\par
+\noindent\makebox[1.3em][l]{\ref{ch:nums}}The key numbers on one page\dotfill\pageref{ch:nums}\par
+\noindent\makebox[1.3em][l]{\ref{ch:design}}Why this design? Every choice in the model\dotfill\pageref{ch:design}\par
+\noindent\makebox[1.3em][l]{\ref{ch:python}}Python from zero\dotfill\pageref{ch:python}\par
+\noindent\makebox[1.3em][l]{\ref{ch:nb-explore}}Notebook 1: Data exploration\dotfill\pageref{ch:nb-explore}\par
+\noindent\makebox[1.3em][l]{\ref{ch:nb-prep}}Notebook 2: Data preparation\dotfill\pageref{ch:nb-prep}\par
+\noindent\makebox[1.3em][l]{\ref{ch:nb-model}}Notebook 3: The flood model\dotfill\pageref{ch:nb-model}\par
+\noindent\makebox[1.3em][l]{\ref{ch:script}}Speaking script for the 15 slides\dotfill\pageref{ch:script}\par
+\noindent\makebox[1.3em][l]{\ref{ch:who}}Who did what\dotfill\pageref{ch:who}\par
+\noindent\makebox[1.3em][l]{\ref{ch:gloss}}A to Z of new words\dotfill\pageref{ch:gloss}\par
+\noindent\makebox[1.3em][l]{\ref{ch:viva}}One-line answers to the questions mam may ask\dotfill\pageref{ch:viva}\par
+\end{multicols}}
+\setcounter{section}{-1}
+\input{d_start}
+\setcounter{section}{0}
+\input{d_project}
+\input{d_design}
+\input{d_python}
+\input{d_nb1}
+\input{d_nb2}
+\input{d_nb3a}
+\input{d_nb3b}
+\input{d_script}
+\input{d_who}
+\input{d_gloss}
+\input{d_viva}
+\end{document}

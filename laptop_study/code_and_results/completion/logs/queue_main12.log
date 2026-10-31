@@ -1,0 +1,337 @@
+244 jobs in batches ['C', 'CG', 'FXG', 'OPT', 'S2', 'F', 'BX', 'LC', 'LCB', 'EP', 'RB', 'RN', 'SX', 'D', 'OPTX']: 45 already done, 6 previously aborted by the dead-network guard (recorded, not re-run), 193 to run
+[start] E60_clstmf_forced_full_noguard_f1of3_s1013_ep30  (190 queued)
+[start] E480_local_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  (188 queued)
+[start] E60_local_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  (187 queued)
+[done] E480_local_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  rc=0  3.3 min
+[start] E60_clstm_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  (186 queued)
+[start] E60_local_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  (185 queued)
+[done] E60_local_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  rc=0  2.9 min
+[start] E30_local_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  (184 queued)
+[done] E60_local_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  rc=0  3.2 min
+[start] E30_local_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  (183 queued)
+[done] E30_local_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  rc=0  3.5 min
+[start] E30_local_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  (182 queued)
+[done] E30_local_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  rc=0  3.4 min
+[start] SEV_hybrid_capsule_aug_f0of3_s2003_ep30  (181 queued)
+[done] E30_local_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  rc=0  3.4 min
+[start] SEV_hybrid_capsule_aug_f1of3_s2013_ep30  (180 queued)
+[done] E60_clstm_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  rc=0  12.7 min
+[start] SEV_hybrid_capsule_aug_f2of3_s2023_ep30  (179 queued)
+[done] E60_clstmf_forced_full_noguard_f1of3_s1013_ep30  rc=0  24.9 min
+[start] SEV_hybrid_dense_aug_f0of3_s2003_ep30  (178 queued)
+[start] SEV_hybrid_dense_aug_f1of3_s2013_ep30  (177 queued)
+[done] SEV_hybrid_capsule_aug_f0of3_s2003_ep30  rc=0  29.5 min
+[done] SEV_hybrid_capsule_aug_f1of3_s2013_ep30  rc=0  29.0 min
+[start] SEV_hybrid_dense_aug_f2of3_s2023_ep30  (176 queued)
+[done] SEV_hybrid_capsule_aug_f2of3_s2023_ep30  rc=0  29.2 min
+[start] E480_local_hybrid_seed11_f0  (175 queued)
+[done] E480_local_hybrid_seed11_f0  rc=0  3.3 min
+[start] E480_local_hybrid_seed12_f0  (174 queued)
+[done] E480_local_hybrid_seed12_f0  rc=0  3.3 min
+[start] E480_local_hybrid_seed13_f0  (173 queued)
+[done] SEV_hybrid_dense_aug_f0of3_s2003_ep30  rc=0  28.9 min
+[start] E480_local_hybrid_seed14_f0  (172 queued)
+[start] E480_local_hybrid_seed11_f1  (171 queued)
+[done] E480_local_hybrid_seed13_f0  rc=0  3.2 min
+[start] E480_local_hybrid_seed12_f1  (170 queued)
+[done] E480_local_hybrid_seed14_f0  rc=0  3.2 min
+[done] E480_local_hybrid_seed11_f1  rc=0  3.1 min
+[start] E480_local_hybrid_seed13_f1  (169 queued)
+[start] E480_local_hybrid_seed14_f1  (168 queued)
+[done] E480_local_hybrid_seed12_f1  rc=0  3.2 min
+[done] E480_local_hybrid_seed13_f1  rc=0  3.2 min
+[start] E480_local_hybrid_seed11_f2  (167 queued)
+[start] E480_local_hybrid_seed12_f2  (166 queued)
+[done] E480_local_hybrid_seed14_f1  rc=0  3.3 min
+[done] E480_local_hybrid_seed11_f2  rc=0  3.1 min
+[start] E480_local_hybrid_seed13_f2  (165 queued)
+[start] E480_local_hybrid_seed14_f2  (164 queued)
+[done] E480_local_hybrid_seed12_f2  rc=0  3.3 min
+[start] E60_local_hybrid_seed11_f0  (163 queued)
+[done] E480_local_hybrid_seed13_f2  rc=0  3.5 min
+[done] E480_local_hybrid_seed14_f2  rc=0  3.6 min
+[start] E60_local_hybrid_seed12_f0  (162 queued)
+[start] E60_local_hybrid_seed13_f0  (161 queued)
+[done] SEV_hybrid_dense_aug_f1of3_s2013_ep30  rc=0  29.5 min
+[done] SEV_hybrid_dense_aug_f2of3_s2023_ep30  rc=0  29.2 min
+[start] E60_local_hybrid_seed14_f0  (160 queued)
+[done] E60_local_hybrid_seed11_f0  rc=0  3.4 min
+[start] E60_local_hybrid_seed11_f1  (159 queued)
+[start] E60_local_hybrid_seed12_f1  (158 queued)
+[start] E60_local_hybrid_seed13_f1  (157 queued)
+[done] E60_local_hybrid_seed12_f0  rc=0  3.1 min
+[done] E60_local_hybrid_seed13_f0  rc=0  3.1 min
+[done] E60_local_hybrid_seed14_f0  rc=0  3.1 min
+[start] E60_local_hybrid_seed14_f1  (156 queued)
+[done] E60_local_hybrid_seed11_f1  rc=0  3.1 min
+[start] E60_local_hybrid_seed11_f2  (155 queued)
+[done] E60_local_hybrid_seed12_f1  rc=0  3.0 min
+[start] E60_local_hybrid_seed12_f2  (154 queued)
+[start] E60_local_hybrid_seed13_f2  (153 queued)
+[done] E60_local_hybrid_seed13_f1  rc=0  3.1 min
+[start] E60_local_hybrid_seed14_f2  (152 queued)
+[done] E60_local_hybrid_seed14_f1  rc=0  3.1 min
+[start] E30_local_hybrid_seed11_f0  (151 queued)
+[done] E60_local_hybrid_seed11_f2  rc=0  3.1 min
+[done] E60_local_hybrid_seed12_f2  rc=0  3.0 min
+[done] E60_local_hybrid_seed13_f2  rc=0  3.0 min
+[start] E30_local_hybrid_seed12_f0  (150 queued)
+[start] E30_local_hybrid_seed13_f0  (149 queued)
+[done] E60_local_hybrid_seed14_f2  rc=0  3.1 min
+[start] E30_local_hybrid_seed14_f0  (148 queued)
+[done] E30_local_hybrid_seed11_f0  rc=0  3.1 min
+[start] E30_local_hybrid_seed11_f1  (147 queued)
+[done] E30_local_hybrid_seed12_f0  rc=0  3.1 min
+[done] E30_local_hybrid_seed13_f0  rc=0  3.1 min
+[start] E30_local_hybrid_seed12_f1  (146 queued)
+[start] E30_local_hybrid_seed13_f1  (145 queued)
+[done] E30_local_hybrid_seed14_f0  rc=0  3.0 min
+[start] E30_local_hybrid_seed14_f1  (144 queued)
+[done] E30_local_hybrid_seed11_f1  rc=0  3.0 min
+[start] E30_local_hybrid_seed11_f2  (143 queued)
+[start] E30_local_hybrid_seed12_f2  (142 queued)
+[start] E30_local_hybrid_seed13_f2  (141 queued)
+[done] E30_local_hybrid_seed12_f1  rc=0  3.1 min
+[done] E30_local_hybrid_seed13_f1  rc=0  3.1 min
+[done] E30_local_hybrid_seed14_f1  rc=0  3.1 min
+[start] E30_local_hybrid_seed14_f2  (140 queued)
+[done] E30_local_hybrid_seed11_f2  rc=0  3.0 min
+[start] E30_local_hybrid_nodepthhist_f0of3_s1003_ep30  (139 queued)
+[start] E30_local_hybrid_nohist_f0of3_s1003_ep30  (138 queued)
+[start] E30_local_hybrid_norain_f0of3_s1003_ep30  (137 queued)
+[done] E30_local_hybrid_seed12_f2  rc=0  3.1 min
+[done] E30_local_hybrid_seed13_f2  rc=0  3.1 min
+[done] E30_local_hybrid_seed14_f2  rc=0  3.0 min
+[start] E30_local_hybrid_norainhist_f0of3_s1003_ep30  (136 queued)
+[done] E30_local_hybrid_nodepthhist_f0of3_s1003_ep30  rc=0  4.1 min
+[start] E30_local_hybrid_noterrain_f0of3_s1003_ep30  (135 queued)
+[start] E30_local_hybrid_nodepthhist_f1of3_s1013_ep30  (134 queued)
+[start] E30_local_hybrid_nohist_f1of3_s1013_ep30  (133 queued)
+[done] E30_local_hybrid_nohist_f0of3_s1003_ep30  rc=0  4.2 min
+[done] E30_local_hybrid_norain_f0of3_s1003_ep30  rc=0  4.2 min
+[done] E30_local_hybrid_norainhist_f0of3_s1003_ep30  rc=0  4.2 min
+[start] E30_local_hybrid_norain_f1of3_s1013_ep30  (132 queued)
+[done] E30_local_hybrid_noterrain_f0of3_s1003_ep30  rc=0  4.3 min
+[start] E30_local_hybrid_norainhist_f1of3_s1013_ep30  (131 queued)
+[done] E30_local_hybrid_nodepthhist_f1of3_s1013_ep30  rc=0  4.3 min
+[start] E30_local_hybrid_noterrain_f1of3_s1013_ep30  (130 queued)
+[start] E30_local_hybrid_nodepthhist_f2of3_s1023_ep30  (129 queued)
+[done] E30_local_hybrid_nohist_f1of3_s1013_ep30  rc=0  4.5 min
+[done] E30_local_hybrid_norain_f1of3_s1013_ep30  rc=0  4.7 min
+[start] E30_local_hybrid_nohist_f2of3_s1023_ep30  (128 queued)
+[done] E30_local_hybrid_norainhist_f1of3_s1013_ep30  rc=0  5.1 min
+[start] E30_local_hybrid_norain_f2of3_s1023_ep30  (127 queued)
+[done] E30_local_hybrid_noterrain_f1of3_s1013_ep30  rc=0  5.0 min
+[start] E30_local_hybrid_norainhist_f2of3_s1023_ep30  (126 queued)
+[start] E30_local_hybrid_noterrain_f2of3_s1023_ep30  (125 queued)
+[done] E30_local_hybrid_nodepthhist_f2of3_s1023_ep30  rc=0  5.1 min
+[start] E480_local_hybrid_n25_f0  (124 queued)
+[done] E30_local_hybrid_nohist_f2of3_s1023_ep30  rc=0  5.1 min
+[done] E480_local_hybrid_n25_f0  rc=0  1.3 min
+[start] E480_local_hybrid_n50_f0  (123 queued)
+[done] E30_local_hybrid_norain_f2of3_s1023_ep30  rc=0  4.9 min
+[start] E480_local_hybrid_n100_f0  (122 queued)
+[start] E480_local_hybrid_n600_f0  (121 queued)
+[done] E480_local_hybrid_n50_f0  rc=0  1.5 min
+[done] E30_local_hybrid_norainhist_f2of3_s1023_ep30  rc=0  4.8 min
+[done] E30_local_hybrid_noterrain_f2of3_s1023_ep30  rc=0  4.8 min
+[start] E480_local_hybrid_n25_f1  (120 queued)
+[start] E480_local_hybrid_n50_f1  (119 queued)
+[done] E480_local_hybrid_n100_f0  rc=0  1.7 min
+[start] E480_local_hybrid_n100_f1  (118 queued)
+[done] E480_local_hybrid_n25_f1  rc=0  0.9 min
+[start] E480_local_hybrid_n600_f1  (117 queued)
+[done] E480_local_hybrid_n50_f1  rc=0  1.0 min
+[start] E480_local_hybrid_n25_f2  (116 queued)
+[done] E480_local_hybrid_n100_f1  rc=0  1.1 min
+[start] E480_local_hybrid_n50_f2  (115 queued)
+[start] E480_local_hybrid_n100_f2  (114 queued)
+[done] E480_local_hybrid_n25_f2  rc=0  0.8 min
+[done] E480_local_hybrid_n50_f2  rc=0  0.9 min
+[start] E480_local_hybrid_n600_f2  (113 queued)
+[done] E480_local_hybrid_n100_f2  rc=0  1.2 min
+[start] E60_local_hybrid_n25_f0  (112 queued)
+[done] E60_local_hybrid_n25_f0  rc=0  0.8 min
+[start] E60_local_hybrid_n50_f0  (111 queued)
+[done] E480_local_hybrid_n600_f0  rc=0  4.8 min
+[start] E60_local_hybrid_n100_f0  (110 queued)
+[done] E60_local_hybrid_n50_f0  rc=0  1.0 min
+[start] E60_local_hybrid_n600_f0  (109 queued)
+[done] E480_local_hybrid_n600_f1  rc=0  4.6 min
+[start] E60_local_hybrid_n25_f1  (108 queued)
+[start] E60_local_hybrid_n50_f1  (107 queued)
+[done] E60_local_hybrid_n100_f0  rc=0  1.5 min
+[done] E60_local_hybrid_n25_f1  rc=0  0.9 min
+[start] E60_local_hybrid_n100_f1  (106 queued)
+[done] E60_local_hybrid_n50_f1  rc=0  1.0 min
+[start] E60_local_hybrid_n600_f1  (105 queued)
+[done] E480_local_hybrid_n600_f2  rc=0  5.0 min
+[start] E60_local_hybrid_n25_f2  (104 queued)
+[done] E60_local_hybrid_n100_f1  rc=0  1.4 min
+[start] E60_local_hybrid_n50_f2  (103 queued)
+[done] E60_local_hybrid_n25_f2  rc=0  0.8 min
+[start] E60_local_hybrid_n100_f2  (102 queued)
+[start] E60_local_hybrid_n600_f2  (101 queued)
+[done] E60_local_hybrid_n50_f2  rc=0  1.1 min
+[done] E60_local_hybrid_n100_f2  rc=0  1.4 min
+[start] E30_local_hybrid_n25_f0  (100 queued)
+[start] E30_local_hybrid_n50_f0  (99 queued)
+[done] E60_local_hybrid_n600_f0  rc=0  5.3 min
+[done] E30_local_hybrid_n25_f0  rc=0  0.9 min
+[start] E30_local_hybrid_n100_f0  (98 queued)
+[start] E30_local_hybrid_n600_f0  (97 queued)
+[done] E30_local_hybrid_n50_f0  rc=0  1.1 min
+[done] E60_local_hybrid_n600_f1  rc=0  5.3 min
+[start] E30_local_hybrid_n25_f1  (96 queued)
+[start] E30_local_hybrid_n50_f1  (95 queued)
+[done] E30_local_hybrid_n100_f0  rc=0  1.6 min
+[done] E30_local_hybrid_n25_f1  rc=0  0.9 min
+[start] E30_local_hybrid_n100_f1  (94 queued)
+[done] E30_local_hybrid_n50_f1  rc=0  1.1 min
+[start] E30_local_hybrid_n600_f1  (93 queued)
+[done] E60_local_hybrid_n600_f2  rc=0  5.3 min
+[start] E30_local_hybrid_n25_f2  (92 queued)
+[start] E30_local_hybrid_n50_f2  (91 queued)
+[done] E30_local_hybrid_n100_f1  rc=0  1.6 min
+[done] E30_local_hybrid_n25_f2  rc=0  0.9 min
+[start] E30_local_hybrid_n100_f2  (90 queued)
+[done] E30_local_hybrid_n50_f2  rc=0  1.1 min
+[start] E30_local_hybrid_n600_f2  (89 queued)
+[done] E30_local_hybrid_n600_f0  rc=0  5.4 min
+[start] base_E480_hybrid_f0_n25  (88 queued)
+[start] base_E480_hybrid_f0_n50  (87 queued)
+[done] E30_local_hybrid_n100_f2  rc=0  1.6 min
+[done] E30_local_hybrid_n600_f1  rc=0  5.3 min
+[start] base_E480_hybrid_f0_n100  (86 queued)
+[done] base_E480_hybrid_f0_n25  rc=0  3.2 min
+[start] base_E480_hybrid_f0_n600  (85 queued)
+[done] base_E480_hybrid_f0_n50  rc=0  3.1 min
+[start] base_E480_hybrid_f1_n25  (84 queued)
+[done] E30_local_hybrid_n600_f2  rc=0  5.0 min
+[start] base_E480_hybrid_f1_n50  (83 queued)
+[done] base_E480_hybrid_f0_n100  rc=0  2.9 min
+[start] base_E480_hybrid_f1_n100  (82 queued)
+[done] base_E480_hybrid_f1_n25  rc=0  2.8 min
+[start] base_E480_hybrid_f1_n600  (81 queued)
+[done] base_E480_hybrid_f0_n600  rc=0  3.5 min
+[start] base_E480_hybrid_f2_n25  (80 queued)
+[done] base_E480_hybrid_f1_n50  rc=0  2.8 min
+[start] base_E480_hybrid_f2_n50  (79 queued)
+[done] base_E480_hybrid_f1_n100  rc=0  2.8 min
+[start] base_E480_hybrid_f2_n100  (78 queued)
+[start] base_E480_hybrid_f2_n600  (77 queued)
+[start] base_E60_hybrid_f0_n25  (76 queued)
+[done] base_E480_hybrid_f1_n600  rc=0  3.4 min
+[done] base_E480_hybrid_f2_n25  rc=0  2.8 min
+[done] base_E480_hybrid_f2_n50  rc=0  2.8 min
+[start] base_E60_hybrid_f0_n50  (75 queued)
+[done] base_E480_hybrid_f2_n100  rc=0  2.8 min
+[start] base_E60_hybrid_f0_n100  (74 queued)
+[done] base_E60_hybrid_f0_n25  rc=0  2.2 min
+[start] base_E60_hybrid_f0_n600  (73 queued)
+[done] base_E60_hybrid_f0_n50  rc=0  2.2 min
+[start] base_E60_hybrid_f1_n25  (72 queued)
+[done] base_E480_hybrid_f2_n600  rc=0  3.3 min
+[start] base_E60_hybrid_f1_n50  (71 queued)
+[done] base_E60_hybrid_f0_n100  rc=0  2.3 min
+[start] base_E60_hybrid_f1_n100  (70 queued)
+[done] base_E60_hybrid_f0_n600  rc=0  2.7 min
+[done] base_E60_hybrid_f1_n25  rc=0  2.2 min
+[start] base_E60_hybrid_f1_n600  (69 queued)
+[start] base_E60_hybrid_f2_n25  (68 queued)
+[done] base_E60_hybrid_f1_n50  rc=0  2.2 min
+[start] base_E60_hybrid_f2_n50  (67 queued)
+[done] base_E60_hybrid_f1_n100  rc=0  2.3 min
+[start] base_E60_hybrid_f2_n100  (66 queued)
+[done] base_E60_hybrid_f2_n25  rc=0  2.2 min
+[start] base_E60_hybrid_f2_n600  (65 queued)
+[start] base_E30_hybrid_f0_n25  (64 queued)
+[done] base_E60_hybrid_f1_n600  rc=0  2.8 min
+[done] base_E60_hybrid_f2_n50  rc=0  2.2 min
+[start] base_E30_hybrid_f0_n50  (63 queued)
+[done] base_E60_hybrid_f2_n100  rc=0  2.3 min
+[start] base_E30_hybrid_f0_n100  (62 queued)
+[start] base_E30_hybrid_f0_n600  (61 queued)
+[done] base_E60_hybrid_f2_n600  rc=0  2.9 min
+[done] base_E30_hybrid_f0_n25  rc=0  2.8 min
+[start] base_E30_hybrid_f1_n25  (60 queued)
+[done] base_E30_hybrid_f0_n50  rc=0  2.8 min
+[start] base_E30_hybrid_f1_n50  (59 queued)
+[start] base_E30_hybrid_f1_n100  (58 queued)
+[done] base_E30_hybrid_f0_n100  rc=0  2.9 min
+[done] base_E30_hybrid_f0_n600  rc=0  3.3 min
+[done] base_E30_hybrid_f1_n25  rc=0  2.8 min
+[start] base_E30_hybrid_f1_n600  (57 queued)
+[start] base_E30_hybrid_f2_n25  (56 queued)
+[start] base_E30_hybrid_f2_n50  (55 queued)
+[done] base_E30_hybrid_f1_n50  rc=0  2.8 min
+[start] base_E30_hybrid_f2_n100  (54 queued)
+[done] base_E30_hybrid_f1_n100  rc=0  2.8 min
+[done] base_E30_hybrid_f2_n25  rc=0  2.8 min
+[done] base_E30_hybrid_f2_n50  rc=0  2.7 min
+[start] base_E30_hybrid_f2_n600  (53 queued)
+[start] E480_local_hybrid_ep90_f0  (52 queued)
+[done] base_E30_hybrid_f1_n600  rc=0  3.5 min
+[start] E480_local_hybrid_ep90_f1  (51 queued)
+[done] base_E30_hybrid_f2_n100  rc=0  2.9 min
+[start] E480_local_hybrid_ep90_f2  (50 queued)
+[done] base_E30_hybrid_f2_n600  rc=0  4.0 min
+[start] E60_local_hybrid_ep90_f0  (49 queued)
+[start] E60_local_hybrid_ep90_f1  (48 queued)
+[done] E480_local_hybrid_ep90_f0  rc=0  8.4 min
+[done] E480_local_hybrid_ep90_f1  rc=0  8.6 min
+[start] E60_local_hybrid_ep90_f2  (47 queued)
+[done] E480_local_hybrid_ep90_f2  rc=0  8.6 min
+[start] E30_local_hybrid_ep90_f0  (46 queued)
+[done] E60_local_hybrid_ep90_f0  rc=0  9.1 min
+[start] E30_local_hybrid_ep90_f1  (45 queued)
+[done] E60_local_hybrid_ep90_f1  rc=0  8.7 min
+[start] E30_local_hybrid_ep90_f2  (44 queued)
+[done] E60_local_hybrid_ep90_f2  rc=0  8.7 min
+[start] R480_local_forced_full_f1of3_s1013_ep30  (43 queued)
+[done] E30_local_hybrid_ep90_f0  rc=0  8.7 min
+[start] R480_local_forced_full_f2of3_s1023_ep30  (42 queued)
+[done] E30_local_hybrid_ep90_f1  rc=0  8.5 min
+[start] R60_local_hybrid_full_f0of3_s1003_ep30  (41 queued)
+[done] R480_local_forced_full_f1of3_s1013_ep30  rc=0  4.1 min
+[start] R60_local_hybrid_full_f1of3_s1013_ep30  (40 queued)
+[done] R480_local_forced_full_f2of3_s1023_ep30  rc=0  4.2 min
+[start] R60_local_hybrid_full_f2of3_s1023_ep30  (39 queued)
+[done] R60_local_hybrid_full_f0of3_s1003_ep30  rc=0  2.1 min
+[start] R60_local_causal_full_f0of3_s1003_ep30  (38 queued)
+[done] R60_local_hybrid_full_f1of3_s1013_ep30  rc=0  1.9 min
+[start] R60_local_causal_full_f1of3_s1013_ep30  (37 queued)
+[done] R60_local_hybrid_full_f2of3_s1023_ep30  rc=0  2.0 min
+[start] R60_local_causal_full_f2of3_s1023_ep30  (36 queued)
+[done] E30_local_hybrid_ep90_f2  rc=0  8.4 min
+[start] R60_local_forced_full_f0of3_s1003_ep30  (35 queued)
+[done] R60_local_causal_full_f0of3_s1003_ep30  rc=0  1.8 min
+[start] R60_local_forced_full_f1of3_s1013_ep30  (34 queued)
+[done] R60_local_causal_full_f1of3_s1013_ep30  rc=0  1.8 min
+[start] R60_local_forced_full_f2of3_s1023_ep30  (33 queued)
+[done] R60_local_causal_full_f2of3_s1023_ep30  rc=0  1.8 min
+[start] R30_local_hybrid_full_f0of3_s1003_ep30  (32 queued)
+[done] R60_local_forced_full_f0of3_s1003_ep30  rc=0  2.8 min
+[start] R30_local_hybrid_full_f1of3_s1013_ep30  (31 queued)
+[done] R60_local_forced_full_f1of3_s1013_ep30  rc=0  2.7 min
+[start] R30_local_hybrid_full_f2of3_s1023_ep30  (30 queued)
+[done] R60_local_forced_full_f2of3_s1023_ep30  rc=0  2.9 min
+[start] R30_local_causal_full_f0of3_s1003_ep30  (29 queued)
+[done] R30_local_hybrid_full_f0of3_s1003_ep30  rc=0  3.4 min
+[start] R30_local_causal_full_f1of3_s1013_ep30  (28 queued)
+[start] R30_local_causal_full_f2of3_s1023_ep30  (27 queued)
+[done] R30_local_hybrid_full_f1of3_s1013_ep30  rc=0  3.3 min
+[done] R30_local_hybrid_full_f2of3_s1023_ep30  rc=0  3.3 min
+[start] R30_local_forced_full_f0of3_s1003_ep30  (26 queued)
+[done] R30_local_causal_full_f0of3_s1003_ep30  rc=0  3.3 min
+[start] R30_local_forced_full_f1of3_s1013_ep30  (25 queued)
+[done] R30_local_causal_full_f1of3_s1013_ep30  rc=0  3.2 min
+[start] R30_local_forced_full_f2of3_s1023_ep30  (24 queued)
+[done] R30_local_causal_full_f2of3_s1023_ep30  rc=0  3.3 min
+[start] R480_clstm_hybrid_full_f0of3_s1003_ep30  (23 queued)
+[done] R30_local_forced_full_f0of3_s1003_ep30  rc=0  4.9 min
+[start] R480_clstm_hybrid_full_f1of3_s1013_ep30  (22 queued)
+[done] R30_local_forced_full_f1of3_s1013_ep30  rc=0  4.7 min
+[start] R480_clstm_hybrid_full_f2of3_s1023_ep30  (21 queued)
+[done] R30_local_forced_full_f2of3_s1023_ep30  rc=0  4.9 min
+[start] R60_clstm_hybrid_full_f0of3_s1003_ep30  (20 queued)

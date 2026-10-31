@@ -1,0 +1,32 @@
+=== E60_clstmf_forced_full_f1of3_s1013_ep30: Australia 60 m -> UK 60 m
+Australia: 16 valid tiles -> fold 1/3: 11 train tiles, 5 held-out tiles; wet windows: train pool 871, held-out pool 400; using 300 train / 300 held-out / 120 UK windows
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789910367.787405    4148 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789910375.977888    4148 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789910384.982105    4148 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+arch clstmf, regime forced, variant full, T=10, 5,461 trainable params; persistence MSE on training windows 1.435e-04 m^2 (RMSE 12.0 mm); epoch 0 val skill +0.0000 (must be 0)
+epoch  1/30  train/persist 0.7388  val skill -0.2313  (51.8s)
+epoch  2/30  train/persist 0.3715  val skill +0.2421  (47.5s)
+epoch  3/30  train/persist 0.3297  val skill +0.1527  (47.8s)
+epoch  4/30  train/persist 0.2989  val skill +0.2077  (47.7s)
+epoch  5/30  train/persist 0.2765  val skill +0.3010  (48.0s)
+epoch  6/30  train/persist 0.2707  val skill +0.3512  (48.0s)
+epoch  7/30  train/persist 0.2566  val skill +0.3645  (48.6s)
+epoch  8/30  train/persist 0.2544  val skill +0.3594  (48.0s)
+epoch  9/30  train/persist 0.2365  val skill +0.2870  (47.1s)
+epoch 10/30  train/persist 0.2387  val skill +0.3572  (48.8s)
+epoch 11/30  train/persist 0.2324  val skill +0.3510  (48.3s)
+epoch 12/30  train/persist 0.2176  val skill +0.3933  (51.5s)
+Traceback (most recent call last):
+  File "C:\Dev\flood-forecast-demo\completion\engine.py", line 578, in <module>
+    run(a.exp, a.regime, a.fold, variant=a.variant, K=a.folds, epochs=a.epochs, seed=a.seed, n_train=a.n_train,
+  File "C:\Dev\flood-forecast-demo\completion\engine.py", line 472, in run
+    predict, nets, hist, pers = build_and_train(tr_pool, tr_idx, va_idx, regime, variant, epochs, seed, log=log, arch=arch, augment=augment, batch=batch, lr=lr)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\flood-forecast-demo\completion\engine.py", line 337, in build_and_train
+    raise RuntimeError(f"DEAD NETWORK after epoch {ep}: the predicted change map is identical for every validation window (mean per-pixel std {spread:.2e} m)")
+RuntimeError: DEAD NETWORK after epoch 13: the predicted change map is identical for every validation window (mean per-pixel std 8.04e-06 m)

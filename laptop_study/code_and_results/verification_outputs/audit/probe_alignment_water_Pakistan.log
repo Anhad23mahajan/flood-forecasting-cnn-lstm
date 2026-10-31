@@ -1,0 +1,10 @@
+Pakistan: initial-condition grid 810x441, baseline-water pixels 15116 (4.23%), max depth 11.72 m
+land-use grid 13035x7298, water fraction 2.29%; ratio to depth grid: rows 16.093, cols 16.549
+
+1772 geometries tried. Best five (Pearson r between baseline-water mask and land-use water):
+   r = +0.100   H2 16x16 blocks, crop offset (44,176) base px
+   r = +0.100   H2 16x16 blocks, crop offset (48,176) base px
+   r = +0.099   H2 16x16 blocks, crop offset (44,180) base px
+   r = +0.099   H2 16x16 blocks, crop offset (48,180) base px
+   r = +0.099   H2 16x16 blocks, crop offset (48,172) base px
+   median r over all tried: +0.047;  best minus runner-up-of-a-different-geometry gap: +0.001

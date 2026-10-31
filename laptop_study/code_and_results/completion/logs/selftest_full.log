@@ -1,0 +1,31 @@
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+selftest E480 train (Pakistan 480 m): compose == loader / causal / forced OK (max abs diff so far 0.00e+00)
+selftest E480 test (Mozambique 480 m): compose == loader / causal / forced OK (max abs diff so far 0.00e+00)
+selftest E60 train (Australia 60 m): compose == loader / causal / forced OK (max abs diff so far 1.53e-05)
+selftest E60 test (UK 60 m): compose == loader / causal / forced OK (max abs diff so far 1.53e-05)
+selftest E30 train (Australia 30 m): compose == loader / causal / forced OK (max abs diff so far 1.53e-05)
+selftest E30 test (UK 30 m): compose == loader / causal / forced OK (max abs diff so far 1.53e-05)
+pool_Mozambique_480_train: 1 tiles of 128px x 80 start times
+  pool_Mozambique_480_train: start 0/80  windows so far 0  (0s)
+  pool_Mozambique_480_train: start 20/80  windows so far 20  (1s)
+  pool_Mozambique_480_train: start 40/80  windows so far 40  (3s)
+  pool_Mozambique_480_train: start 60/80  windows so far 60  (5s)
+pool_Mozambique_480_train: 79 wet windows saved
+selftest R480 train (Mozambique 480 m): compose == loader / causal / forced OK (max abs diff so far 1.53e-05)
+pool_Pakistan_480_test: 18 tiles of 128px x 60 start times
+  pool_Pakistan_480_test: start 0/60  windows so far 18  (0s)
+  pool_Pakistan_480_test: start 20/60  windows so far 378  (4s)
+  pool_Pakistan_480_test: start 40/60  windows so far 738  (7s)
+pool_Pakistan_480_test: 1080 wet windows saved
+selftest R480 test (Pakistan 480 m): compose == loader / causal / forced OK (max abs diff so far 1.53e-05)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789877502.161675   14004 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789877506.370449   14004 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789877511.137481   14004 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+selftest: untrained model equals persistence in all three regimes
+SELFTEST PASSED

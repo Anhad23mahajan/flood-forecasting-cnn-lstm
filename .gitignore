@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# LaTeX build files
+*.aux
+*.toc
+*.synctex.gz
+
+# Large data and model weights (kept outside the repository)
+*.h5
+*.weights.h5
+*.keras
+*.pt
+*.tif
+*.tiff
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*

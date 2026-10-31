@@ -1,0 +1,8 @@
+Mozambique 480 depth frames 1729 rain files 289 first rain 2019-03-14 03:00:00
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+rain mean per file: max 12.715 mm, total 415.6 mm
+mass balance k=0: depth gain (mm) = 0.501 * rain (mm) + 0.032 ; total gain 217.2 mm vs total rain 415.6 mm
+lag k : -6 -5 -4 -3 -2 -1 +0 +1 +2 +3 +4 +5 +6
+corr dV  : +0.69 +0.71 +0.73 +0.79 +0.86 +0.93 +1.00 +0.93 +0.86 +0.79 +0.72 +0.70 +0.68   best k = 0
+corr dWet: +0.34 +0.38 +0.41 +0.50 +0.59 +0.68 +0.77 +0.74 +0.72 +0.70 +0.68 +0.70 +0.70   best k = 0

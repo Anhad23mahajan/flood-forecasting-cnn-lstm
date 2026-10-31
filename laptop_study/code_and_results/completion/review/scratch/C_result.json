@@ -1,0 +1,59 @@
+{
+ "Pakistan_480_train": {
+  "idx": [
+   62,
+   133,
+   304,
+   535,
+   675,
+   745,
+   1161,
+   1323,
+   1362,
+   1419
+  ],
+  "exact": true,
+  "meta_start_max": 3978,
+  "n_files": 4033,
+  "size": 128,
+  "n_windows": 1440
+ },
+ "Australia_60_train": {
+  "idx": [
+   165,
+   307,
+   324,
+   451,
+   530,
+   548,
+   615,
+   964,
+   1007,
+   1139
+  ],
+  "exact": true,
+  "meta_start_max": 2826,
+  "n_files": 2881,
+  "size": 128,
+  "n_windows": 1271
+ },
+ "UK_60_test": {
+  "idx": [
+   2,
+   3,
+   10,
+   27,
+   51,
+   55,
+   77,
+   97,
+   100,
+   109
+  ],
+  "exact": true,
+  "meta_start_max": 810,
+  "n_files": 865,
+  "size": 85,
+  "n_windows": 120
+ }
+}

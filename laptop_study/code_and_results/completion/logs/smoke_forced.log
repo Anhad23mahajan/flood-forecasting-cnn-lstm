@@ -1,0 +1,21 @@
+=== E60_forced_full_f1of3_s1013_ep3: Australia 60 m -> UK 60 m
+Australia: 16 valid tiles -> fold 1/3: 11 train tiles, 5 held-out tiles; wet windows: train pool 871, held-out pool 400; using 30 train / 300 held-out / 120 UK windows
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789876643.303205   32016 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789876648.276597   32016 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789876655.258666   32016 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+regime forced, variant full, T=10; persistence MSE on training windows 1.870e-04 m^2 (RMSE 13.7 mm); epoch 0 val skill +0.0000 (must be 0)
+epoch  1/3  train/persist 0.9994  val skill +0.0017  (27.7s)
+Traceback (most recent call last):
+  File "C:\Dev\flood-forecast-demo\completion\engine.py", line 517, in <module>
+    run(a.exp, a.regime, a.fold, variant=a.variant, K=a.folds, epochs=a.epochs, seed=a.seed, n_train=a.n_train,
+  File "C:\Dev\flood-forecast-demo\completion\engine.py", line 423, in run
+    predict, nets, hist, pers = build_and_train(tr_pool, tr_idx, va_idx, regime, variant, epochs, seed, log=log)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Dev\flood-forecast-demo\completion\engine.py", line 299, in build_and_train
+    raise RuntimeError(f"DEAD NETWORK after epoch {ep}: predicted change identical for every validation window (std {spread:.2e} m)")
+RuntimeError: DEAD NETWORK after epoch 2: predicted change identical for every validation window (std 8.69e-06 m)

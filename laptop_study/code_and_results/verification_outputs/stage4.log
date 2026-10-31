@@ -1,0 +1,27 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789545157.112398   20620 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789545159.377256   20620 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+I0000 00:00:1789545161.733409   20620 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+gathering a few nearby real training examples...
+  9 examples
+training briefly...
+  epoch 1/8  loss=0.59857  (6.1s)
+  epoch 2/8  loss=0.57821  (0.3s)
+  epoch 3/8  loss=0.55573  (0.3s)
+  epoch 4/8  loss=0.53907  (0.3s)
+  epoch 5/8  loss=0.52643  (0.3s)
+  epoch 6/8  loss=0.51795  (0.3s)
+  epoch 7/8  loss=0.51249  (0.3s)
+  epoch 8/8  loss=0.50458  (0.3s)
+
+computing Grad-CAM on the held prediction...
+target (sum predicted depth): 3670.343
+heatmap range: [0.000, 0.996]  std=0.2784
+saved stage4_gradcam_check.png
+
+mean heatmap value on above-average-depth pixels: 0.5638
+mean heatmap value on below-average-depth pixels:  0.6084

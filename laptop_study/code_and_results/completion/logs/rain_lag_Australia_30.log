@@ -1,0 +1,8 @@
+Australia 30 depth frames 2881 rain files 481 first rain 2022-02-20 19:00:00
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+rain mean per file: max 15.358 mm, total 726.5 mm
+mass balance k=0: depth gain (mm) = 0.497 * rain (mm) + 0.005 ; total gain 362.7 mm vs total rain 726.0 mm
+lag k : -6 -5 -4 -3 -2 -1 +0 +1 +2 +3 +4 +5 +6
+corr dV  : +0.72 +0.74 +0.76 +0.82 +0.87 +0.92 +1.00 +0.92 +0.88 +0.82 +0.77 +0.74 +0.72   best k = 0
+corr dWet: +0.12 +0.12 +0.12 +0.14 +0.18 +0.26 +0.33 +0.28 +0.23 +0.19 +0.17 +0.16 +0.15   best k = 0

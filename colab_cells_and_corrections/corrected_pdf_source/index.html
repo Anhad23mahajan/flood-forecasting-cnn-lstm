@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forecasting Floods with a CNN-LSTM (corrected version)</title>
+<style>
+  @page { size: A4; margin: 16mm 17mm 18mm 17mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 10.4pt; line-height: 1.5; color: #1f2933; margin: 0; }
+  h1.title { font-size: 27pt; color: #0b3a6b; margin: 6mm 0 2mm 0; line-height: 1.15; }
+  .subtitle { font-size: 12.5pt; color: #5b6770; margin: 0 0 2mm 0; }
+  .authors { font-size: 11pt; color: #3d4852; margin-bottom: 5mm; }
+  h2 { font-size: 17pt; color: #0b3a6b; border-bottom: 2px solid #0b3a6b; padding-bottom: 2px; margin: 9mm 0 4mm 0; break-after: avoid; }
+  h2 small { font-size: 9.5pt; color: #5b6770; font-weight: 600; margin-left: 6px; }
+  h3 { font-size: 12.2pt; color: #1f64a8; margin: 5mm 0 1.5mm 0; break-after: avoid; }
+  p { margin: 0 0 2.6mm 0; }
+  ul, ol { margin: 0 0 3mm 0; padding-left: 6mm; }
+  li { margin-bottom: 1.3mm; }
+  .box { border-left: 4px solid #1f77b4; background: #eef5fb; padding: 3mm 4mm; margin: 4mm 0; break-inside: avoid; }
+  .box .t { font-weight: 700; margin-bottom: 1mm; }
+  .box p:last-child, .box ul:last-child { margin-bottom: 0; }
+  .good { border-color: #2e9e44; background: #edf7ef; }
+  .warn { border-color: #e8821a; background: #fdf1e5; }
+  .bad  { border-color: #c0392b; background: #fbeaea; }
+  table { border-collapse: collapse; width: 100%; margin: 3mm 0 3mm 0; break-inside: avoid; font-size: 9.6pt; }
+  th { background: #e1ebf5; text-align: left; font-weight: 700; }
+  th, td { border: 1px solid #cfd8e3; padding: 1.6mm 2.2mm; vertical-align: top; }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  .pos { color: #1b7a32; font-weight: 700; }
+  .neg { color: #b03022; font-weight: 700; }
+  figure { margin: 3mm 0 4mm 0; break-inside: avoid; }
+  figure img { width: 100%; height: auto; display: block; border: 1px solid #e3e8ee; }
+  figure.tall img { width: auto; max-height: 200mm; margin: 0 auto; }
+  figure.mid img { width: 88%; margin: 0 auto; }
+  figcaption { font-size: 9.2pt; color: #4b5762; margin-top: 1.5mm; }
+  .flow { margin: 3mm auto 4mm auto; width: 82%; break-inside: avoid; }
+  .flow .step { border: 1.5px solid #1f77b4; background: #f5f9fd; border-radius: 3px; padding: 2mm 3mm; text-align: center; }
+  .flow .step b { display: block; font-size: 10.4pt; }
+  .flow .step span { font-size: 8.8pt; color: #5b6770; }
+  .flow .arrow { text-align: center; color: #1f77b4; font-size: 11pt; line-height: 1.1; margin: 0.6mm 0; }
+  .flow .step.new { border-color: #2e9e44; background: #f2faf4; }
+  .small { font-size: 9pt; color: #4b5762; }
+  .toc { columns: 2; column-gap: 12mm; margin: 2mm 0 0 0; padding-left: 7mm; }
+  .toc li { margin-bottom: 0.8mm; }
+  .qa h3 { margin-top: 3.2mm; font-size: 11pt; }
+  .pb { break-before: page; }
+</style>
+</head>
+<body>
+
+<h1 class="title">Forecasting Floods with a CNN-LSTM</h1>
+<p class="subtitle">A plain-language guide to the project: what we did, why, what came out, and what is still weak</p>
+<p class="authors">DL Lab project &middot; Anhad Mahajan &amp; Aman Sumeet Saxena<br><span class="small">Corrected version, 4 October 2026. It adds a simple &ldquo;trend&rdquo; forecast to compare with, a second version of the forecaster (version 2), and corrects several statements of the first guide.</span></p>
+
+<div class="box">
+  <div class="t">The whole project in one paragraph</div>
+  <p>We teach a computer program to look at maps of a flood and predict where the water will be <b>30 minutes later</b>. The program learns from four floods (Australia, the UK, Pakistan and Mozambique). We test it on a flood it has <b>never seen</b> and compare it with two very simple guesses: &ldquo;the water stays exactly where it is now&rdquo; and &ldquo;the water keeps changing the way it just changed&rdquo;. On top of the main program we added three extras the course asks for: a <b>capsule network</b> that rates how bad the flooding is, <b>Grad-CAM</b> pictures that show where the program is looking, and <b>written rules</b> (the &ldquo;NeuroSymbolic&rdquo; part) that check the program&rsquo;s answers with common sense and physics.</p>
+</div>
+
+<div class="box warn">
+  <div class="t">What changed in this corrected version</div>
+  <ol>
+    <li>We added a second simple guess, the <b>trend forecast</b>. It beats the first version of our CNN-LSTM in every test (it scores 0.91 to 0.99; the first version scored 0.15 to 0.35, and below zero for late Australia).</li>
+    <li>We built <b>version 2</b> of the forecaster. It starts from the trend forecast and learns only a correction on top. It <b>matches</b> the trend forecast but does not beat it, because at 30 minutes ahead there is almost nothing left to learn.</li>
+    <li>The explanation we gave for the late-Australia failure was wrong. The first version added a little water over most of the map. The training part of the flood did contain falling water (in 73 of its 331 steps the average depth fell), and the trend forecast fitted on it does very well on the last 15%, so missing examples of draining water were not the cause.</li>
+    <li>The water-balance rule helped the first version but not version 2, so it is now described as a physics check, not an improvement. The data follows the water balance closely (within about 5%), not &ldquo;exactly&rdquo;.</li>
+    <li>Statements about what the model &ldquo;learned about floods&rdquo;, about the LSTM and about the Grad-CAM pictures were toned down to what the tests actually show.</li>
+    <li>The capsule network and the Grad-CAM pictures are still those of the <b>first version</b>. We have not rebuilt them on version 2.</li>
+  </ol>
+</div>
+
+<h3 style="margin-top:6mm">Contents</h3>
+<ol class="toc">
+  <li>The problem and the data</li>
+  <li>Preparing the data</li>
+  <li>The yardsticks: two simple forecasts</li>
+  <li>The main model: CNN + LSTM</li>
+  <li>How the models were trained and tested</li>
+  <li>Results: do they beat the yardsticks?</li>
+  <li>The water-balance rule (physics check)</li>
+  <li>The capsule network: how bad is the flood?</li>
+  <li>The severity rules (NeuroSymbolic part 2)</li>
+  <li>Grad-CAM: where is the model looking?</li>
+  <li>What went wrong along the way, and how we fixed it</li>
+  <li>Honest weaknesses</li>
+  <li>Next steps</li>
+  <li>Questions the professor may ask, with simple answers</li>
+  <li>Word list</li>
+</ol>
+
+<!-- ========================================================= 1 -->
+<h2 class="pb">1. The problem and the data</h2>
+
+<h3>Why forecast floods?</h3>
+<p>When a river floods, people need to know <b>where the water is going next</b>: which roads, fields and houses will be under water soon. Forecasting even a short time ahead gives time to warn people and move them.</p>
+
+<h3>Where the data comes from</h3>
+<p>We use a public dataset called <b>FloodCastBench</b> (Xu and others, published in the journal <i>Scientific Data</i>, 2025). The authors took four real floods and re-created them in a <b>computer simulation</b>: a program that uses the laws of how water flows (water runs downhill, rain adds water, rough ground like forest slows it down).</p>
+
+<div class="box warn">
+  <div class="t">Important to say clearly</div>
+  <p>The flood maps are <b>simulated</b>, not photos from satellites. The simulation is built from real ground heights and real satellite rainfall, so it is realistic, but it is still a simulation. This is normal for research like this, because real measurements of water depth every few minutes over a whole region do not exist.</p>
+</div>
+
+<table>
+  <tr><th>Flood</th><th>When</th><th>Size of one map square (cell)</th><th>Map size</th><th>Length</th></tr>
+  <tr><td>Australia</td><td>Feb &ndash; Mar 2022</td><td>30 m &times; 30 m</td><td>1073 &times; 1073 cells (about 32 km wide)</td><td>10 days</td></tr>
+  <tr><td>UK</td><td>Dec 2015</td><td>30 m &times; 30 m</td><td>170 &times; 275 cells</td><td>3 days</td></tr>
+  <tr><td>Pakistan</td><td>Aug 2022</td><td>480 m &times; 480 m</td><td>810 &times; 441 cells (about 390 km tall)</td><td>14 days</td></tr>
+  <tr><td>Mozambique (Cyclone Idai)</td><td>Mar 2019</td><td>480 m &times; 480 m</td><td>151 &times; 138 cells</td><td>6 days</td></tr>
+</table>
+
+<p>Think of each map as a <b>grid of squares</b>, like a chessboard with a million squares. For each square we know:</p>
+<ul>
+  <li><b>Water depth</b>: how many metres of water are on that square. This is what we want to predict.</li>
+  <li><b>Rain</b>: how much rain is falling there (millimetres per hour).</li>
+  <li><b>Ground height</b>: how high the ground is. Water flows from high squares to low squares.</li>
+  <li><b>Land cover</b>: water, trees, crops, buildings and so on.</li>
+</ul>
+<p>We have one map every <b>30 minutes</b>, so each flood is like a flip-book of hundreds of pictures.</p>
+
+<div class="box">
+  <div class="t">How the coarser maps were made</div>
+  <p>The dataset gives a flood at one or two map sizes. According to the dataset paper, the 60 m maps of Australia and the UK are the 30 m simulation results resized to a coarser grid. For Pakistan, the authors shrank the terrain and rainfall to 480 m and ran the simulation again at that size, so its 480 m maps are not resized copies of 30 m results. The paper does not say which of the two methods was used for Mozambique, so we do not claim either.</p>
+</div>
+
+<!-- ========================================================= 2 -->
+<h2>2. Preparing the data</h2>
+<p>Before any learning, the raw files had to be cleaned and lined up. This was done in our earlier notebooks (<i>Data_preparation</i> and the pre-processing and visualisation notebook).</p>
+<ol>
+  <li><b>One map every 30 minutes.</b> The dataset has depth maps every 5 minutes, but rain only every 30 minutes, and water barely moves in 5 minutes. So we keep one depth map in six.</li>
+  <li><b>Put every layer on the same grid.</b> The ground-height and rain files come at a finer size (30 m) than some depth maps (480 m). We averaged the small squares inside each big square, so every layer describes exactly the same place.</li>
+  <li><b>Check the layers line up.</b> If a layer were shifted by even a few squares, the program would learn from wrong information. We checked that rivers on the land-cover map and valleys on the ground-height map sit where the water collects, and the best-matching positions agree with the ones we use to within about one cell.</li>
+  <li><b>Use rain honestly.</b> Each rain file holds the rain that falls in the <b>next</b> 30 minutes. A forecast is not allowed to know the future, so the program only ever sees rain that has <b>already fallen</b>.</li>
+  <li><b>Save to Google Drive</b>, so the data loads in seconds instead of downloading 27 GB again.</li>
+</ol>
+
+<div class="box">
+  <div class="t">How rain lines up with the maps</div>
+  <pre style="margin:1mm 0 2mm 0; font-size:9.2pt; line-height:1.35;">  map at 1:00         map at 1:30          map at 2:00
+        |---- rain A ----|---- rain B ----|</pre>
+  <p>To forecast the 2:00 map while standing at 1:30, the program may use rain A (it has already fallen) but <b>not</b> rain B (it is still in the future).</p>
+</div>
+
+<!-- ========================================================= 3 -->
+<h2>3. The yardsticks: two simple forecasts</h2>
+<p>To know if a forecast is any good, we need something to compare it with. We use two very simple forecasts that need no learning.</p>
+
+<div class="box good">
+  <div class="t">Yardstick 1: &ldquo;copy the last map&rdquo;</div>
+  <p>&ldquo;In 30 minutes the water will be exactly where it is now.&rdquo; It costs nothing and needs no learning.</p>
+</div>
+<div class="box good">
+  <div class="t">Yardstick 2: the &ldquo;trend forecast&rdquo;</div>
+  <p>&ldquo;In 30 minutes the water will have changed the way it changed in the last 30 minutes.&rdquo; It is like guessing tomorrow&rsquo;s temperature: if it got 2 degrees warmer between yesterday and today, you guess about 2 degrees warmer again. For each square, the forecast is the depth now plus the last change in depth times one number. That number says how much of the last change continues. It is 0.92 for the 30 m floods and 0.95 for the 480 m floods, and it was found using only the first part of the training flood, so the trend forecast knows nothing about the test floods.</p>
+</div>
+
+<p>Over 30 minutes a flood changes only a little, so even &ldquo;copy the last map&rdquo; is already <b>very good</b>. An earlier version of this project reported impressive-looking numbers without comparing to this yardstick; when compared, that version was barely better than copying. In the first version of this guide every result was shown only next to &ldquo;copy the last map&rdquo;. A later check showed that this was too easy a yardstick, because the trend forecast is much better than copying. So every result is now shown next to both.</p>
+
+<h3>The score we use: skill</h3>
+<table>
+  <tr><th style="width:26%">Skill value</th><th>Meaning</th></tr>
+  <tr><td class="n">1</td><td>Perfect forecast</td></tr>
+  <tr><td class="n">between 0 and 1</td><td>Better than copying. For example 0.3 means the forecast removes 30% of copying&rsquo;s error</td></tr>
+  <tr><td class="n">0</td><td>No better than copying</td></tr>
+  <tr><td class="n">below 0</td><td>Worse than copying</td></tr>
+</table>
+<p class="small">In formula form: skill = 1 &minus; (forecast&rsquo;s error &divide; copying&rsquo;s error), where &ldquo;error&rdquo; is the sum of the squared differences between forecast and truth over every square. Skill is always measured against copying, so a skill of 0.9 for the trend forecast means it removes 90% of copying&rsquo;s error.</p>
+
+<!-- ========================================================= 4 -->
+<h2>4. The main model: CNN + LSTM</h2>
+<p>The model has two parts, each with a job a person would also do when reading flood maps.</p>
+
+<h3>Part 1: the CNN looks at each picture</h3>
+<p>A <b>CNN</b> (convolutional neural network) is the standard tool for pictures. It slides small 3 &times; 3 &ldquo;windows&rdquo; across the map and learns to spot patterns: the edge of the water, a slope, a valley, a patch of heavy rain. The same windows are used everywhere on the map, so a valley is recognised wherever it is.</p>
+
+<h3>Part 2: the LSTM remembers what happened</h3>
+<p>An <b>LSTM</b> is a network with <b>memory</b>. It reads the maps in order (2 hours ago, 1.5 hours ago, 1 hour ago, now) and keeps track of how the water has been moving: is it rising, spreading, draining? We use a <b>ConvLSTM</b>, an LSTM whose memory is itself a map, so every square remembers what happened around it. A normal LSTM would turn the map into a long list of numbers and lose the shape of the land.</p>
+
+<div class="flow">
+  <div class="step"><b>Input: the last 4 maps (2 hours)</b><span>each with water depth, rain that already fell, and local ground height</span></div>
+  <div class="arrow">&#9660;</div>
+  <div class="step"><b>CNN: 2 layers of pattern detectors</b><span>finds edges, slopes and rain patches in each map</span></div>
+  <div class="arrow">&#9660;</div>
+  <div class="step"><b>ConvLSTM: memory of how the water moved</b><span>32 memory maps, read in time order</span></div>
+  <div class="arrow">&#9660;</div>
+  <div class="step"><b>Output: the predicted CHANGE in water depth</b><span>over the next 30 minutes</span></div>
+  <div class="arrow">&#9660;</div>
+  <div class="step"><b>First version: next map = map now + predicted change</b><span>depth can never go below zero</span></div>
+  <div class="arrow">&#9660;</div>
+  <div class="step new"><b>Version 2: next map = trend forecast + predicted correction</b><span>the correction is counted in centimetres; depth can never go below zero</span></div>
+</div>
+
+<h3>Three design choices</h3>
+<ul>
+  <li><b>Predict the change, not the whole map.</b> Most of the map hardly changes in 30 minutes. If the model had to redraw the whole map, it would waste effort on what it already knows. Predicting only the change makes it focus on where water moves. The model also <b>starts</b> as &ldquo;copy the last map&rdquo; (its last layer begins at zero), so training can only improve on that yardstick.</li>
+  <li><b>Local ground height instead of height above sea level.</b> Water doesn&rsquo;t care how high a field is above the sea; it cares whether the field is <b>higher or lower than its neighbours</b>. So we give the model &ldquo;how much higher or lower than the surroundings&rdquo; for each square.</li>
+  <li><b>Version 2 starts from the trend forecast.</b> The first version starts from &ldquo;copy the last map&rdquo; and has to learn everything else. Version 2 starts from the trend forecast and learns only a small correction on top of it. Its last layer starts at zero, so before any training it <i>is</i> the trend forecast (we checked this: the largest difference was 0.0).</li>
+</ul>
+
+<div class="box">
+  <div class="t">Why version 2 exists</div>
+  <p>After we found that the trend forecast beats the first version (see section 6), we built version 2 to see whether the same network could at least match it. It has the same 62,833 numbers to learn. We changed two things at once, the starting point and counting the correction in centimetres, so we cannot say which of them made the difference.</p>
+</div>
+
+<p>The model is small: about <b>63,000 numbers</b> to learn (a phone photo has millions of pixels). Small is good here: it trains in minutes and is less likely to just memorise the training flood.</p>
+
+<!-- ========================================================= 5 -->
+<h2>5. How the models were trained and tested</h2>
+<h3>Two models, one per map scale</h3>
+<p>A 30 m square and a 480 m square behave very differently (water crosses a 30 m square in seconds, a 480 m square in minutes). So we train two separate models for each version:</p>
+<table>
+  <tr><th style="width:16%">Model</th><th style="width:36%">Learns from</th><th>Tested on</th></tr>
+  <tr><td>30 m model</td><td>Australia, first 70% of the flood</td><td>Australia, last 15% <b>and</b> the whole UK flood (never seen)</td></tr>
+  <tr><td>480 m model</td><td>Pakistan, first 70% of the flood</td><td>Pakistan, last 15% <b>and</b> the whole Mozambique flood (never seen)</td></tr>
+</table>
+<p>The middle 15% of each training flood is used as a <b>check during training</b> (&ldquo;validation&rdquo;): if the model gets better on the training part but worse on this check, it is starting to memorise, and training stops.</p>
+
+<div class="box good">
+  <div class="t">Why test on a never-seen flood?</div>
+  <p>Testing on a flood the model never saw is the honest test. It shows whether the model learned <b>how floods behave in general</b> rather than memorising one place. We only have one such test flood for each map scale, so the results rest on two training-and-test pairs.</p>
+</div>
+
+<h3>Tiles</h3>
+<p>The Australia map has over a million squares, too big to learn from all at once. So the model learns from <b>4,000 small square pieces (tiles) of 64 &times; 64 squares</b>, cut at random places and times. Because the model only uses small sliding windows, the same learned model can afterwards be run on a <b>whole map</b>, which is how all results are measured.</p>
+
+<figure>
+  <img src="training_progress.png" alt="Training progress of the first version">
+  <figcaption><b>Training progress of the first version.</b> The error on the training tiles (blue) and on the later &ldquo;check&rdquo; tiles (orange), after each pass over the data. Training stopped automatically when the check error stopped improving, after only a few passes. Judging from the figure, the 30 m model kept the weights from its second pass, because its check error got worse after that.</figcaption>
+</figure>
+
+<p>Version 2 was trained the same way, on the same tiles. On the check tiles its error before training (the plain trend forecast) was 0.1885 cm for the 30 m model and 0.0243 cm for the 480 m model. After training it was 0.1868 cm and 0.0230 cm, so training only changed the forecast a little. All results in this guide come from <b>a single training run</b> per model.</p>
+
+<!-- ========================================================= 6 -->
+<h2>6. Results: do they beat the yardsticks?</h2>
+<table>
+  <tr><th>Flood</th><th>Tested on</th><th class="n">Copy the last map: typical error</th><th class="n">Skill: trend forecast</th><th class="n">Skill: first version</th><th class="n">Skill: version 2</th></tr>
+  <tr><td>Australia</td><td>unseen last 15%</td><td class="n">0.11 cm</td><td class="n pos">+0.990</td><td class="n neg">&minus;1.449</td><td class="n pos">+0.989</td></tr>
+  <tr><td>UK</td><td>never-seen flood</td><td class="n">0.52 cm</td><td class="n pos">+0.947</td><td class="n pos">+0.305</td><td class="n pos">+0.948</td></tr>
+  <tr><td>Pakistan</td><td>unseen last 15%</td><td class="n">0.10 cm</td><td class="n pos">+0.908</td><td class="n pos">+0.345</td><td class="n pos">+0.908</td></tr>
+  <tr><td>Mozambique</td><td>never-seen flood</td><td class="n">0.55 cm</td><td class="n pos">+0.942</td><td class="n pos">+0.150</td><td class="n pos">+0.943</td></tr>
+</table>
+<p class="small">Skill is measured against &ldquo;copy the last map&rdquo; (section 3). The &ldquo;typical error&rdquo; of copying is averaged over the whole map, dry squares included, so over wet squares only it would be higher (for copying, the whole-map number is about 20% to 45% lower than the wet-squares number).</p>
+
+<div class="box good">
+  <div class="t">The main result</div>
+  <p>On the two floods the models have never seen, the first version beat &ldquo;copy the last map&rdquo; (skill +0.31 in the UK and +0.15 in Mozambique). But the trend forecast, with no network at all, scored +0.95 and +0.94. Version 2, which starts from the trend forecast, matches it (+0.95 and +0.94). So the forecasters are useful in the sense that they beat copying, and version 2 is as good as the strongest simple forecast we tried, but it is not yet better than it.</p>
+</div>
+
+<div class="box">
+  <div class="t">How much is left to learn</div>
+  <p>At 30 minutes ahead the trend forecast already removes 91% to 99% of copying&rsquo;s error. So the most any model could still add is about 1% (Australia), 5% (UK), 9% (Pakistan) and 6% (Mozambique) of copying&rsquo;s error. Version 2 differs from the trend forecast by 0.001 or less in every test, so at this horizon the network adds almost nothing to the trend.</p>
+</div>
+
+<div class="box bad">
+  <div class="t">The first version&rsquo;s failure: late Australia</div>
+  <p>At the end of the Australian flood the water is almost still: copying is wrong by only about 1 millimetre. The first version scored &minus;1.45 there, worse than copying. We first explained this by saying that the model learned only from the rising, rainy part of the flood and never saw water draining away. That explanation does not hold. In 73 of the 331 training steps the average depth of the Australian map fell, so falling water was in the training data, and the last 15% is a very quiet period in which the average depth still rises slightly in every step. The trend forecast, fitted on the same training steps, scores +0.99 on that last part. The error maps below show what really went wrong: the first version predicts slightly too much water over most of the map, and misses the local rises and falls. Version 2 scores +0.989 there.</p>
+</div>
+
+<figure>
+  <img src="new_skill_comparison.png" alt="Skill comparison: trend forecast, first version and version 2">
+  <figcaption><b>Skill per flood.</b> Bars above the black line mean better than copying; 1 is perfect. Orange is the trend forecast (no network), blue the first version, green version 2.</figcaption>
+</figure>
+
+<figure>
+  <img src="new_error_over_time.png" alt="Forecast error at every step of the test period">
+  <figcaption><b>Error at every moment of the test period</b> (lower is better). Grey is copy the last map, blue the first version, orange the trend forecast, green dashed version 2. The orange and green lines lie almost on top of each other and far below the others. In the calm early part of Pakistan&rsquo;s test period version 2 is very slightly above the trend forecast, so version 2 matches the trend and does not beat it. In Australia the first version&rsquo;s error stays between 0.16 and 0.21 cm while copying&rsquo;s error falls to about 0.08 cm, which is what an extra bias that does not go away looks like.</figcaption>
+</figure>
+
+<figure class="tall">
+  <img src="new_error_maps.png" alt="Error maps of the first version and version 2">
+  <figcaption><b>Where the forecasts go wrong</b>, one row per flood, at the moment of fastest change. Columns: water now, true change in 30 minutes, error of the first version, error of version 2. In the error columns <b>purple means the forecast had too much water and orange means too little</b>; the last three columns share one colour scale. The first version&rsquo;s errors are strong along the rivers and rain blocks, and in Australia there is a faint purple haze over most of the map. Version 2&rsquo;s errors are almost invisible at the same scale.</figcaption>
+</figure>
+
+<!-- ========================================================= 7 -->
+<h2>7. The water-balance rule (physics check) <small>NeuroSymbolic part 1</small></h2>
+<p>&ldquo;NeuroSymbolic&rdquo; means combining a <b>neural network</b> (which learns from examples) with <b>written rules</b> (which a person can read and check). Our first rule comes from physics.</p>
+
+<h3>The law</h3>
+<p>In these simulations almost all of the rain stays on the ground, so the rise of the water matches the rain. According to the dataset paper, the Australian, UK and Mozambique simulations let water leave freely at the edge of the map, and the Pakistan simulation has a river flowing in. So some water does cross the edge, and the law below is only an approximation. If no water crossed the edge, then over the whole map:</p>
+<div class="box">
+  <p style="margin:0"><b>average rise of the water in 30 minutes = rain (mm per hour) &times; 0.5 hours</b><br>With no rain, the total amount of water cannot change. It can only move around.</p>
+</div>
+<p>We first checked how well the data follows this law:</p>
+<figure>
+  <img src="water_balance.png" alt="Water balance check">
+  <figcaption><b>Water-balance check.</b> Each dot is one 30-minute step. Across: rain &times; 0.5 hours. Up: how much the water rose on average. The dots sit very close to the red line in all four floods.</figcaption>
+</figure>
+<table>
+  <tr><th>Flood</th><th class="n">Australia</th><th class="n">UK</th><th class="n">Pakistan</th><th class="n">Mozambique</th></tr>
+  <tr><td>Total rise of the water &divide; total (rain &times; 0.5 h)</td><td class="n">0.999</td><td class="n">0.946</td><td class="n">1.028</td><td class="n">1.045</td></tr>
+</table>
+<p>So over a whole flood the water added differs from the rain by up to about 5%. The law holds <b>closely, not exactly</b>. Water crossing the edge of the map is a likely reason, and in 73 of the 331 training steps of the Australian flood the average depth even fell, which cannot happen from rain alone. The rise matches the rain of the <b>same</b> 30 minutes almost perfectly (correlation 1.00), and the rain of the 30 minutes <b>before</b> less well (0.93 to 0.97).</p>
+
+<h3>What the rule does</h3>
+<p>The neural network does not know this law, and the first version had picked up a small habit of adding a little water everywhere. After every forecast, the rule:</p>
+<ol>
+  <li>adds up all the water the network predicts for the whole map;</li>
+  <li>compares it with the amount the rain allows. It can only use rain that has <b>already fallen</b>, so it uses the last 30 minutes of rain as its guess for the next 30 minutes. That is the only honest choice, but it is an approximation;</li>
+  <li>if the network added too much, removes the extra from wet squares; if too little, spreads the missing rain over every square.</li>
+</ol>
+<p><b>Where</b> the water goes is still decided by the network. The rule only fixes the <b>total</b>.</p>
+
+<table>
+  <tr><th>Flood</th><th class="n">Copy + rule (no network)</th><th class="n">First version</th><th class="n">First version + rule</th><th class="n">Trend forecast</th><th class="n">Version 2</th><th class="n">Version 2 + rule</th></tr>
+  <tr><td>Australia</td><td class="n">0.000</td><td class="n neg">&minus;1.449</td><td class="n neg">&minus;0.710</td><td class="n">0.990</td><td class="n">0.989</td><td class="n">0.989</td></tr>
+  <tr><td>UK</td><td class="n">0.053</td><td class="n">0.305</td><td class="n">0.320</td><td class="n">0.947</td><td class="n">0.948</td><td class="n">0.949</td></tr>
+  <tr><td>Pakistan</td><td class="n">0.142</td><td class="n">0.345</td><td class="n">0.404</td><td class="n">0.908</td><td class="n">0.908</td><td class="n">0.901</td></tr>
+  <tr><td>Mozambique</td><td class="n">0.051</td><td class="n">0.150</td><td class="n">0.172</td><td class="n">0.942</td><td class="n">0.943</td><td class="n">0.941</td></tr>
+</table>
+<p class="small">All numbers are skill against copying the last map. The trend-forecast-plus-rule scores are within 0.003 of the trend forecast alone.</p>
+
+<div class="box warn">
+  <div class="t">What this tells us about the rule</div>
+  <p>The rule helped the first version in every flood and halved Australia&rsquo;s problem, because that version added extra water. On version 2 the rule makes almost no difference (between &minus;0.007 and +0.001) and makes Pakistan slightly worse. So we keep the rule as a physics check, not as an improvement. It is still a fair example of NeuroSymbolic AI: the network spots where the water goes, and a written rule makes sure the total is sensible. It just does not raise the score once the forecaster is good.</p>
+</div>
+
+<!-- ========================================================= 8 -->
+<h2>8. The capsule network: how bad is the flood?</h2>
+<h3>The question it answers</h3>
+<p>Besides the map, people want a simple rating: &ldquo;how bad will it be here in 30 minutes?&rdquo;. We cut the map into tiles of 64 &times; 64 squares and rate each tile by the <b>share of its normally-dry land under more than 30 cm of water</b> (rivers and lakes don&rsquo;t count):</p>
+<table>
+  <tr><th style="width:25%">Rating</th><th>Share of dry land under 30 cm+ of water</th></tr>
+  <tr><td>None</td><td>less than 5%</td></tr>
+  <tr><td>Minor</td><td>5% &ndash; 15%</td></tr>
+  <tr><td>Moderate</td><td>15% &ndash; 30%</td></tr>
+  <tr><td>Severe</td><td>30% or more</td></tr>
+</table>
+<p class="small">30 cm is roughly the depth at which water becomes dangerous to walk or drive through.</p>
+
+<h3>What a capsule network is</h3>
+<p>A normal network ends with <b>one number per answer</b> (&ldquo;70% sure it&rsquo;s Severe&rdquo;). A capsule network ends with a small <b>arrow (a list of numbers) per answer</b>: the <b>length</b> of the arrow says how sure it is, and the <b>direction</b> of the arrow stores <b>how</b> the answer looks (where the water is, how it is spread out).</p>
+<p>Inside, many small capsules each look at one part of the tile and &ldquo;vote&rdquo; for each rating. Votes that <b>agree</b> with each other get more weight in the next round (&ldquo;routing by agreement&rdquo;). It is like a group discussion where people who agree with the emerging opinion get listened to more. Our capsule network reuses the CNN + LSTM of the <b>first version</b> of the forecaster (frozen, so it already understands flood maps) and adds the capsule layers on top.</p>
+
+<figure>
+  <img src="capsule_confusion.png" alt="Capsule network confusion matrices">
+  <figcaption><b>How often the capsule network is right</b>, one grid per flood. Rows: the true rating. Columns: the network&rsquo;s answer. Numbers on the diagonal (top-left to bottom-right) are correct answers. Accuracy: Pakistan 87%, Mozambique 64%, Australia 61%, UK 50%.</figcaption>
+</figure>
+
+<div class="box warn">
+  <div class="t">Honest assessment</div>
+  <p>The capsule network works, but it is the weakest part. The rating in 30 minutes is almost the same as the rating <b>now</b>, and if you simply apply the rating rule to the forecaster&rsquo;s predicted map, you get it right about 99% of the time (99.8%, 99.1%, 99.9% and 99.5% in the four floods). So the capsule network is doing a hard version of an easy job. Three more cautions:</p>
+  <ul>
+    <li>In the Pakistan test 698 of the 1,000 tiles are Severe, so always answering &ldquo;Severe&rdquo; would already be right 69.8% of the time, and 87% accuracy is less impressive than it looks.</li>
+    <li>A 64 &times; 64 tile covers about 2 km at 30 m but about 30 km at 480 m, so &ldquo;Severe&rdquo; means different things in the two models, and their accuracies should not be compared with each other.</li>
+    <li>We have not compared the capsule network with a plain output layer. In our earlier, larger laptop study (the &ldquo;round 2&rdquo; study) the capsule network only beat a plain layer when no data augmentation was used.</li>
+  </ul>
+</div>
+
+<!-- ========================================================= 9 -->
+<h2>9. The severity rules <small>NeuroSymbolic part 2</small></h2>
+<p>The second set of written rules checks the capsule network&rsquo;s rating. Each final answer comes with a <b>written reason</b>, so a person can see why the decision was made.</p>
+<table>
+  <tr><th style="width:22%">Rule</th><th>If&hellip;</th><th>Then&hellip;</th></tr>
+  <tr><td>1. No water, no flood</td><td>less than 1% of the land is flooded now <b>and</b> in the forecast</td><td>rating = None</td></tr>
+  <tr><td>2. Rising water</td><td>the forecast shows at least as much flooding as now <b>and</b> it rained more than 1 mm/h in the last hour</td><td>rating can&rsquo;t be lower than the current level</td></tr>
+  <tr><td>3. Agree with the forecast</td><td>the capsule network&rsquo;s rating is more than one level away from the rating of the forecast map</td><td>use the forecast map&rsquo;s rating</td></tr>
+</table>
+<table>
+  <tr><th>Flood</th><th class="n">Capsule network alone</th><th class="n">Capsule network + rules</th><th class="n">Answers changed by the rules</th></tr>
+  <tr><td>Australia</td><td class="n">60.9%</td><td class="n pos">67.9%</td><td class="n">7%</td></tr>
+  <tr><td>UK</td><td class="n">50.0%</td><td class="n pos">56.1%</td><td class="n">6%</td></tr>
+  <tr><td>Pakistan</td><td class="n">87.4%</td><td class="n pos">89.1%</td><td class="n">2%</td></tr>
+  <tr><td>Mozambique</td><td class="n">63.5%</td><td class="n pos">70.7%</td><td class="n">7%</td></tr>
+</table>
+<p>The rules improve the rating in every flood, by up to 7 percentage points. Example of a written reason from the results: <i>&ldquo;Rule 2: water rising during rain, so at least Moderate (the current level).&rdquo;</i></p>
+<div class="box warn">
+  <p>All three rules use the flooded share of the map now or in the forecast, which is almost always a good guide to the rating. Rules 1 and 2 did most of the work (rule 1 fired 134 times in Mozambique and rule 2 fired 40 times in the UK), and rule 3 replaced the capsule rating by the forecast map&rsquo;s rating in 21, 21 and 10 tiles in Australia, the UK and Pakistan. So the gain says more about the rules than about the capsule network.</p>
+</div>
+
+<!-- ========================================================= 10 -->
+<h2>10. Grad-CAM: where is the model looking?</h2>
+<p>Neural networks are often called &ldquo;black boxes&rdquo;. <b>Grad-CAM</b> opens the box a little: it makes a <b>heat map</b> showing which parts of the map most influenced the answer. Bright means very important, dark means ignored.</p>
+<p>How it works, in plain words: we ask &ldquo;if this part of the model&rsquo;s memory changed a little, how much would the forecast change?&rdquo;. Parts that would change the forecast a lot are important, and are painted bright.</p>
+
+<div class="box">
+  <div class="t">What the heat maps show</div>
+  <ul>
+    <li><b>Australia and UK:</b> the bright areas are the river channels and flood edges, where water is actually changing.</li>
+    <li><b>Pakistan:</b> the bright areas are the square patches of heavy rain.</li>
+    <li><b>Mozambique:</b> the bright areas follow the drainage lines where water collects.</li>
+  </ul>
+  <p>These are sensible places. But the heat maps are <b>illustrations, not proof</b>. In our earlier laptop study, a check of the capsule network&rsquo;s heat maps found that they changed a lot from one training run to another, and we have not run such a check on the pictures in this guide.</p>
+</div>
+
+<figure class="tall">
+  <img src="gradcam_forecaster.png" alt="Grad-CAM of the forecaster">
+  <figcaption><b>Grad-CAM of the forecaster (first version).</b> Columns: water now, predicted change, heat map (on top of the ground shape). For the large maps we zoom into the busiest area, because a whole map does not fit in the graphics card&rsquo;s memory.</figcaption>
+</figure>
+
+<figure class="tall">
+  <img src="gradcam_capsule.png" alt="Grad-CAM of the capsule network">
+  <figcaption><b>Grad-CAM of the capsule network on never-seen floods.</b> Top of each pair: the water. Bottom: where the network looked to decide the rating. In the UK it looks at the river and the flooded field beside it; in Mozambique at the large flooded patches. <i>Note:</i> the four UK examples (and the four Mozambique ones) are the same place at nearly the same moment, so they look identical; the next version should pick more varied examples.</figcaption>
+</figure>
+
+<!-- ========================================================= 11 -->
+<h2>11. What went wrong along the way, and how we fixed it</h2>
+<p>These are worth mentioning: they show the results were checked, not just accepted.</p>
+
+<div class="box">
+  <div class="t">Problem 1: the model made up water (first run: Australia skill &minus;12.7)</div>
+  <p>To help the model learn from interesting places, the first version kept only 20% of the &ldquo;calm&rdquo; tiles where nothing changes. The result: the model almost never saw &ldquo;no rain, nothing happens&rdquo;, and learned that <b>water always rises a little</b>. It added water everywhere, even over the sea. <b>Fix:</b> keep all tiles. Australia improved from &minus;12.7 to &minus;1.45, and calm periods in the other floods stopped losing to copying.</p>
+</div>
+<div class="box">
+  <div class="t">Problem 2: out of memory when drawing Grad-CAM</div>
+  <p>Grad-CAM must keep every intermediate step in the graphics card&rsquo;s memory, and the full Australia map (over a million squares) did not fit. <b>Fix:</b> zoom into a 256 &times; 256 window around the area of fastest change.</p>
+</div>
+<div class="box">
+  <div class="t">Problem 3: the first water rule hurt Mozambique</div>
+  <p>At the start of the Mozambique flood the map was almost dry. The first version of the rule piled all the missing rain onto the few wet squares. <b>Fix:</b> rain falls everywhere, so missing rain is now spread over every square. Mozambique went from +0.03 back to +0.17.</p>
+</div>
+<div class="box warn">
+  <div class="t">Problem 4: the first version was far below a simple trend forecast</div>
+  <p>We had only compared the forecaster with &ldquo;copy the last map&rdquo;. A later check scored the trend forecast in exactly the same way: same whole maps, same test parts, same score. We checked the check itself: scored separately on the raw files, copying&rsquo;s error matched the notebook&rsquo;s table to three decimals in all four tests, and the trend scores came out the same when the check was run inside the notebook. The trend forecast scored 0.91 to 0.99; the first version only 0.15 to 0.35, and &minus;1.45 for late Australia. That also showed that our explanation for late Australia (&ldquo;it never saw draining water&rdquo;) was wrong, because the training data did contain falling water. <b>Fix:</b> version 2, which starts from the trend forecast. It now scores the same as the trend forecast. We do not yet know whether starting from the trend, or counting the correction in centimetres, did the fixing.</p>
+</div>
+
+<!-- ========================================================= 12 -->
+<h2>12. Honest weaknesses</h2>
+<ol>
+  <li><b>At 30 minutes ahead a simple trend forecast does nearly all the work.</b> Version 2 only matches it. We have not shown that the CNN-LSTM adds anything at this horizon.</li>
+  <li><b>The first version was weak, and we do not fully know why.</b> It was probably under-trained (the 30 m model kept its second-pass weights), and the very small numbers it had to predict may have made learning slow, but these are guesses. We changed two things at once when building version 2, so we cannot separate the causes.</li>
+  <li><b>The capsule network is doing an easy job the hard way.</b> The rating in 30 minutes is nearly the rating now, so a simple rule on the forecast map gets 99%. It has not been compared with a plain output layer, and it is still built on the first version of the forecaster.</li>
+  <li><b>Only 30 minutes ahead.</b> Useful warnings need several hours. The model&rsquo;s memory (the LSTM) has not been tested where it should matter more.</li>
+  <li><b>Simulated data.</b> The floods are realistic simulations, not real measurements. Results on real floods could be different.</li>
+  <li><b>Single runs and two test pairs.</b> Every result comes from one training run, and each map scale has only one training flood and one never-seen flood.</li>
+  <li><b>The &ldquo;typical error&rdquo; looks smaller than it is</b> because it is averaged over the whole map, dry squares included.</li>
+  <li><b>The water rule uses past rain as a guess for the next 30 minutes</b>, and the data follows the water balance only to within about 5%.</li>
+</ol>
+
+<!-- ========================================================= 13 -->
+<h2>13. Next steps</h2>
+<ol>
+  <li><b>Forecast further ahead.</b> Feed each 30-minute forecast back in as input to reach several hours ahead, step by step. This is where the trend forecast should get worse and the model&rsquo;s memory has a real chance to matter, so compare against a trend forecast carried forward in the same way. We first need to decide what rain to assume for the future steps.</li>
+  <li><b>Test what the model uses.</b> Remove the rain, or freeze the depth history, at test time. Replace the ConvLSTM with a plain convolution to see whether the memory itself helps.</li>
+  <li><b>Give the capsule network a real job.</b> Rate the flooding 3 to 6 hours ahead, where &ldquo;now&rdquo; is no longer enough, and compare it with a plain output layer. Rebuild it, and the Grad-CAM pictures, on version 2.</li>
+  <li><b>Repeat the runs</b> with different random starts, so we can see how much the numbers move by chance.</li>
+</ol>
+
+<!-- ========================================================= 14 -->
+<h2>14. Questions the professor may ask, with simple answers</h2>
+<div class="qa">
+<h3>Why use a CNN?</h3>
+<p>Flood maps are pictures. A CNN is the standard tool for pictures: it learns to spot local patterns (water edges, slopes, rain patches) and recognises them anywhere on the map.</p>
+
+<h3>Why add an LSTM?</h3>
+<p>A single picture doesn&rsquo;t tell you whether water is rising or falling, and a flood is a sequence of maps. So the architecture we set out to build is a CNN with an LSTM, and we use a ConvLSTM so its memory keeps the shape of the map. We then tested it fairly. For a 30-minute forecast, continuing the trend already gets 91% to 99% of the possible improvement over copying, and the LSTM version adds only about 0.001 on top. Memory should matter more for longer forecasts, so that is what we test next.</p>
+
+<h3>Why not just use a bigger model?</h3>
+<p>We have not tested bigger models. We only have four floods, so we kept the model small (about 63,000 numbers); it trains in minutes. At 30 minutes ahead there is also little left to gain, at most about 1% to 9% of copying&rsquo;s error.</p>
+
+<h3>How do you know the model is actually good?</h3>
+<p>We compare it with two simple forecasts: &ldquo;copy the last map&rdquo; and &ldquo;continue the trend&rdquo;. The first version beat copying but not the trend. Version 2 matches the trend. So it is as good as the strongest simple forecast we tried, and not yet better.</p>
+
+<h3>Why is the trend forecast so good?</h3>
+<p>Floods change smoothly: water that has been rising tends to keep rising for a while, and water that has been draining keeps draining. Over 30 minutes the next change is close to the last change. This is why we always compare with it.</p>
+
+<h3>Why predict only 30 minutes ahead?</h3>
+<p>It is the time between two maps in the data, and the simplest honest starting point. The results also show a limit: at 30 minutes the trend forecast already does almost everything, so longer forecasts (several hours) are where a learning model may have more to add. They are the next step.</p>
+
+<h3>Where is the NeuroSymbolic AI?</h3>
+<p>In two places. (1) A physics rule, conservation of water, corrects the forecaster&rsquo;s total amount of water. It helped the first version and makes almost no difference to version 2. (2) Three written if-then rules check the capsule network&rsquo;s rating and give a written reason for each decision. They raised its accuracy in every flood, partly because the rules use the flooded share of the map now and in the forecast, which is almost always a good guide to the rating.</p>
+
+<h3>Why a capsule network?</h3>
+<p>It keeps not just &ldquo;how sure&rdquo; but also &ldquo;how it looks&rdquo; (the direction of its output arrows), and its voting system lets parts of the tile agree on an answer. It works, but honestly, for a 30-minute rating a simple rule on the forecast map is better, and we have not compared it with a plain output layer. The plan is to give it a harder job.</p>
+
+<h3>What does Grad-CAM show?</h3>
+<p>Which parts of the map the model relied on. It lights up rivers, flood edges and rain patches, which are sensible places. It is an illustration; we have not tested how stable these pictures are.</p>
+
+<h3>Why does Australia score badly?</h3>
+<p>It did for the first version. That version added a little water over most of the map, which matters when the water hardly moves: at the end of that flood, copying is wrong by only about 1 mm. Version 2, which starts from the trend forecast, scores +0.989 there.</p>
+
+<h3>Is the model cheating by seeing future rain?</h3>
+<p>No. Each rain file covers the next 30 minutes, so we only give the model rain from earlier files, which has already fallen.</p>
+
+<h3>Why two models instead of one?</h3>
+<p>A 30 m square and a 480 m square behave very differently: water moves across them at very different speeds. One model for both would be confused.</p>
+</div>
+
+<!-- ========================================================= 15 -->
+<h2>15. Word list</h2>
+<table>
+  <tr><th style="width:24%">Word</th><th>Plain meaning</th></tr>
+  <tr><td>Cell / square</td><td>One square of the map grid (30 m or 480 m wide)</td></tr>
+  <tr><td>Neural network</td><td>A program that learns a task from many examples instead of being told the steps</td></tr>
+  <tr><td>CNN</td><td>Convolutional neural network: a network for pictures that slides small pattern-detectors across the image</td></tr>
+  <tr><td>LSTM / ConvLSTM</td><td>A network with memory that reads things in order; the ConvLSTM&rsquo;s memory is a map</td></tr>
+  <tr><td>Training</td><td>Showing the network examples and nudging its numbers to make its answers less wrong</td></tr>
+  <tr><td>Validation</td><td>A held-back part of the data used during training to notice memorising</td></tr>
+  <tr><td>Test</td><td>Data never used in training, used only to measure the final result</td></tr>
+  <tr><td>Tile</td><td>A small square piece of the map (64 &times; 64 cells)</td></tr>
+  <tr><td>Copy the last map</td><td>The first yardstick forecast: &ldquo;the water stays where it is&rdquo;</td></tr>
+  <tr><td>Trend forecast</td><td>The second yardstick forecast: &ldquo;the water keeps changing the way it just changed&rdquo;. It has one number and no network</td></tr>
+  <tr><td>Version 2</td><td>The CNN-LSTM that starts from the trend forecast and learns only a correction</td></tr>
+  <tr><td>Skill</td><td>How much of copying&rsquo;s error a forecast removes. Above 0 = better than copying, 1 = perfect</td></tr>
+  <tr><td>Capsule network</td><td>A network whose outputs are small arrows: length = how sure, direction = how the answer looks</td></tr>
+  <tr><td>Routing by agreement</td><td>The capsule network&rsquo;s voting: parts that agree get more say</td></tr>
+  <tr><td>Grad-CAM</td><td>A heat map showing which parts of the input most influenced the answer</td></tr>
+  <tr><td>NeuroSymbolic AI</td><td>Combining a learning network with written rules that people can read</td></tr>
+  <tr><td>Water balance</td><td>Water can&rsquo;t appear from nowhere: the total only grows by the rain that falls</td></tr>
+  <tr><td>Simulation</td><td>A computer re-creation of the flood using the laws of water flow</td></tr>
+</table>
+<p class="small" style="margin-top:4mm">The numbers in this guide come from the outputs of the notebook <i>Flood_model_updated</i> (with the added comparison cells) and from the comparison with the trend forecast, scored on the same whole-map, 30-minute test.</p>
+
+</body>
+</html>

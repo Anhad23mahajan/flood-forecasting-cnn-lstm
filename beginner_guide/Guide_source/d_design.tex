@@ -1,0 +1,83 @@
+% =========================================================== WHY THIS DESIGN (one-liners)
+\section{Why this design? One-line answers for every choice in the model}\label{ch:design}
+
+Mam will ask about the code and the theory behind it, for example ``why 16 filters?''. Each answer below is one sentence you can say aloud, with a short note in small print for when she asks more. Tags: \textbf{Notebook} means the notebook or report says it, \textbf{Evidence} means one of our own experiments shows it, \textbf{General} means it is the usual reason and we did not test it. We never ran an experiment that changes the number of filters or layers of Model A, so never say ``we tried 8 and 32''.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Model A layer by layer for a 64 by 64 tile (Model B has the same layers). Parameters match the notebook's \cd{summary()}, total 62,833.}\label{tab:layers}
+\begin{tabularx}{\linewidth}{|>{\ttfamily}p{2.2cm}|p{3.6cm}|p{2.5cm}|r|Y|}
+\hline
+\rowcolor{black!12} \hd{Name} & \hd{Keras call} & \hd{Output shape} & \hd{Params} & \hd{Job}\\ \hline
+past\_maps & Input & 4, 64, 64, 3 & 0 & Four maps: depth, rain, local height.\\ \hline
+cnn\_1 & TimeDistributed (Conv2D(16, 3, same, relu)) & 4, 64, 64, 16 & 448 & 16 simple patterns per map.\\ \hline
+cnn\_2 & TimeDistributed (Conv2D(16, 3, same, relu)) & 4, 64, 64, 16 & 2,320 & Bigger shapes from the simple ones.\\ \hline
+memory & ConvLSTM2D(32, 3, same) & 64, 64, 32 & 55,424 & Reads the 4 maps in order, keeps 32 memory maps.\\ \hline
+decoder & Conv2D(16, 3, same, relu) & 64, 64, 16 & 4,624 & Memory to 16 working features.\\ \hline
+depth\_change & Conv2D(1, 1), starts at zero & 64, 64, 1 & 17 & 16 features to one number: the change in depth.\\ \hline
+add, next\_depth & Add, then ReLU & 64, 64, 1 & 0 & Last depth plus change, never below 0.\\ \hline
+\end{tabularx}
+\end{table}
+\textbf{Counting parameters:} kernel height $\times$ width $\times$ input layers $\times$ filters, plus one bias per filter. \cd{cnn\_1}: $3\cdot3\cdot3\cdot16+16=448$. \cd{cnn\_2}: $3\cdot3\cdot16\cdot16+16=2{,}320$. \cd{decoder}: $3\cdot3\cdot32\cdot16+16=4{,}624$. \cd{depth\_change}: $16+1=17$. ConvLSTM: four parts (three gates and the candidate) over 16 input plus 32 memory layers, $4(3\cdot3\cdot48\cdot32+32)=55{,}424$, which is 88\% of the model.
+
+\subsection{The layers}
+\qq{Why a CNN and not a dense network?}{A flood is a picture, and a convolution looks at neighbouring squares with the same small detector everywhere.}{Evidence: the original laptop model squeezed each frame through a dense layer of 128 numbers and scored only 0.06 to 0.19, while local convolutional networks scored 0.81 to 0.87.}
+\qq{Why 16 filters?}{It is a small standard size and each filter learns one pattern, but the notebook does not say why 16 was chosen and we did not tune it.}{General. Evidence: laptop networks of 4,101, 4,741 and 652,918 parameters all scored within about 0.03, so size was not the limit.}
+\qq{Why a second convolution layer?}{A second 3 by 3 layer sees a 5 by 5 area, so it finds bigger shapes such as river bends with fewer weights than one 5 by 5 filter.}{General, we did not test removing it. Two 3 by 3 layers use 18 weights per channel pair against 25, and add one more ReLU bend.}
+\qq{Why a 3 by 3 kernel?}{It is the smallest filter that sees a square and all eight neighbours, so it can see the direction of a slope.}{Evidence: kernels of 1, 5 and 11 scored within 0.025 in the laptop study, so neighbours add little.}
+\qq{What does padding same do?}{It adds a border of zeros so the output stays 64 by 64, which is needed to add the change to the last depth map square by square.}{}
+\qq{Why ReLU, and why none on the last convolution?}{ReLU zeroes negatives and gives the network the bend it needs, and the change in depth can be negative, so the last convolution has none.}{The final ReLU after the addition only keeps the depth from going below zero.}
+\qq{What does TimeDistributed do?}{It runs the same convolution, with the same weights, on each of the four maps separately.}{Shape (4, 64, 64, 3) becomes (4, 64, 64, 16), and sharing weights is why \cd{cnn\_1} costs 448 and not $4\times448$.}
+\qq{Why a ConvLSTM with 32 filters?}{We need to remember how the water moved over 1.5 hours, and a ConvLSTM keeps its memory as a map, using 32 memory layers.}{General for 32, not tuned. Evidence: an 8-filter ConvLSTM scored 0.866, 0.840, 0.811 in the laptop study, and one 140 times larger did not do better (these are not Models A and B).}
+\qq{What does the ConvLSTM output?}{By default only the memory after the last of the four steps, shape (64, 64, 32), which is all we need for one forecast.}{}
+\qq{Why a decoder layer and a final 1 by 1 convolution?}{The decoder turns the 32 memory maps into 16 features, and the 1 by 1 layer mixes them into one number per square, the predicted change, with 17 parameters.}{}
+\qq{Why no pooling, dropout or batch normalisation?}{Pooling would shrink the map and we need an answer for every square, the model is small, and early stopping handles overfitting.}{We did not try dropout or batch normalisation.}
+\qq{Why does the last layer start at zero?}{With zero weights the predicted change is zero, so before training the model exactly copies the last map.}{Notebook. In Model B the same trick starts it exactly at the trend forecast, and the notebook checks the difference is 0.0.}
+\qq{Why predict the change and not the whole map?}{In 30 minutes most squares hardly change, so learning the small difference is much easier than redrawing the map.}{}
+
+\subsection{Data and training}
+\qq{Why 4 input maps?}{Four maps 30 minutes apart show the last 1.5 hours, enough to see whether the water is rising, falling or steady.}{It is the setting \cd{INPUT\_STEPS = 4}. We did not test other lengths in Part 1.}
+\qq{Why 64 by 64 tiles, and why 4,000?}{The Australia map is 1073 by 1073, too big to train in one piece, and a network of small filters can run on a whole map afterwards.}{4,000 training, 600 checking, 1,000 test tiles. \cd{forecaster\_for\_whole\_map} copies the weights into a whole-map model.}
+\qq{Why divide rain by 10 and use local ground height?}{Rain is scaled to a similar size as the other inputs, and water flows because of height differences to the neighbours, so we use height minus the 15 by 15 average.}{Notebook.}
+\qq{Why mean squared error?}{Our skill score is built on squared error, so we train on what we are scored on, and big mistakes count more.}{Model B uses centimetres because, says the notebook, in metres the numbers are tiny.}
+\qq{Why Adam, learning rate 0.001, batch 16, 20 epochs?}{They are the usual safe settings, Adam adapts its own step size, and 20 is only a ceiling because early stopping ends training sooner.}{General. Evidence: in the laptop study a bigger batch with a higher rate cost 0.008 to 0.026 and longer training gained up to 0.024, both near seed noise of about 0.01.}
+\qq{How does early stopping work?}{\cd{EarlyStopping(patience=4, restore\_best\_weights=True)} stops after 4 epochs without improvement on the 600 checking tiles and restores the best weights.}{For the 30 m Model A the checking error was lowest after the second epoch, then rose: overfitting.}
+\qq{Why a 70, 15, 15 split in time?}{Checking and test parts come after the training part, like a real forecast, and beta uses only the training part, so there is no leakage.}{}
+\qq{Why two models, 30 m and 480 m?}{A 30 m and a 480 m square behave very differently, so we never mix them: Australia to UK, and Pakistan to Mozambique.}{}
+\qq{Why not a Transformer or U-Net?}{Our project was a CNN with an LSTM memory, and the dataset's own benchmark has U-Net and FNO but no recurrent model.}{Evidence: a local CNN with no recurrence scored the same at equal training length ($+0.004$ and $-0.014$, inside the $\pm0.03$ band).}
+
+\subsection{Trend forecast, Model B and the water rule}
+\qq{How is beta found?}{It is the least-squares number, the sum of previous change times next change divided by the sum of previous change squared, giving 0.921 for 30 m and 0.948 for 480 m.}{That is \cd{top / bottom} in \cd{fit\_trend\_factor}. Below 1 means the change carries on but slows.}
+\qq{What do Subtract and Rescaling do in Model B?}{Subtract gives the last change, Rescaling(beta) scales it, Add and ReLU make the trend forecast, and the network's output times 0.01 is added as a correction in centimetres.}{}
+\qq{Why does Model B not beat the trend?}{At 30 minutes the trend already removes 91 to 99\% of copying's squared error, leaving only 1, 5, 9 and 6\%.}{If training does not lower the checking error the code keeps the plain trend (\cd{if best\_loss >= start\_loss}).}
+\qq{How does the water-balance rule work?}{Average rise should equal rain times 0.5 hours, so the rule adds missing water to every square or removes extra water only from wet squares.}{It fixes the total only, the network still decides where the water goes.}
+
+\subsection{Capsule network, Grad-CAM and the labels}
+\qq{Why a capsule network?}{It was in our proposal, and a capsule's length says how sure the network is, which suits a severity rating.}{It did not beat a plain layer once we used augmentation, and the forecast map's own class is right 99\% of the time.}
+\qq{Why is the ConvLSTM frozen in the capsule model?}{We reuse the forecaster's memory and train only the new layers, which is faster and needs fewer examples.}{General. It also lets one Grad-CAM function explain both models.}
+\qq{Why strided convolutions and 256 primary capsules?}{Each stride-2 convolution halves the map (64, 32, 16, 8) and $8\times8\times4$ types gives 256 capsules of 8 numbers.}{The notebook gives no reason for the kernel sizes (5, 5, 3) or the count, general reasoning only.}
+\qq{What does squash do?}{It shrinks a vector's length to between 0 and 1 and keeps its direction, so length can mean confidence.}{Formula in the code: $\frac{|v|^2}{1+|v|^2}\cdot\frac{v}{|v|}$.}
+\qq{What is routing by agreement?}{Each small capsule votes for each class, votes that agree with the result get more weight next round, and the code repeats this 3 times.}{The vote weights are $256\times4\times16\times8=131{,}072$ numbers, with a softmax over the 4 classes.}
+\qq{What is the margin loss?}{The true class capsule should be longer than 0.9 and the others shorter than 0.1, with the others weighted 0.5.}{Same constants as Sabour et al., not tuned by us. The notebook comment says class weights stop it answering None every time.}
+\qq{Why Grad-CAM at the ConvLSTM memory?}{It is the last layer that is still a map and is shared by the forecaster and the capsule network.}{General. Steps: average gradient per memory map, weighted sum, keep positive part, scale 0 to 1.}
+\qq{Why 30 cm and the 5, 15, 30\% limits?}{They are our own definition: severity is the share of normally dry land under more than 30 cm, below 5\% None, 5 to 15 Minor, 15 to 30 Moderate, 30 and up Severe.}{Notebook. Not an official standard. The old deepest-square label did not measure the flood.}
+
+\subsection{Formulas worth knowing}\label{sec:formulas}
+\textbf{Convolution:} $y=\max\bigl(0,\ b+\sum w\,x\bigr)$ summed over the 3 by 3 squares and all input layers, with the same weights at every position. Output size per side $\lfloor(n+2p-k)/s\rfloor+1$ (map $n$, kernel $k$, padding $p$, stride $s$), so ``same'' padding keeps $n$ and stride 2 halves it.
+
+\textbf{LSTM cell:} $f_t=\sigma(W_f[x_t,h_{t-1}]+b_f)$ forget gate, $i_t=\sigma(W_i[\cdot]+b_i)$ input gate, $o_t=\sigma(W_o[\cdot]+b_o)$ output gate, $g_t=\tanh(W_g[\cdot]+b_g)$ candidate, then $c_t=f_t\odot c_{t-1}+i_t\odot g_t$ and $h_t=o_t\odot\tanh(c_t)$. The memory is updated by adding, so the learning signal does not fade over many steps (the vanishing gradient problem of a plain recurrent network).
+
+\textbf{ConvLSTM:} the same equations, but $x$, $h$, $c$ are maps and every product with $W$ is a convolution, for example $f_t=\sigma(W_{xf}*x_t+W_{hf}*h_{t-1}+b_f)$. Keras defaults (tanh and sigmoid) are unchanged.
+
+\textbf{Others:} MSE $=\frac1N\sum(\hat y-y)^2$. Skill $=1-\sum(\hat y-y)^2/\sum(\text{last}-y)^2$. Trend $=\max(0,\ d_t+\beta(d_t-d_{t-1}))$. Softmax $e^{s_k}/\sum_j e^{s_j}$. Adam moves each weight by about learning rate $\times$ average gradient $/\sqrt{\text{average squared gradient}}$. Grad-CAM $=\text{ReLU}(\sum_k\alpha_kA_k)$ with $A_k$ memory map $k$ and $\alpha_k$ its average gradient.
+
+\textbf{What each square sees:} two 3 by 3 convolutions give 5 by 5, the ConvLSTM and the decoder each add one more step, so each forecast square depends on at least a 9 by 9 patch of the newest map (at least 270 m at 30 m and 4.3 km at 480 m).
+
+\subsection{Five answers to learn by heart}
+\begin{enumerate}
+\item \textbf{Why this architecture?} The CNN reads the water's shape in each map, the ConvLSTM remembers how it moved over 1.5 hours, and a decoder turns the memory into the change in depth.
+\item \textbf{Why 16 filters and 32 memory maps?} Small standard sizes that we did not tune, and our laptop study suggests size is not what limits the skill.
+\item \textbf{Why a second convolution?} It sees a 5 by 5 area, so it finds bigger shapes with fewer weights than one big filter, and we did not test removing it.
+\item \textbf{Why predict the change, last layer at zero?} Most squares hardly change in 30 minutes, so the model starts as a perfect copy and learns only the small difference.
+\item \textbf{Main finding about the design?} A trend forecast with one number matches the network at 30 minutes, so what matters is each square's recent depth history, not the layer design.
+\end{enumerate}

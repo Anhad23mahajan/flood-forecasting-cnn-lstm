@@ -1,0 +1,48 @@
+246 jobs in batches ['C', 'CG', 'FXG', 'OPT', 'S2', 'F', 'BX', 'LC', 'LCB', 'EP', 'EXS', 'EPC', 'RN', 'SX', 'D', 'OPTX', 'LC2']: 213 already done, 6 previously aborted by the dead-network guard (recorded, not re-run), 27 to run
+[start] E480_v2lin_hybrid_full_f1of3_s1013_ep30  (22 queued)
+[start] E480_v2lin_hybrid_full_f2of3_s1023_ep30  (21 queued)
+[start] E480_clstm_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  (20 queued)
+[done] E480_clstm_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  rc=0  14.4 min
+[start] E480_clstm_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  (19 queued)
+[start] E480_clstm_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  (18 queued)
+[done] E480_clstm_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  rc=0  13.8 min
+[start] E480_local_hybrid_n600_ep15_f0  (17 queued)
+[start] E480_local_hybrid_n300_ep60_f0  (16 queued)
+[done] E480_local_hybrid_n600_ep15_f0  rc=0  3.3 min
+[done] E480_clstm_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  rc=0  13.5 min
+[start] E480_local_hybrid_n600_ep15_f1  (15 queued)
+[done] E480_local_hybrid_n300_ep60_f0  rc=0  5.8 min
+[start] E480_local_hybrid_n300_ep60_f1  (14 queued)
+[done] E480_local_hybrid_n600_ep15_f1  rc=0  2.9 min
+[start] E480_local_hybrid_n600_ep15_f2  (13 queued)
+[done] E480_local_hybrid_n600_ep15_f2  rc=0  2.9 min
+[start] E480_local_hybrid_n300_ep60_f2  (12 queued)
+[done] E480_local_hybrid_n300_ep60_f1  rc=0  5.7 min
+[start] E60_local_hybrid_n600_ep15_f0  (11 queued)
+[done] E60_local_hybrid_n600_ep15_f0  rc=0  2.9 min
+[start] E60_local_hybrid_n300_ep60_f0  (10 queued)
+[done] E480_local_hybrid_n300_ep60_f2  rc=0  5.7 min
+[start] E60_local_hybrid_n600_ep15_f1  (9 queued)
+[done] E60_local_hybrid_n600_ep15_f1  rc=0  2.9 min
+[start] E60_local_hybrid_n300_ep60_f1  (8 queued)
+[done] E60_local_hybrid_n300_ep60_f0  rc=0  5.5 min
+[start] E60_local_hybrid_n600_ep15_f2  (7 queued)
+[done] E60_local_hybrid_n600_ep15_f2  rc=0  2.9 min
+[start] E60_local_hybrid_n300_ep60_f2  (6 queued)
+[done] E60_local_hybrid_n300_ep60_f1  rc=0  5.6 min
+[start] E30_local_hybrid_n600_ep15_f0  (5 queued)
+[done] E30_local_hybrid_n600_ep15_f0  rc=0  3.1 min
+[start] E30_local_hybrid_n300_ep60_f0  (4 queued)
+[done] E60_local_hybrid_n300_ep60_f2  rc=0  5.6 min
+[start] E30_local_hybrid_n600_ep15_f1  (3 queued)
+[done] E30_local_hybrid_n600_ep15_f1  rc=0  3.1 min
+[start] E30_local_hybrid_n300_ep60_f1  (2 queued)
+[start] E30_local_hybrid_n600_ep15_f2  (1 queued)
+[done] E30_local_hybrid_n300_ep60_f0  rc=0  5.8 min
+[done] E30_local_hybrid_n600_ep15_f2  rc=0  3.0 min
+[start] E30_local_hybrid_n300_ep60_f2  (0 queued)
+[done] E480_v2lin_hybrid_full_f1of3_s1013_ep30  rc=0  68.2 min
+[done] E480_v2lin_hybrid_full_f2of3_s1023_ep30  rc=0  68.0 min
+[done] E30_local_hybrid_n300_ep60_f1  rc=0  5.4 min
+[done] E30_local_hybrid_n300_ep60_f2  rc=0  3.2 min
+QUEUE FINISHED; failed: []

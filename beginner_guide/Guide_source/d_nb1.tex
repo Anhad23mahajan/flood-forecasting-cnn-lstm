@@ -1,0 +1,144 @@
+\section{Notebook 1: Data exploration}\label{ch:nb-explore}
+\begingroup\emergencystretch=3em
+
+\subsection{The big picture}
+The notebook downloads the whole FloodCastBench dataset from Hugging Face, checks that no file is missing, and then looks at the data with tables, pictures and graphs. It also tests which rain map goes with which depth map and tests an old ``severe'' label. There is no model, nothing is saved to Google Drive, and the files vanish when the Colab session ends. Cell numbers count every cell from 0 (Colab does not show them). The next notebook (Chapter~\ref{ch:nb-prep}) builds the model arrays from what is found here.
+
+A \term{depth map} is a grid of water depths in metres and a \term{rain map} a grid of rain in mm per hour, both in \cd{.tif} files. A \term{dataset} is one region at one square size: Australia 30m, UK 30m, Australia 60m, UK 60m, Pakistan 480m, Mozambique 480m.
+
+\subsection{Cells 2 to 5: Setup and settings}
+Cell 2 runs \cd{!pip install -q rasterio} (\cd{!} means a computer command, \cd{-q} means quiet, and \texttt{rasterio} opens \cd{.tif} files). It is needed every session because Colab starts on a fresh machine. Cell 3 loads the toolboxes (\cd{os}, \cd{glob}, \cd{time}, \cd{shutil}, \cd{numpy}, \cd{pandas}, \cd{matplotlib}, \cd{rasterio}, and \cd{snapshot\_download} and \cd{HfApi} from \cd{huggingface\_hub}). Cell 5 writes every fixed value in CAPITAL LETTERS: the dataset address \cd{REPO\_ID}, the temporary folder \cd{DATA\_DIR}, the list \cd{REGIONS}, the dictionary \cd{DEPTH\_FOLDERS} (dataset name to folder, so a loop can say ``for every dataset'') and \cd{REGION\_OF} (rain is stored per region). None of them prints anything.
+
+\codelines{explore_c5}{43}{48}
+Depth maps are 300 seconds apart and rain maps 1800 seconds apart, so one rain map covers 6 depth maps. A square is ``wet'' above 0.01 m (1 cm), a cut-off chosen in the notebook (we think a film thinner than 1 cm is almost dry).
+
+\subsection{Cells 7 to 9: Disk space, token and the download}
+Cell 7 checks the free disk with \cd{shutil.disk\_usage} and prints ``Free disk space: 62.9 GB'' and ``Space needed: about 30 GB'' (the 30 is typed by hand). Cell 8 reads the Hugging Face token (a secret key) from Colab Secrets inside \cd{try}/\cd{except}, so a missing key does not stop the notebook. It printed ``Token found''. Cell 9 is the download:
+
+\codelines{explore_c9}{5}{10}
+The loop tries up to 5 times (\cd{range(1, 6)}). \cd{snapshot\_download} fetches the whole dataset, 8 files at a time (\cd{max\_workers=8}), and skips files already present, so a retry carries on where it stopped. On success it prints ``Download complete'' and \cd{break}s. On an error the \cd{except} part waits \cd{time.sleep(60)} (60 seconds) and tries again. It prints ``Time taken: 60.0 minutes''.
+
+\begin{carefulbox}
+\textbf{The 429 lines.} ``HTTP Error 429'' and ``Rate limited. Waiting 113.0s before retry'' mean ``Too Many Requests''. Hugging Face asks the library to slow down and it waits and retries that file (up to 5 times). It is not a failure. The 60.0 minutes covers moving about 27 GB and all those waits. No ``Attempt failed'' line is visible in the saved output.
+\end{carefulbox}
+\qq{Why 5 tries?}{An hour-long download of 14,870 files can break, and files already fetched are skipped on a retry.}{}
+
+\subsection{Cell 10: Check that every file arrived}
+\codelines{explore_c10}{6}{12}
+\cd{api.list\_repo\_files} gives the name of every file on Hugging Face. The loop checks each with \cd{os.path.exists} and \cd{append}s only those that are absent. Output: ``Files in the dataset: 14870'' and ``Files missing: 0''. The cell checks that files exist, not that they are undamaged. (Our own count later finds 13,254 depth maps, 1,587 rain maps and 12 ground files, which is 14,853. We do not know what the other 17 are.)
+
+\subsection{Cell 12: Four helper functions}
+A \term{function} is a named recipe: \cd{def name(inputs):} defines it and nothing runs until it is called. \cd{get\_seconds} turns \cd{300.tif} into the number 300 (needed because sorting names as text puts \cd{1200.tif} before \cd{300.tif}). \cd{get\_depth\_files} lists a dataset's depth files with \cd{glob} and sorts them by that number. \cd{get\_rain\_files} does the same for a region and its alphabetical sort is enough because names like \cd{20151204-S120000.tif} start with the date. \cd{read\_map} opens a map and returns it as a 2D array:
+\begin{itemize}
+\item With \cd{max\_size} it reads a shrunk copy (shrink = longer side divided by \cd{max\_size}, rounded up). Pictures and rain averages use shrunk maps, depth measurements use full size. We believe rasterio picks squares without averaging, so shrunk numbers are close, not exact.
+\item \cd{astype("float32")} allows NaN. The files mark ``no data'' with a huge negative number (the cell comment) and \cd{data < -1e30} turns those into NaN, which \cd{np.nanmean} and \cd{np.nanmax} skip. Cell 20 finds none, so this is only a safety net.
+\end{itemize}
+\qq{What is NaN and why use it?}{It means ``no value'', and it keeps the empty-place marker out of averages and maxima.}{}
+
+\subsection{Cell 14: What is in the dataset}
+For each dataset the cell counts files, converts the time span to hours, reads the map size from the first file, and tests \cd{np.all(np.diff(seconds) == 300)}, that every gap is exactly 5 minutes. A second table does the rain regions (hours are \cd{(len(files) - 1) * 1800 / 3600}).
+
+\begin{center}\small
+\begin{tabular}{|l|r|r|l|c|}
+\hline
+\rowcolor{black!12} \hd{Depth dataset} & \hd{Maps} & \hd{Hours} & \hd{Size (rows x cols)} & \hd{5 min?}\\ \hline
+Australia 30m & 2881 & 240.0 & 1073 x 1073 & True\\ \hline
+UK 30m & 865 & 72.0 & 170 x 275 & True\\ \hline
+Australia 60m & 2881 & 240.0 & 536 x 536 & True\\ \hline
+UK 60m & 865 & 72.0 & 85 x 137 & True\\ \hline
+Pakistan 480m & 4033 & 336.0 & 810 x 441 & True\\ \hline
+Mozambique 480m & 1729 & 144.0 & 151 x 138 & True\\ \hline
+\end{tabular}\hspace{1em}
+\begin{tabular}{|l|r|r|l|}
+\hline
+\rowcolor{black!12} \hd{Rain region} & \hd{Maps} & \hd{Hours} & \hd{Size}\\ \hline
+Australia & 481 & 240.0 & 1073 x 1073\\ \hline
+UK & 145 & 72.0 & 180 x 285\\ \hline
+Pakistan & 672 & 335.5 & 13035 x 7298\\ \hline
+Mozambique & 289 & 144.0 & 2624 x 2321\\ \hline
+\end{tabular}
+\end{center}
+All six are exactly 5 minutes apart, so no depth map is missing inside a flood. 240 hours is 2,880 gaps and needs 2,881 maps because both ends count. \textbf{Pakistan oddity:} 4,033 depth maps would need 673 rain maps but there are 672, so the last depth map has no rain map and cell 20 stores NaN for it. Rain and depth maps also differ in size (Pakistan depth 810 by 441, rain 13,035 by 7,298, which the report says is 30 m squares), so the next notebook puts them on one grid. The warning ``NotGeoreferencedWarning: Dataset has no geotransform'' only says the files are plain grids with no map position. It is harmless.
+
+\subsection{Cell 16: The four regions}
+For each region the cell draws ground height (a DEM, digital elevation model), land cover and the water on the ground at the start. \cd{LAND\_USE} maps each land-cover code to a name and colour. Squares with under 1 cm of water are set to NaN so the water stands out. The rest only draws (\cd{subplots}, \cd{imshow}, \cd{colorbar}).
+
+\textbf{Say this:} ``The four regions differ in height, ground cover and starting water, which is why the floods look different. The model uses ground height as an input.'' Australia reaches about 210 m with a river and sea, the UK is flat (about 5 to 63 m) with many buildings and up to about 2.4 m of start water, Pakistan is tall (to about 1,500 m on the left) with one 11 m deep spot, and Mozambique (to about 185 m) starts completely dry. The ``grey = dry'' in the titles shows as white because \cd{axis("off")} also removes the grey.
+
+\subsection{Cell 18: Six moments of each flood}
+\codelines{explore_c18}{12}{13}
+For each dataset it picks 6 evenly spaced maps (\cd{np.linspace}, for Australia 30m hours 0, 48, 96, 144, 192, 240) and draws them on one colour scale. The top of the scale is the 98th percentile of the wet squares and not the maximum, because a few river or sea squares are 10 or 20 times deeper and would turn everything else the same pale blue. Each dataset has its own scale, so colours are comparable only inside one figure.
+
+\nbfig{explore_c18_5.jpg}{0.5}{Australia 30m at 0 to 240 hours. Darker blue is deeper (up to about 2.4 m), white is dry.}
+\textbf{Say this:} ``Floods are not instant. Water spreads in thin layers, collects in low places and rivers, and changes slowly, so beating a copy of the last map is hard.'' Mozambique starts empty and fills slowly, the UK shows its river from the start, and Pakistan covers most of the left and upper part within 67 hours.
+
+\subsection{Cells 20 and 21: Rain and water every 30 minutes}
+Cell 20 is the main, slow cell. For every dataset it keeps one depth map in six (\cd{[::6]}, so 30 minutes apart) and reads it at full size. For each it measures the average depth (\cd{np.nanmean}), the deepest square (\cd{np.nanmax}), the wet share (mean of \cd{depth > WET\_DEPTH\_M}) and the average rain from the matching rain map, shrunk (NaN if none, only for Pakistan's last step). The data check:
+
+\codelines{explore_c20}{21}{22}
+It counts missing squares and negative depths. Every dataset printed ``impossible values found: 0'' over 2,214 maps (481, 145, 481, 145, 673, 289), so there is no missing square and no negative depth in the maps checked (one map in six). Cell 21 draws three graphs per dataset on one hours axis: rain bars, average depth, and wet-area share.
+
+\textbf{Say this:} ``The flood follows the rain. Water rises while it rains and then stays, and the wet area is largest around the heaviest rain.'' For Australia 30m the rain peaks near 15 mm per hour around hour 171, the average depth levels off near 36 cm and the wet area peaks at 56.3\% at hour 171.5. UK 30m peaks at 49.3\% at hour 24.5, Pakistan's wet area jumps from about 4\% to 80\% in 15 hours and peaks at 86.1\%, and Mozambique starts dry and peaks at 80.3\% at hour 54. After the rain stops the wet area slowly shrinks, which we think is water collecting in low places. The 60 m graphs match the 30 m ones except for a higher wet percentage (67.9\% against 56.3\%), so do not compare wet-area percentages between scales.
+\qq{Why is rain shrunk and depth not?}{Rain maps are huge and only their average is needed, while depth is read at full size so its numbers are exact.}{}
+
+\subsection{Cell 23: Which rain map goes with which depth map}
+For the water that appears in each half hour (\cd{np.diff} of the average depth, times 1000 for mm), the cell tests three rain maps: the one with the same time stamp, one 30 minutes earlier and one 30 minutes later.
+
+\codelines{explore_c23}{6}{12}
+The function pairs each half hour \cd{step} with rain map \cd{step + shift} ($-1$, 0 or $+1$) if it exists and is not NaN, and \cd{np.corrcoef} gives the \term{correlation} (1 means they rise and fall together, 0 no link). The right graph plots water added against rain, with a dashed line ``water added $=0.5\times$ rain'', because rain is per \emph{hour} and a step is half an hour. If all rain stays on the ground the dots fall on that line.
+
+\nbfig{explore_c23_17.jpg}{0.5}{Australia 30m. Left: correlation for the three rain maps (green is the best). Right: each dot is one half hour, rain on x and water added on y.}
+\textbf{Say this:} ``The water that appears in a half hour follows the rain map with the same time stamp, and it equals half the hourly rain rate.'' In all six datasets the same-stamp bar is the green one (about 1.0) and the neighbours are 0.92 to 0.97, because rain changes slowly. The ``1.0'' label sits on the title, a drawing flaw. The report measured 0.494 to 0.502 for the slope. Since rain file $j$ is the rain after depth map $j$, a forecast must not use it, so the models use only rain that has already fallen and accept the lower 0.92 to 0.97 match (Chapters~\ref{ch:data}, \ref{ch:nb-model}).
+\qq{Why do the dots lie on 0.5 times rain?}{Rain is mm per hour and a step is half an hour, so almost all rain stays on the ground in these simulations.}{}
+
+\subsection{Cell 25: Is the old ``severe'' label measuring the flood?}
+At the wettest moment of each flood the cell cuts the map into 128 by 128 tiles (\cd{depth[top:top + 128, left:left + 128]}). It applies the old rule and also measures the share of each tile under more than 30 cm:
+
+\codelines{explore_c25}{23}{24}
+\codelines{explore_c25}{26}{27}
+\begin{center}\small
+\begin{tabular}{|l|r|r|r|}
+\hline
+\rowcolor{black!12} \hd{Dataset} & \hd{Tiles} & \hd{Called severe (\%)} & \hd{Actually flooded (\%)}\\ \hline
+Australia 30m & 64 & 93.75 & 35.73\\ \hline
+UK 30m & 2 & 100.00 & 11.01\\ \hline
+Australia 60m & 16 & 100.00 & 37.13\\ \hline
+UK 60m & 0 & 0.00 & 0.00\\ \hline
+Pakistan 480m & 18 & 100.00 & 33.20\\ \hline
+Mozambique 480m & 1 & 100.00 & 13.87\\ \hline
+\end{tabular}
+\end{center}
+\textbf{Say this:} ``The old label called almost every tile severe because it looked at the deepest single square, while only about a third of a tile was really flooded, so we replaced it.'' UK 60m shows 0.00 only because its map has 85 rows, fewer than 128, so no tile fits. UK 30m (2 tiles) and Mozambique (1) rest on very few tiles. The final label (share of normally dry land under 30 cm, 64 by 64 tiles) is in Chapter~\ref{ch:capsule}.
+
+\subsection{Cell 27: The summary table}
+For each dataset it takes the wettest step and shows the deepest square over all measured moments, plus the wet share, the hour and the average depth at that moment.
+\begin{center}\small
+\begin{tabular}{|l|r|r|r|r|}
+\hline
+\rowcolor{black!12} \hd{Dataset} & \hd{Deepest (m)} & \hd{Wet area (\%)} & \hd{Hour} & \hd{Avg depth (cm)}\\ \hline
+Australia 30m & 19.21 & 56.33 & 171.5 & 30.83\\ \hline
+UK 30m & 6.11 & 49.33 & 24.5 & 10.73\\ \hline
+Australia 60m & 15.01 & 67.85 & 171.5 & 30.85\\ \hline
+UK 60m & 4.88 & 55.56 & 24.5 & 10.78\\ \hline
+Pakistan 480m & 26.67 & 86.08 & 132.5 & 34.53\\ \hline
+Mozambique 480m & 12.41 & 80.26 & 54.0 & 15.38\\ \hline
+\end{tabular}
+\end{center}
+The 60 m rows have a lower deepest point and higher wet percentage because the squares are coarser. Pakistan has the largest wet area but its squares are 480 m, so it is not a fair ranking.
+
+\qq{Why this dataset, and how do you know the data is complete?}{FloodCastBench has simulated floods in four regions at several resolutions with matching rain, and we checked 14,870 of 14,870 files present and no impossible values.}{}
+
+\subsection{This notebook in ten lines}
+\begin{enumerate}
+\item It installs rasterio, loads its libraries and writes every setting in one cell.
+\item It downloads 14,870 files (about 27 GB) in about 60 minutes, and the 429 messages are only the website asking it to slow down.
+\item It checks that all 14,870 files arrived (zero missing).
+\item It defines four helpers: time from a file name, list depth files, list rain files, read a map with NaN for missing values.
+\item Its tables show six depth datasets 5 minutes apart and four rain sets 30 minutes apart.
+\item It draws ground height, land cover and start water of the four regions.
+\item It draws six moments of each flood on one colour scale.
+\item It measures depth, wet area and rain every 30 minutes and finds no impossible values in 2,214 maps.
+\item It shows that water added follows the same-stamp rain map (about 1.00, neighbours 0.92 to 0.97) and equals half the hourly rain.
+\item It shows that the old ``severe'' label marks almost every tile because of one deep spot, and ends with a summary table.
+\end{enumerate}
+\endgroup

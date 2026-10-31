@@ -1,0 +1,184 @@
+
+--- cell 2: import warnings
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789810197.709529   33028 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789810201.178108   33028 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+GPU available: []
+TensorFlow version: 2.21.0
+    ok (11.3s)
+
+--- cell 4: PATCH_SIZE = 128
+    ok (0.0s)
+
+--- cell 6: DATA_ROOT = "data/extracted/FloodCastBench"
+local DATA_ROOT: data/extracted/FloodCastBench
+    ok (0.0s)
+
+--- cell 16: import sys
+Australia: 2881 depth frames, grid 1073x1073, 30m, layer offset (0, 0)
+UK: 865 depth frames, grid 170x275, 30m, layer offset (5, 5)
+
+Pakistan is refused, as intended: Pakistan: DEM grid is 13035x7298 but the depth grid is 810x441 and no verified offset is registered in LAYER_OFFSETS - windows read at the same (row, col) would
+    ok (0.5s)
+
+--- cell 18: import rasterio
+Severity-class census (fraction of windows in each class):
+  Australia  patches=62  none=13%  minor=9%  moderate=9%  severe=69%
+  UK         patches= 2  none=0%  minor=0%  moderate=0%  severe=100%
+-> Only Australia has real class diversity. Severity is trained and validated there only.
+    ok (4.9s)
+
+--- cell 20: rd_au = regions["Australia"]
+Australia patches: 62 valid -> 46 train / 16 val
+scanning 40 start times x 62 patches ...
+train=100  val(balanced)=40  val(uniform, for UK comparison)=40
+    ok (20.2s)
+
+--- cell 22: def load_examples(rd, windows):
+loading training windows ...
+loading validation windows ...
+train 100  val 40  au_uniform 40
+    ok (69.9s)
+
+--- cell 24: def persistence_mse(examples):
+persistence MSE on training windows: 1.641e-04 m^2  (RMSE 12.8 mm)
+severity baseline (threshold the last observed frame): 97.5% on the balanced validation windows
+severity chance level on the balanced validation windows: 25.0%
+    ok (0.0s)
+
+--- cell 26: import model as flood_model
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789810307.320389   33028 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+    ok (3.6s)
+
+--- cell 28: import time
+WARNING:tensorflow:AutoGraph could not transform <function predict_step at 0x000001CDB5E50A40> and will run it as-is.
+Cause: Unable to locate the source code of <function predict_step at 0x000001CDB5E50A40>. Note that functions defined in certain environments, like the interactive Python shell, do not expose their source code. If that is the case, you should define them in a .py source file. If you are certain the code is graph-compatible, wrap the call using @tf.autograph.experimental.do_not_convert. Original error: could not get source code
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+epoch  0 (untrained)  val_depth_skill=+0.0000  val_sev_acc=25.0%   <- skill must be ~0
+WARNING:tensorflow:AutoGraph could not transform <function train_step at 0x000001CDB5E50900> and will run it as-is.
+Cause: Unable to locate the source code of <function train_step at 0x000001CDB5E50900>. Note that functions defined in certain environments, like the interactive Python shell, do not expose their source code. If that is the case, you should define them in a .py source file. If you are certain the code is graph-compatible, wrap the call using @tf.autograph.experimental.do_not_convert. Original error: could not get source code
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+epoch  1/25  train_depth/persist=0.9814  train_sev_loss=0.6817  val_depth_skill=+0.0212  val_sev_acc=25.0%  (29.5s)
+epoch  2/25  train_depth/persist=0.9735  train_sev_loss=0.4321  val_depth_skill=+0.0513  val_sev_acc=25.0%  (7.5s)
+epoch  3/25  train_depth/persist=0.9582  train_sev_loss=0.4326  val_depth_skill=+0.0789  val_sev_acc=35.0%  (7.5s)
+epoch  4/25  train_depth/persist=0.9794  train_sev_loss=0.3617  val_depth_skill=+0.0228  val_sev_acc=25.0%  (7.6s)
+epoch  5/25  train_depth/persist=0.9589  train_sev_loss=0.3053  val_depth_skill=+0.0644  val_sev_acc=60.0%  (8.3s)
+epoch  6/25  train_depth/persist=0.9367  train_sev_loss=0.2775  val_depth_skill=+0.0477  val_sev_acc=65.0%  (8.3s)
+epoch  7/25  train_depth/persist=0.9223  train_sev_loss=0.2704  val_depth_skill=+0.0712  val_sev_acc=52.5%  (8.6s)
+epoch  8/25  train_depth/persist=1.1447  train_sev_loss=0.2645  val_depth_skill=+0.0182  val_sev_acc=60.0%  (9.0s)
+epoch  9/25  train_depth/persist=0.9824  train_sev_loss=0.2821  val_depth_skill=+0.0202  val_sev_acc=50.0%  (7.8s)
+epoch 10/25  train_depth/persist=0.9817  train_sev_loss=0.2361  val_depth_skill=+0.0204  val_sev_acc=47.5%  (7.9s)
+epoch 11/25  train_depth/persist=0.9800  train_sev_loss=0.2333  val_depth_skill=+0.0191  val_sev_acc=60.0%  (7.4s)
+epoch 12/25  train_depth/persist=0.9775  train_sev_loss=0.2224  val_depth_skill=+0.0207  val_sev_acc=55.0%  (8.0s)
+epoch 13/25  train_depth/persist=0.9725  train_sev_loss=0.2207  val_depth_skill=+0.0336  val_sev_acc=57.5%  (8.0s)
+epoch 14/25  train_depth/persist=0.9497  train_sev_loss=0.2161  val_depth_skill=+0.0269  val_sev_acc=65.0%  (7.8s)
+epoch 15/25  train_depth/persist=0.9410  train_sev_loss=0.2039  val_depth_skill=+0.0480  val_sev_acc=57.5%  (7.8s)
+epoch 16/25  train_depth/persist=0.9403  train_sev_loss=0.2012  val_depth_skill=+0.0615  val_sev_acc=60.0%  (8.5s)
+epoch 17/25  train_depth/persist=0.9324  train_sev_loss=0.1859  val_depth_skill=+0.0594  val_sev_acc=62.5%  (7.9s)
+epoch 18/25  train_depth/persist=0.9194  train_sev_loss=0.1742  val_depth_skill=+0.0689  val_sev_acc=60.0%  (7.8s)
+epoch 19/25  train_depth/persist=0.8943  train_sev_loss=0.1703  val_depth_skill=+0.0937  val_sev_acc=57.5%  (7.7s)
+epoch 20/25  train_depth/persist=0.9064  train_sev_loss=0.1736  val_depth_skill=+0.0823  val_sev_acc=55.0%  (7.8s)
+epoch 21/25  train_depth/persist=0.8867  train_sev_loss=0.1458  val_depth_skill=+0.0654  val_sev_acc=60.0%  (7.8s)
+epoch 22/25  train_depth/persist=0.8717  train_sev_loss=0.1489  val_depth_skill=+0.0858  val_sev_acc=62.5%  (7.5s)
+epoch 23/25  train_depth/persist=0.8378  train_sev_loss=0.1474  val_depth_skill=+0.0531  val_sev_acc=70.0%  (7.2s)
+epoch 24/25  train_depth/persist=0.9217  train_sev_loss=0.1399  val_depth_skill=+0.0261  val_sev_acc=55.0%  (9.1s)
+epoch 25/25  train_depth/persist=0.9484  train_sev_loss=0.1505  val_depth_skill=+0.0876  val_sev_acc=60.0%  (8.0s)
+    ok (224.4s)
+
+--- cell 29: import matplotlib.pyplot as plt
+<notebook cell 29>:13: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+    ok (0.4s)
+
+--- cell 32: def compute_metrics(pred, obs, wet_threshold=0.1):
+Depth - Australia held-out patches (class-balanced windows):
+  metric      model   persistence
+  RMSE      0.01147       0.01200
+  NSE       0.99781       0.99760
+  r         0.99902       0.99895
+  CSI       0.97924       0.97663
+  skill vs persistence = +0.0876   (positive = beats persistence)
+
+Severity - Australia held-out patches (balanced, chance = 25%):
+  capsule accuracy             60.0%
+  capsule balanced accuracy    60.0%
+  threshold-baseline accuracy  97.5%
+  confusion matrix (rows = true none/minor/moderate/severe, cols = capsule prediction):
+[[9 1 0 0]
+ [7 3 0 0]
+ [1 0 9 0]
+ [0 0 7 3]]
+    ok (2.4s)
+
+--- cell 34: from grad_cam import grad_cam
+mean heatmap on above-average-depth pixels: 0.3845
+mean heatmap on below-average-depth pixels: 0.2862
+    ok (0.9s)
+
+--- cell 36: from predict_severity import predict_severity_with_reasoning
+true=moderate  raw=none      reasoned=none     
+  depth_rate=0.0004 m/hr  rainfall=0.00 mm  slope=3.31%  drainage=229 m
+  no rule triggered an adjustment; raw model classification retained
+
+true=severe    raw=moderate  reasoned=moderate 
+  depth_rate=0.0007 m/hr  rainfall=0.00 mm  slope=3.35%  drainage=550 m
+  no rule triggered an adjustment; raw model classification retained
+
+true=moderate  raw=moderate  reasoned=moderate 
+  depth_rate=0.0032 m/hr  rainfall=4.09 mm  slope=3.35%  drainage=550 m
+  rainfall (4.09 mm) is actively corroborating the rising depth trend
+
+true=none      raw=none      reasoned=none     
+  depth_rate=0.0004 m/hr  rainfall=0.00 mm  slope=2.92%  drainage=999 m
+  no rule triggered an adjustment; raw model classification retained
+
+true=severe    raw=moderate  reasoned=moderate 
+  depth_rate=0.0033 m/hr  rainfall=6.30 mm  slope=3.66%  drainage=425 m
+  rainfall (6.30 mm) is actively corroborating the rising depth trend
+
+true=minor     raw=minor     reasoned=minor    
+  depth_rate=0.0004 m/hr  rainfall=0.00 mm  slope=6.23%  drainage=1053 m
+  no rule triggered an adjustment; raw model classification retained
+
+true=severe    raw=severe    reasoned=severe   
+  depth_rate=0.0031 m/hr  rainfall=6.07 mm  slope=5.51%  drainage=562 m
+  rainfall (6.07 mm) is actively corroborating the rising depth trend
+
+true=none      raw=none      reasoned=none     
+  depth_rate=0.0004 m/hr  rainfall=0.00 mm  slope=5.51%  drainage=562 m
+  no rule triggered an adjustment; raw model classification retained
+
+    ok (3.1s)
+
+--- cell 38: import re
+wrote predicted_depth_georeferenced.tif with CRS EPSG:32756
+patch spans lat -29.1268..-29.0920, lon 153.4159..153.4556
+    ok (0.4s)
+
+--- cell 40: rd_uk = regions["UK"]
+UK: 2 patches x 14 times = 28 windows
+UK severity census: {'none': 0, 'minor': 0, 'moderate': 0, 'severe': 28} -> severity is NOT assessable on the UK
+
+Depth, uniformly-sampled windows (like-for-like):
+                                RMSE       NSE         r       CSI
+  Australia model            0.01315   0.99923   0.99966   0.99050
+  Australia persistence      0.01360   0.99918   0.99965   0.99103
+  UK model (held out)        0.01775   0.99824   0.99923   0.97360
+  UK persistence             0.01825   0.99814   0.99920   0.97192
+
+=== SUMMARY ===
+Depth, Australia held-out patches : skill vs persistence = +0.0659  (beats persistence)
+Depth, UK (never seen)            : skill vs persistence = +0.0536  (beats persistence)
+Severity, Australia held-out      : capsule 60.0% vs threshold baseline 97.5% (chance 25%)
+A cross-regional transfer claim is supported only if the UK skill is positive.
+    ok (12.3s)
+
+--- cell 42: encoder.save_weights("encoder.weights.h5")
+saved. To persist beyond this session: from google.colab import drive; drive.mount('/content/drive'), then copy these files (and predicted_depth_georeferenced.tif) to your Drive.
+    ok (0.3s)
+
+ALL 17 EXECUTABLE CELLS RAN WITHOUT ERROR

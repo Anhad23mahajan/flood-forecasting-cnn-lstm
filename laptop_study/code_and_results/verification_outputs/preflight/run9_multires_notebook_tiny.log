@@ -1,0 +1,114 @@
+
+--- cell 2: import warnings
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789843004.758981   30816 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789843008.516717   30816 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+GPU available: []
+TensorFlow version: 2.21.0
+    ok (8.2s)
+
+--- cell 4: # CONFIG (overridable)
+    ok (0.0s)
+
+--- cell 6: DATA_ROOT = "data/extracted/FloodCastBench"
+local DATA_ROOT: data/extracted/FloodCastBench
+    ok (0.0s)
+
+--- cell 14: import sys
+Pakistan   480 m  depth 810x441  scale 16  offset (42, 178)  4033 frames  tiles: 18 -> valid 18
+Mozambique 480 m  depth 151x138  scale 16  offset (150, 50)  1729 frames  tiles: 1 -> valid 1
+Australia   60 m  depth 536x536  scale 2  offset (0, 0)  2881 frames  tiles: 16 -> valid 16
+UK          60 m  depth 85x137  scale 2  offset (5, 5)  865 frames  tiles: 0 -> valid 0
+    ok (3.5s)
+
+--- cell 16: results = {}
+=== Pakistan (480 m, depth 810x441) -> Mozambique (480 m, depth 151x138); epochs 2, seed 42
+Pakistan: 18 valid 128px tiles -> 14 train / 4 validation (split by tile)
+wet windows available: train 112, validation 32
+loaded 8 training and 4 validation windows
+Mozambique: 4 (overlapping) 128px tiles x 60 times -> 238 wet windows
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789843231.307372   30816 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+persistence MSE on training windows 9.172e-05 m^2 (RMSE 9.6 mm); epoch 0 val skill +0.0000 (must be ~0)
+epoch  1/2  train/persist 0.9956  val skill +0.0052  (12.8s)
+epoch  2/2  train/persist 0.9891  val skill +0.0061  (0.9s)
+
+Pakistan held-out tiles: 4 windows
+  skill vs persistence +0.0061
+  RMSE  model 0.0070 m   persistence 0.0070 m
+  NSE   model 0.9999     persistence 0.9999      r  model 1.0000  persistence 1.0000
+  CSI(0.001 m) model 0.9810 persistence 0.9975;  CSI(0.1 m) model 0.9937 persistence 0.9942
+  skill by lead time (30 min ... 2.5 h): +0.011  +0.009  +0.007  +0.006  +0.005   | persistence RMSE mm: 2.1 4.2 6.3 8.4 10.5
+
+Mozambique (never seen): 238 windows
+  skill vs persistence +0.0033
+  RMSE  model 0.0170 m   persistence 0.0171 m
+  NSE   model 0.9986     persistence 0.9986      r  model 0.9993  persistence 0.9993
+  CSI(0.001 m) model 0.9599 persistence 0.9749;  CSI(0.1 m) model 0.9740 persistence 0.9740
+  skill by lead time (30 min ... 2.5 h): +0.010  +0.006  +0.004  +0.003  +0.003   | persistence RMSE mm: 5.2 10.4 15.6 20.6 25.6
+
+Pakistan held-out tiles: what does the model use? (skill when one input is removed at test time)
+    none (normal)              +0.006
+    rainfall removed           +0.006
+    terrain removed            +0.006
+    history order scrambled    +0.006
+    history frozen             +0.006
+
+Mozambique (never seen): what does the model use? (skill when one input is removed at test time)
+    none (normal)              +0.003
+    rainfall removed           +0.003
+    terrain removed            +0.003
+    history order scrambled    +0.003
+    history frozen             +0.003
+=== Australia (60 m, depth 536x536) -> UK (60 m, depth 85x137); epochs 2, seed 42
+Australia: 16 valid 128px tiles -> 12 train / 4 validation (split by tile)
+wet windows available: train 95, validation 32
+loaded 8 training and 4 validation windows
+UK: domain 85x137 < one patch -> 85px windows padded to 128, scored on real pixels only
+persistence MSE on training windows 1.635e-04 m^2 (RMSE 12.8 mm); epoch 0 val skill +0.0000 (must be ~0)
+epoch  1/2  train/persist 0.9987  val skill +0.0098  (11.6s)
+epoch  2/2  train/persist 0.9913  val skill +0.0110  (0.9s)
+
+Australia held-out tiles: 4 windows
+  skill vs persistence +0.0110
+  RMSE  model 0.0079 m   persistence 0.0080 m
+  NSE   model 0.9993     persistence 0.9993      r  model 0.9996  persistence 0.9996
+  CSI(0.001 m) model 0.9745 persistence 0.9859;  CSI(0.1 m) model 0.9862 persistence 0.9862
+  skill by lead time (30 min ... 2.5 h): +0.031  +0.017  +0.012  +0.010  +0.008   | persistence RMSE mm: 3.3 5.9 7.9 9.5 11.0
+
+UK (never seen): 120 windows
+  skill vs persistence +0.0047
+  RMSE  model 0.0157 m   persistence 0.0157 m
+  NSE   model 0.9981     persistence 0.9981      r  model 0.9992  persistence 0.9992
+  CSI(0.001 m) model 0.9324 persistence 0.9631;  CSI(0.1 m) model 0.9727 persistence 0.9727
+  skill by lead time (30 min ... 2.5 h): +0.015  +0.008  +0.006  +0.004  +0.004   | persistence RMSE mm: 4.8 9.6 14.3 18.9 23.5
+
+Australia held-out tiles: what does the model use? (skill when one input is removed at test time)
+    none (normal)              +0.011
+    rainfall removed           +0.011
+    terrain removed            +0.011
+    history order scrambled    +0.011
+    history frozen             +0.011
+
+UK (never seen): what does the model use? (skill when one input is removed at test time)
+    none (normal)              +0.005
+    rainfall removed           +0.005
+    terrain removed            +0.005
+    history order scrambled    +0.005
+    history frozen             +0.005
+    ok (332.1s)
+
+--- cell 18: import json
+experiment              held-out skill  test skill    test RMSE model / persistence (m)
+pakistan_mozambique            +0.0061     +0.0033          0.0170 / 0.0171
+australia60_uk60               +0.0110     +0.0047          0.0157 / 0.0157
+
+Paper (Xu et al. 2025, Table 5, different protocol): Pakistan->Mozambique 480 m FNO+ RMSE 0.0786 m, NSE 0.955 (U-Net RMSE 1.60, NSE -72); Australia->UK 60 m FNO+ RMSE 0.0248 m, NSE 0.9989 (U-Net RMSE 0.525).
+saved multires_results.json
+    ok (0.0s)
+
+ALL 6 EXECUTABLE CELLS RAN WITHOUT ERROR

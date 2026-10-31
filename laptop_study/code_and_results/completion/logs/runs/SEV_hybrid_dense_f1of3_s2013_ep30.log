@@ -1,0 +1,48 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789900556.489025   13460 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789900566.084050   13460 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+SEV_hybrid_dense_f1of3_s2013_ep30: 62 tiles, held-out 21; train 400 balanced windows (class counts [100, 100, 100, 100]); held-out balanced 240, natural 600 (class fractions [0.123, 0.055, 0.068, 0.753]); last-frame baseline on natural 0.975
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789900579.456358   13460 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+epoch  1/30  depth/persist 0.809  sev loss 1.451  val acc(48 balanced) 0.396  (88s/epoch avg)
+epoch  2/30  depth/persist 0.535  sev loss 1.719  val acc(48 balanced) 0.521  (81s/epoch avg)
+epoch  3/30  depth/persist 0.494  sev loss 0.999  val acc(48 balanced) 0.417  (79s/epoch avg)
+epoch  4/30  depth/persist 0.470  sev loss 0.855  val acc(48 balanced) 0.438  (78s/epoch avg)
+epoch  5/30  depth/persist 0.449  sev loss 0.708  val acc(48 balanced) 0.354  (78s/epoch avg)
+epoch  6/30  depth/persist 0.422  sev loss 0.567  val acc(48 balanced) 0.375  (78s/epoch avg)
+epoch  7/30  depth/persist 0.410  sev loss 0.554  val acc(48 balanced) 0.354  (78s/epoch avg)
+epoch  8/30  depth/persist 0.407  sev loss 0.508  val acc(48 balanced) 0.438  (78s/epoch avg)
+epoch  9/30  depth/persist 0.392  sev loss 0.466  val acc(48 balanced) 0.396  (79s/epoch avg)
+epoch 10/30  depth/persist 0.391  sev loss 0.490  val acc(48 balanced) 0.375  (79s/epoch avg)
+epoch 11/30  depth/persist 0.383  sev loss 0.386  val acc(48 balanced) 0.396  (79s/epoch avg)
+epoch 12/30  depth/persist 0.387  sev loss 0.368  val acc(48 balanced) 0.396  (79s/epoch avg)
+epoch 13/30  depth/persist 0.375  sev loss 0.439  val acc(48 balanced) 0.375  (79s/epoch avg)
+epoch 14/30  depth/persist 0.380  sev loss 0.348  val acc(48 balanced) 0.375  (78s/epoch avg)
+epoch 15/30  depth/persist 0.368  sev loss 0.351  val acc(48 balanced) 0.396  (78s/epoch avg)
+epoch 16/30  depth/persist 0.366  sev loss 0.315  val acc(48 balanced) 0.354  (78s/epoch avg)
+epoch 17/30  depth/persist 0.361  sev loss 0.330  val acc(48 balanced) 0.375  (78s/epoch avg)
+epoch 18/30  depth/persist 0.362  sev loss 0.302  val acc(48 balanced) 0.375  (78s/epoch avg)
+epoch 19/30  depth/persist 0.360  sev loss 0.269  val acc(48 balanced) 0.479  (78s/epoch avg)
+epoch 20/30  depth/persist 0.361  sev loss 0.291  val acc(48 balanced) 0.417  (78s/epoch avg)
+epoch 21/30  depth/persist 0.355  sev loss 0.258  val acc(48 balanced) 0.375  (78s/epoch avg)
+epoch 22/30  depth/persist 0.353  sev loss 0.237  val acc(48 balanced) 0.396  (78s/epoch avg)
+epoch 23/30  depth/persist 0.352  sev loss 0.221  val acc(48 balanced) 0.438  (78s/epoch avg)
+epoch 24/30  depth/persist 0.350  sev loss 0.185  val acc(48 balanced) 0.396  (78s/epoch avg)
+epoch 25/30  depth/persist 0.349  sev loss 0.189  val acc(48 balanced) 0.375  (78s/epoch avg)
+epoch 26/30  depth/persist 0.347  sev loss 0.201  val acc(48 balanced) 0.417  (78s/epoch avg)
+epoch 27/30  depth/persist 0.345  sev loss 0.153  val acc(48 balanced) 0.375  (77s/epoch avg)
+epoch 28/30  depth/persist 0.346  sev loss 0.164  val acc(48 balanced) 0.375  (78s/epoch avg)
+epoch 29/30  depth/persist 0.345  sev loss 0.155  val acc(48 balanced) 0.375  (78s/epoch avg)
+epoch 30/30  depth/persist 0.344  sev loss 0.155  val acc(48 balanced) 0.396  (79s/epoch avg)
+balanced: capsule/dense acc 0.446 | last-frame threshold 0.925 | forecast threshold 0.954 | macro recall 0.446 | changing n=18 acc 0.3333333333333333
+natural: capsule/dense acc 0.537 | last-frame threshold 0.975 | forecast threshold 0.988 | macro recall 0.443 | changing n=15 acc 0.3333333333333333
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+rules [original_thresholds]: acc 0.537 -> 0.533; changed 65 (fixed 24, broke 26)
+rules [recalibrated_on_fold_training_windows]: acc 0.537 -> 0.567; changed 97 (fixed 47, broke 29)
+Grad-CAM [depth]: wet hotter in 0.65 of windows (median ratio 2.4371598958969116); deletion effect top 90.47699654515434 vs random 68.26725605352382 vs shifted 31.77717492740069; top beats both controls in 0.8857142857142857
+Grad-CAM [severity]: wet hotter in 0.75 of windows (median ratio 6.256523132324219); deletion effect top 23.14129543948818 vs random 8.397193882916422 vs shifted 3.7872217668069377; top beats both controls in 0.7837837837837838
+saved completion/results/severity\SEV_hybrid_dense_f1of3_s2013_ep30.json

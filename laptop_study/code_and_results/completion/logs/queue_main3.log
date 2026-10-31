@@ -1,0 +1,100 @@
+224 jobs in batches ['A', 'BL', 'K', 'S', 'E', 'E2', 'B', 'FX', 'C', 'OPT', 'S2', 'F']: 116 already done, 108 to run
+[start] E30_local_hybrid_full_blk_f1of3_s1013_ep30  (103 queued)
+[start] E30_local_hybrid_full_blk_f2of3_s1023_ep30  (102 queued)
+[done] E30_local_hybrid_full_blk_f1of3_s1013_ep30  rc=0  8.1 min
+[done] E30_local_hybrid_full_blk_f2of3_s1023_ep30  rc=0  6.9 min
+[start] E480_clstm_hybrid_full_blk_f0of3_s1003_ep30  (101 queued)
+[start] E480_clstm_hybrid_full_blk_f1of3_s1013_ep30  (100 queued)
+[start] E480_clstm_hybrid_full_blk_f2of3_s1023_ep30  (99 queued)
+[start] E60_local_hybrid_nodepthhist_f0of3_s1003_ep30  (98 queued)
+[done] E60_local_hybrid_nodepthhist_f0of3_s1003_ep30  rc=0  6.0 min
+[start] E60_local_hybrid_nohist_f0of3_s1003_ep30  (97 queued)
+[start] E60_local_hybrid_norain_f0of3_s1003_ep30  (96 queued)
+[done] E60_local_hybrid_nohist_f0of3_s1003_ep30  rc=0  4.9 min
+[done] E60_local_hybrid_norain_f0of3_s1003_ep30  rc=0  4.6 min
+[start] E60_local_hybrid_norainhist_f0of3_s1003_ep30  (95 queued)
+[done] E480_clstm_hybrid_full_blk_f0of3_s1003_ep30  rc=0  32.1 min
+[start] E60_local_hybrid_noterrain_f0of3_s1003_ep30  (94 queued)
+[done] E480_clstm_hybrid_full_blk_f1of3_s1013_ep30  rc=0  31.1 min
+[start] E60_local_hybrid_nodepthhist_f1of3_s1013_ep30  (93 queued)
+[done] E60_local_hybrid_norainhist_f0of3_s1003_ep30  rc=0  4.9 min
+[start] E60_local_hybrid_nohist_f1of3_s1013_ep30  (92 queued)
+[done] E480_clstm_hybrid_full_blk_f2of3_s1023_ep30  rc=0  29.6 min
+[start] E60_local_hybrid_norain_f1of3_s1013_ep30  (91 queued)
+[done] E60_local_hybrid_noterrain_f0of3_s1003_ep30  rc=0  4.7 min
+[start] E60_local_hybrid_norainhist_f1of3_s1013_ep30  (90 queued)
+[start] E60_local_hybrid_noterrain_f1of3_s1013_ep30  (89 queued)
+[done] E60_local_hybrid_nodepthhist_f1of3_s1013_ep30  rc=0  4.7 min
+[start] E60_local_hybrid_nodepthhist_f2of3_s1023_ep30  (88 queued)
+[done] E60_local_hybrid_nohist_f1of3_s1013_ep30  rc=0  4.6 min
+[done] E60_local_hybrid_norain_f1of3_s1013_ep30  rc=0  4.7 min
+[start] E60_local_hybrid_nohist_f2of3_s1023_ep30  (87 queued)
+[start] E60_local_hybrid_norain_f2of3_s1023_ep30  (86 queued)
+[done] E60_local_hybrid_norainhist_f1of3_s1013_ep30  rc=0  4.7 min
+[done] E60_local_hybrid_noterrain_f1of3_s1013_ep30  rc=0  4.5 min
+[start] E60_local_hybrid_norainhist_f2of3_s1023_ep30  (85 queued)
+[done] E60_local_hybrid_nodepthhist_f2of3_s1023_ep30  rc=0  4.6 min
+[start] E60_local_hybrid_noterrain_f2of3_s1023_ep30  (84 queued)
+[done] E60_local_hybrid_nohist_f2of3_s1023_ep30  rc=0  4.7 min
+[start] E480_local_hybrid_nodepthhist_f0of3_s1003_ep30  (83 queued)
+[done] E60_local_hybrid_norain_f2of3_s1023_ep30  rc=0  4.6 min
+[start] E480_local_hybrid_nohist_f0of3_s1003_ep30  (82 queued)
+[done] E60_local_hybrid_norainhist_f2of3_s1023_ep30  rc=0  4.6 min
+[start] E480_local_hybrid_norain_f0of3_s1003_ep30  (81 queued)
+[start] E480_local_hybrid_norainhist_f0of3_s1003_ep30  (80 queued)
+[done] E60_local_hybrid_noterrain_f2of3_s1023_ep30  rc=0  4.6 min
+[start] E480_local_hybrid_noterrain_f0of3_s1003_ep30  (79 queued)
+[done] E480_local_hybrid_nodepthhist_f0of3_s1003_ep30  rc=0  4.9 min
+[done] E480_local_hybrid_nohist_f0of3_s1003_ep30  rc=0  4.8 min
+[start] E480_local_hybrid_nodepthhist_f1of3_s1013_ep30  (78 queued)
+[done] E480_local_hybrid_norain_f0of3_s1003_ep30  rc=0  4.9 min
+[start] E480_local_hybrid_nohist_f1of3_s1013_ep30  (77 queued)
+[done] E480_local_hybrid_norainhist_f0of3_s1003_ep30  rc=0  4.9 min
+[start] E480_local_hybrid_norain_f1of3_s1013_ep30  (76 queued)
+[done] E480_local_hybrid_noterrain_f0of3_s1003_ep30  rc=0  4.8 min
+[start] E480_local_hybrid_norainhist_f1of3_s1013_ep30  (75 queued)
+[done] E480_local_hybrid_nodepthhist_f1of3_s1013_ep30  rc=0  4.9 min
+[start] E480_local_hybrid_noterrain_f1of3_s1013_ep30  (74 queued)
+[done] E480_local_hybrid_nohist_f1of3_s1013_ep30  rc=0  4.9 min
+[start] E480_local_hybrid_nodepthhist_f2of3_s1023_ep30  (73 queued)
+[done] E480_local_hybrid_norain_f1of3_s1013_ep30  rc=0  4.8 min
+[start] E480_local_hybrid_nohist_f2of3_s1023_ep30  (72 queued)
+[done] E480_local_hybrid_norainhist_f1of3_s1013_ep30  rc=0  4.7 min
+[start] E480_local_hybrid_norain_f2of3_s1023_ep30  (71 queued)
+[done] E480_local_hybrid_noterrain_f1of3_s1013_ep30  rc=0  4.7 min
+[start] E480_local_hybrid_norainhist_f2of3_s1023_ep30  (70 queued)
+[start] E480_local_hybrid_noterrain_f2of3_s1023_ep30  (69 queued)
+[done] E480_local_hybrid_nodepthhist_f2of3_s1023_ep30  rc=0  4.9 min
+[done] E480_local_hybrid_nohist_f2of3_s1023_ep30  rc=0  4.8 min
+[start] E60_clstmf_forced_full_f0of3_s1003_ep30  (68 queued)
+[done] E480_local_hybrid_norain_f2of3_s1023_ep30  rc=0  4.8 min
+[start] E60_clstmf_forced_full_f1of3_s1013_ep30  (67 queued)
+[done] E480_local_hybrid_norainhist_f2of3_s1023_ep30  rc=0  4.8 min
+[start] E60_clstmf_forced_full_f2of3_s1023_ep30  (66 queued)
+[start] E480_clstmf_forced_full_f0of3_s1003_ep30  (65 queued)
+[done] E480_local_hybrid_noterrain_f2of3_s1023_ep30  rc=0  4.9 min
+[FAILED] E60_clstmf_forced_full_f1of3_s1013_ep30  rc=1  11.2 min
+[start] E480_clstmf_forced_full_f1of3_s1013_ep30  (64 queued)
+[done] E60_clstmf_forced_full_f0of3_s1003_ep30  rc=0  29.6 min
+[start] E480_clstmf_forced_full_f2of3_s1023_ep30  (63 queued)
+[done] E60_clstmf_forced_full_f2of3_s1023_ep30  rc=0  31.2 min
+[start] E480_v1_hybrid_full_f0of3_s1003_ep30  (62 queued)
+[done] E480_clstmf_forced_full_f0of3_s1003_ep30  rc=0  32.4 min
+[start] E480_v1_hybrid_full_f1of3_s1013_ep30  (61 queued)
+[done] E480_clstmf_forced_full_f1of3_s1013_ep30  rc=0  33.8 min
+[done] E480_clstmf_forced_full_f2of3_s1023_ep30  rc=0  38.3 min
+[FAILED] E480_v1_hybrid_full_f0of3_s1003_ep30  rc=1073807364  36.6 min
+[FAILED] E480_v1_hybrid_full_f1of3_s1013_ep30  rc=1073807364  34.7 min
+[start] E480_v1_hybrid_full_f2of3_s1023_ep30  (60 queued)
+[start] E60_v1_hybrid_full_f0of3_s1003_ep30  (59 queued)
+[start] E60_v1_hybrid_full_f1of3_s1013_ep30  (58 queued)
+[start] E60_v1_hybrid_full_f2of3_s1023_ep30  (57 queued)
+[start] E30_v1_hybrid_full_f0of3_s1003_ep30  (56 queued)
+[start] E30_v1_hybrid_full_f1of3_s1013_ep30  (55 queued)
+[start] E30_v1_hybrid_full_f2of3_s1023_ep30  (54 queued)
+[start] E480_local_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  (53 queued)
+[start] E480_local_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  (52 queued)
+[start] E480_local_hybrid_full_b8_lr0.003_f2of3_s1023_ep30  (51 queued)
+[start] E60_local_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  (50 queued)
+[start] E60_clstm_hybrid_full_b8_lr0.003_f0of3_s1003_ep30  (49 queued)
+[start] E60_local_hybrid_full_b8_lr0.003_f1of3_s1013_ep30  (48 queued)

@@ -1,0 +1,4 @@
+Pakistan: 18 valid tiles -> fold 2/3: 12 train tiles, 6 held-out tiles; wet windows: train pool 960, held-out pool 480; using 400 train / 300 held-out / 238 Mozambique windows
+E480 hybrid fold 2: S1 heldout +0.1313  test +0.1461
+E480 hybrid fold 2: S2 heldout +0.1275  test +0.0941
+E480 hybrid fold 2: S3 heldout +0.1988  test +0.1757

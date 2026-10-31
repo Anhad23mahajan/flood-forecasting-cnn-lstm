@@ -1,0 +1,15 @@
+242 jobs in batches ['C', 'CG', 'OPT', 'S2', 'F', 'BX', 'LC', 'LCB', 'EP', 'RB', 'RN', 'SX', 'D', 'OPTX']: 38 already done, 204 to run
+[start] E60_v1_hybrid_full_f0of3_s1003_ep30  (203 queued)
+[start] E60_v1_hybrid_full_f1of3_s1013_ep30  (202 queued)
+[FAILED] E60_v1_hybrid_full_f0of3_s1003_ep30  rc=1  3.1 min
+[start] E60_v1_hybrid_full_f2of3_s1023_ep30  (201 queued)
+[FAILED] E60_v1_hybrid_full_f1of3_s1013_ep30  rc=1  3.4 min
+[start] E30_v1_hybrid_full_f0of3_s1003_ep30  (200 queued)
+[start] E30_v1_hybrid_full_f1of3_s1013_ep30  (199 queued)
+[FAILED] E60_v1_hybrid_full_f2of3_s1023_ep30  rc=1  3.5 min
+[FAILED] E30_v1_hybrid_full_f0of3_s1003_ep30  rc=1  3.7 min
+[start] E30_v1_hybrid_full_f2of3_s1023_ep30  (198 queued)
+[FAILED] E30_v1_hybrid_full_f1of3_s1013_ep30  rc=1  3.7 min
+[start] E60_v1_hybrid_full_noguard_f2of3_s1023_ep30  (195 queued)
+[FAILED] E30_v1_hybrid_full_f2of3_s1023_ep30  rc=1  5.8 min
+[start] E30_v1_hybrid_full_noguard_f0of3_s1003_ep30  (194 queued)

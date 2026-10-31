@@ -1,0 +1,26 @@
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+pool_Australia_30_train: 62 tiles of 128px x 80 start times
+  pool_Australia_30_train: start 0/80  windows so far 53  (1s)
+  pool_Australia_30_train: start 20/80  windows so far 1236  (10s)
+  pool_Australia_30_train: start 40/80  windows so far 2476  (20s)
+  pool_Australia_30_train: start 60/80  windows so far 3716  (31s)
+pool_Australia_30_train: 4894 wet windows saved
+  Australia_30 rainfall 0/481  (0s)
+  Australia_30 rainfall 50/481  (2s)
+  Australia_30 rainfall 100/481  (4s)
+  Australia_30 rainfall 150/481  (7s)
+  Australia_30 rainfall 200/481  (9s)
+  Australia_30 rainfall 250/481  (11s)
+  Australia_30 rainfall 300/481  (13s)
+  Australia_30 rainfall 350/481  (15s)
+  Australia_30 rainfall 400/481  (16s)
+  Australia_30 rainfall 450/481  (18s)
+pool_UK_30_test: 4 tiles of 128px x 60 start times
+  pool_UK_30_test: start 0/60  windows so far 4  (0s)
+  pool_UK_30_test: start 20/60  windows so far 84  (2s)
+  pool_UK_30_test: start 40/60  windows so far 164  (4s)
+pool_UK_30_test: 240 wet windows saved
+  UK_30 rainfall 0/145  (0s)
+  UK_30 rainfall 50/145  (1s)
+  UK_30 rainfall 100/145  (3s)

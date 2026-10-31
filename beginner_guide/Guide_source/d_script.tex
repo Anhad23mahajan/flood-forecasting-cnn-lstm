@@ -1,0 +1,42 @@
+% =========================================================== SPEAKING SCRIPT (about 7 minutes, walks through every figure)
+\section{Speaking script for the 15 slides (about 7 minutes)}\label{ch:script}
+
+You present slides 1 to 7 (about 3 minutes 30 seconds) and Aman presents slides 8 to 15 (about 3 minutes 30 seconds). The words in quotes are what you say. The grey bracketed lines are \emph{pointing cues}: touch or point at that part of the slide while you talk. Pause for a second after each question to mam, and vary your voice. If you run late, make slides 9 and 13 one sentence each.
+
+\newcommand{\pt}[1]{\par\noindent\hspace*{0.6em}{\small\color{black!60}\textit{[#1]}} }
+
+\subsection{Anhad: slides 1 to 7}
+\textbf{Slide 1. Title (10 s).} \pt{point at the picture} ``Hello mam, I am Anhad and this is Aman. This picture is our model on the Australia flood, and the bright lines are the rivers it watches most. Our question: can a neural network forecast a flood better than very simple rules?''
+
+\textbf{Slide 2. The problem (35 s).} \pt{trace the four boxes, then the arrow into the network} ``When a river is about to overflow, people need to know where the water will be in the next hour. A physics simulator takes days. A network answers in seconds. We show it these four maps, 30 minutes apart, plus rain and ground height, and it draws the last box, the map 30 minutes later.'' \pt{point at the orange box} ``Here is the catch. If I say `tomorrow's weather will be like today's', I am right most days. In 30 minutes the water barely moves either, so just copying the last map is already a good forecast. The network must beat that.''
+
+\textbf{Slide 3. The data (25 s).} \pt{sweep across the cards, then the tags} ``Four floods, re-created by a physics simulator from real terrain and satellite rain: Australia, UK, Pakistan, Mozambique. We learn from the dark-tagged ones and test on the teal-tagged ones, like studying one question paper and then getting an exam with new questions. Squares are 30 metres wide for the first pair and 480 metres for the second, so we train two separate models.''
+
+\textbf{Slide 4. The whole system (30 s).} \pt{start at the dark Forecaster box and follow the arrows} ``The forecaster, a CNN with a ConvLSTM, predicts the next depth map. A water rule checks it against the rain, like a bathtub that can only fill as much as the tap pours in.'' \pt{drop to the bottom row} ``A capsule network rates how serious the flood is, and three written rules check that rating and give a reason, like a doctor checking a machine's report against a checklist. A network checked by rules people can read is NeuroSymbolic AI.'' \pt{red dashed arrows} ``These dashed arrows are Grad-CAM, our explainable AI.''
+
+\textbf{Slide 5. The forecaster (35 s).} \pt{point at each box, left to right} ``In go four maps with three layers each: depth, rain and ground height. Two CNN layers pick out shapes, the way you spot a river on a satellite photo.'' \pt{dark box} ``The ConvLSTM reads the four maps in order and remembers how the water moved, like watching four frames of a video to see if it is rising. The last layers turn that memory into the predicted change in depth, not the whole map, because most of it hardly changes. The model has 62,833 parameters, the numbers on the right of the slide.''
+
+\textbf{Slide 6. Skill, Model A and Model B (40 s).} \pt{formula} ``We score a forecast with skill: one minus its error divided by the error of copying. Zero means no better than copying, one is perfect, below zero is worse.'' \pt{red card} ``Model A learns the change from the last map. It beat copying in three of four tests, but in late Australia its skill was minus 1.449.'' \pt{teal card} ``So we built Model B. It starts from a trend forecast, the last map plus a fraction beta of the last change, like a car that keeps going at nearly the speed it just had. Beta is one number: 0.921 for 30 metres, 0.948 for 480 metres.''
+
+\textbf{Slide 7. Main result of Part 1 (30 s).} \pt{legend, then the long blue bar} ``Orange is the trend forecast with no network, blue is Model A, green is Model B. Higher is better, and zero is copying. This blue bar is Australia, minus 1.449. Everywhere the orange bars beat the blue ones, 0.91 to 0.99 against 0.15 to 0.35.'' \pt{green bars, then 0.001} ``And the green bars match the orange to within 0.001. A rule with one number did as well as our network. Aman will explain why.''
+
+\subsection{Aman: slides 8 to 15}
+\textbf{Slide 8. Little is left to improve (25 s).} \pt{four big percentages} ``After the trend forecast, only 1 percent of copying's error is left in Australia, 5 in the UK, 9 in Pakistan, 6 in Mozambique. It is like a student who already has 95 out of 100: little left to gain.'' \pt{small charts} ``On these error charts, orange and green, trend and Model B, hug the bottom in every panel. A fair test of memory needs longer forecasts, 6 to 24 hours.''
+
+\textbf{Slide 9. Error maps (15 s).} \pt{finger down the first column, then to the last column} ``Same story on the map, one row per flood. Left to right: the water now, what really changed, Model A's error, Model B's error. Purple is too much water, orange too little. Model B's last column is almost blank.''
+
+\textbf{Slide 10. Part 2, the laptop study (35 s).} \pt{legend} ``Part 2 is a bigger laptop study, about 310 runs, up to 2.5 hours ahead. The three colours are three tests.'' \pt{first bars, then the lookup table} ``Our first big network scored only 0.19 and 0.06. A lookup table that uses just each square's current depth and last change already reaches 0.74 to 0.79, and a linear formula about 0.8.'' \pt{last three groups} ``The best networks reach 0.81 to 0.87, only 0.05 to 0.08 more. Like a driver who only needs the last speed: the recent history of each square gives most of the skill.''
+
+\textbf{Slide 11. Does the memory help? (35 s).} \pt{two lines} ``Does the LSTM memory help? Skill, from 30 minutes on the left to 2.5 hours on the right. Grey is a plain CNN, teal is the ConvLSTM with memory. Both fall, because any forecast gets harder further ahead.'' \pt{the crossing} ``In this chart teal falls more slowly. But trained for the same, longer length, 90 passes, they scored the same: plus 0.004 and minus 0.014, inside our plus or minus 0.03 band. A model 140 times bigger did no better.''
+
+\textbf{Slide 12. Severity and written rules (30 s).} \pt{small tables} ``The capsule network rates each tile none, minor, moderate or severe, like flood warnings from green to red. In these tables the dark diagonal is correct answers.'' \pt{bottom bars} ``Grey is the capsule network alone, teal is with our three rules: the rules raised accuracy in all four floods, for example 60.9 to 67.9 percent in Australia. The dark bars show the rating read straight from the forecast map is right about 99 percent of the time, because severity in 30 minutes is almost the same as now.''
+
+\textbf{Slide 13. Grad-CAM (25 s).} \pt{left block, then right block} ``Grad-CAM is a highlighter showing which parts of the input the model used. On the left, the forecaster: the bright areas follow the river channels and flood edges, where the water is changing. On the right, the capsule network on the UK and Mozambique: those heat maps were weak, so we show them as pictures, not proof.''
+
+\textbf{Slide 14. What we learned (35 s).} \pt{numbers 1, 2, 3} ``One: at 30 minutes a trend with one number does most of the work, and our second model matches it but does not beat it. Two: up to 2.5 hours a lookup table scores 0.74 to 0.79, the best networks 0.81 to 0.87, and memory did not help at equal training. Three: always compare a model with simple forecasts. Our first model looked good until we did.'' \pt{boxes below} ``Limits: one flood per region, simulated data, single runs. Next: 6 to 24 hours ahead, where the memory could matter.''
+
+\textbf{Slide 15. Thank you (5 s).} \pt{look at mam} ``Thank you, mam. We are happy to take your questions.''
+
+\begin{carefulbox}
+If the linear-model bars on slide 10 still show 0.32, 0.35 and 0.15, say: ``Those linear bars are from our first fit, which had a bug. After the fix it scores 0.82, 0.80 and 0.79, so the conclusion does not change.''
+\end{carefulbox}

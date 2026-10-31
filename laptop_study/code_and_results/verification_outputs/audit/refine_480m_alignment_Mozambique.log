@@ -1,0 +1,11 @@
+Mozambique: depth 151x138; DEM 2624x2321; margins (rows, cols) = (208, 113) base px; coarse estimate (152,48)
+terrain-structure score, best five offsets (most negative r):
+   (150, 50)  terrain r=-0.270
+   (150, 48)  terrain r=-0.270
+   (152, 50)  terrain r=-0.270
+   (152, 48)  terrain r=-0.269
+   (148, 48)  terrain r=-0.269
+
+adopted crop offset for Mozambique: (row, col) = (150, 50) base px  -> cell (i,j) covers base rows [150+16i, 150+16i+16), cols [50+16j, ...)
+DEM NoData pixels: 104936 (1.72%); inside the adopted crop: 0; outside: 104936
+   NoData bounding box rows 0..2623, cols 0..2320;  crop rows 150..2566, cols 50..2258

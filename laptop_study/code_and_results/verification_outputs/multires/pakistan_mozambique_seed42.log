@@ -1,0 +1,86 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789846847.593196   19232 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789846849.744660   19232 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+=== Pakistan (480 m, depth 810x441) -> Mozambique (480 m, depth 151x138); epochs 40, seed 42
+Pakistan: 18 valid 128px tiles -> 14 train / 4 validation (split by tile)
+wet windows available: train 1120, validation 320
+loaded 400 training and 150 validation windows
+Mozambique: 4 (overlapping) 128px tiles x 60 times -> 238 wet windows
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+I0000 00:00:1789847420.866847   19232 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+persistence MSE on training windows 1.042e-04 m^2 (RMSE 10.2 mm); epoch 0 val skill +0.0000 (must be ~0)
+epoch  1/40  train/persist 0.9204  val skill +0.1026  (57.0s)
+epoch  2/40  train/persist 0.8852  val skill +0.1143  (42.5s)
+epoch  3/40  train/persist 0.8756  val skill +0.1001  (42.4s)
+epoch  4/40  train/persist 0.8728  val skill +0.1199  (42.0s)
+epoch  5/40  train/persist 0.8593  val skill +0.1169  (41.9s)
+epoch  6/40  train/persist 0.8616  val skill +0.1109  (44.2s)
+epoch  7/40  train/persist 0.8545  val skill +0.1054  (44.9s)
+epoch  8/40  train/persist 0.8516  val skill +0.1117  (43.5s)
+epoch  9/40  train/persist 0.8526  val skill +0.1242  (45.9s)
+epoch 10/40  train/persist 0.8434  val skill +0.1205  (42.8s)
+epoch 11/40  train/persist 0.8452  val skill +0.1185  (44.0s)
+epoch 12/40  train/persist 0.8336  val skill +0.1026  (42.5s)
+epoch 13/40  train/persist 0.8335  val skill +0.1096  (42.2s)
+epoch 14/40  train/persist 0.8231  val skill +0.1102  (42.1s)
+epoch 15/40  train/persist 0.8160  val skill +0.1187  (42.3s)
+epoch 16/40  train/persist 0.8165  val skill +0.1160  (42.2s)
+epoch 17/40  train/persist 0.8099  val skill +0.1142  (42.6s)
+epoch 18/40  train/persist 0.8007  val skill +0.1205  (42.1s)
+epoch 19/40  train/persist 0.7939  val skill +0.1143  (42.0s)
+epoch 20/40  train/persist 0.7904  val skill +0.1112  (42.4s)
+epoch 21/40  train/persist 0.7858  val skill +0.1136  (40.5s)
+epoch 22/40  train/persist 0.7796  val skill +0.1127  (34.8s)
+epoch 23/40  train/persist 0.7756  val skill +0.1179  (27.3s)
+epoch 24/40  train/persist 0.7695  val skill +0.1129  (28.5s)
+epoch 25/40  train/persist 0.7582  val skill +0.1106  (27.8s)
+epoch 26/40  train/persist 0.7555  val skill +0.0875  (27.1s)
+epoch 27/40  train/persist 0.7504  val skill +0.1013  (26.3s)
+epoch 28/40  train/persist 0.7435  val skill +0.1020  (25.6s)
+epoch 29/40  train/persist 0.7427  val skill +0.1050  (25.8s)
+epoch 30/40  train/persist 0.7321  val skill +0.0990  (25.9s)
+epoch 31/40  train/persist 0.7306  val skill +0.0987  (25.7s)
+epoch 32/40  train/persist 0.7284  val skill +0.1021  (25.8s)
+epoch 33/40  train/persist 0.7239  val skill +0.1000  (25.7s)
+epoch 34/40  train/persist 0.7203  val skill +0.0889  (25.8s)
+epoch 35/40  train/persist 0.7210  val skill +0.0961  (26.1s)
+epoch 36/40  train/persist 0.7168  val skill +0.0857  (26.4s)
+epoch 37/40  train/persist 0.7175  val skill +0.0906  (25.9s)
+epoch 38/40  train/persist 0.7127  val skill +0.0903  (25.8s)
+epoch 39/40  train/persist 0.7105  val skill +0.0877  (25.8s)
+epoch 40/40  train/persist 0.7149  val skill +0.0886  (20201.9s)
+
+Pakistan held-out tiles: 150 windows
+  skill vs persistence +0.0886
+  RMSE  model 0.0140 m   persistence 0.0147 m
+  NSE   model 0.9998     persistence 0.9998      r  model 0.9999  persistence 0.9999
+  CSI(0.001 m) model 0.9653 persistence 0.9934;  CSI(0.1 m) model 0.9892 persistence 0.9889
+  skill by lead time (30 min ... 2.5 h): +0.091  +0.093  +0.081  +0.084  +0.094   | persistence RMSE mm: 5.0 9.6 13.7 17.6 21.4
+
+Mozambique (never seen): 238 windows
+  skill vs persistence +0.0471
+  RMSE  model 0.0167 m   persistence 0.0171 m
+  NSE   model 0.9986     persistence 0.9986      r  model 0.9994  persistence 0.9993
+  CSI(0.001 m) model 0.9160 persistence 0.9749;  CSI(0.1 m) model 0.9758 persistence 0.9740
+  skill by lead time (30 min ... 2.5 h): +0.037  +0.042  +0.044  +0.046  +0.050   | persistence RMSE mm: 5.2 10.4 15.6 20.6 25.6
+
+Pakistan held-out tiles: what does the model use? (skill when one input is removed at test time)
+    none (normal)              +0.089
+    rainfall removed           +0.003
+    terrain removed            +0.107
+    history order scrambled    +0.089
+    history frozen             +0.087
+
+Mozambique (never seen): what does the model use? (skill when one input is removed at test time)
+    none (normal)              +0.047
+    rainfall removed           +0.001
+    terrain removed            +0.040
+    history order scrambled    +0.047
+    history frozen             +0.048
+
+saved verification_outputs/multires/pakistan_mozambique_seed42_ep40.json

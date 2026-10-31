@@ -1,0 +1,26 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789544013.341062   25868 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789544015.535586   25868 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+I0000 00:00:1789544024.740028   25868 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+positions: 64 total, 62 pass DEM no-data filter, 8 sampled -> 32 (position, time) examples
+train examples: 25   holdout examples: 7
+loading train examples...
+  loaded 25 in 2.9s
+loading holdout examples...
+
+training 6 epochs on 25 real examples...
+  epoch 1/6  train_loss(MSE)=0.20131  (5.5s)
+  epoch 2/6  train_loss(MSE)=0.18512  (0.8s)
+  epoch 3/6  train_loss(MSE)=0.17975  (0.8s)
+  epoch 4/6  train_loss(MSE)=0.17749  (0.8s)
+  epoch 5/6  train_loss(MSE)=0.17749  (0.8s)
+  epoch 6/6  train_loss(MSE)=0.17652  (0.8s)
+
+evaluating on holdout...
+holdout MSE (mean over examples): 0.10439
+holdout RMSE (in depth units, meters): 0.3231 m
+saved stage2_holdout_sample.npz for visualization

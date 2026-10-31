@@ -1,0 +1,51 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789545521.440238   18388 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789545523.768403   18388 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+gathering class-balanced examples...
+  none: found 6
+  minor: found 6
+  moderate: found 6
+  severe: found 6
+train: 18  holdout: 6
+I0000 00:00:1789545526.849637   18388 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:From C:\Dev\flood-forecast-demo\venv\Lib\site-packages\keras\src\backend\tensorflow\core.py:233: The name tf.placeholder is deprecated. Please use tf.compat.v1.placeholder instead.
+
+training briefly so the capsule head produces non-degenerate output...
+  epoch 1/6 done (8.9s)
+  epoch 2/6 done (7.9s)
+  epoch 3/6 done (7.8s)
+  epoch 4/6 done (7.6s)
+  epoch 5/6 done (7.7s)
+  epoch 6/6 done (7.5s)
+
+running predict_severity_with_reasoning on holdout examples...
+
+true=moderate   raw_capsule=moderate   reasoned=severe    
+  features: depth_rate=0.0031 m/hr  rainfall=0.00 mm  slope=6.38%  drainage_proximity=1182 m
+  justification: escalated: depth rising 0.0031 m/hr while 1182 m from the baseline water extent - a floodplain-inundation pattern, not just channel rise
+
+true=none       raw_capsule=moderate   reasoned=moderate  
+  features: depth_rate=0.0036 m/hr  rainfall=0.00 mm  slope=3.31%  drainage_proximity=581 m
+  justification: no rule triggered an adjustment; raw model classification retained
+
+true=minor      raw_capsule=moderate   reasoned=severe    
+  features: depth_rate=0.0031 m/hr  rainfall=0.00 mm  slope=6.38%  drainage_proximity=1182 m
+  justification: escalated: depth rising 0.0031 m/hr while 1182 m from the baseline water extent - a floodplain-inundation pattern, not just channel rise
+
+true=none       raw_capsule=moderate   reasoned=moderate  
+  features: depth_rate=0.0026 m/hr  rainfall=0.00 mm  slope=4.30%  drainage_proximity=779 m
+  justification: no rule triggered an adjustment; raw model classification retained
+
+true=severe     raw_capsule=moderate   reasoned=moderate  
+  features: depth_rate=0.0028 m/hr  rainfall=3.46 mm  slope=4.30%  drainage_proximity=779 m
+  justification: rainfall (3.46 mm) is actively corroborating the rising depth trend
+  *** INCONSISTENCY: justification says a rule fired but severity did not change ***
+
+true=severe     raw_capsule=moderate   reasoned=severe    
+  features: depth_rate=0.0035 m/hr  rainfall=0.43 mm  slope=10.79%  drainage_proximity=1424 m
+  justification: escalated: depth rising 0.0035 m/hr while 1424 m from the baseline water extent - a floodplain-inundation pattern, not just channel rise; steep terrain (10.8% grade) suggests high-energy flow, not simple pooling
+

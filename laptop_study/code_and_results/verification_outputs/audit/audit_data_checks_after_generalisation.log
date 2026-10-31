@@ -1,0 +1,20 @@
+A4. loader vs direct reads (inputs, targets, rainfall, DEM, severity label, persistence baseline)
+  [PASS] 24 random windows (12 Australia + 12 UK): every array and both labels match an independent read (0 mismatches)
+
+A5. UK offset (5,5): is the depth raster really a crop of the terrain grid?
+  [PASS] aligned (5,5) is the strongest depth-terrain relationship among all 121 candidate offsets (r aligned -0.252 | r unaligned (0,0) +0.007 | best offset (5, 5))
+
+A6. window scan vs an independent census on 3 time points x every valid Australian patch
+  [PASS] 186 scanned windows: every severity and baseline label matches (class mix here: none 25% minor 8% moderate 5% severe 62%)
+
+A8. coarse regions (60 m, 480 m): does the loader's DEM / rainfall equal an independent block average of the raw 30 m files?
+  [PASS] Pakistan 480 m (scale 16, offset (42,178)): 6 random windows equal independent block-averaged reads 
+  [PASS] Mozambique 480 m (scale 16, offset (150,50)): 6 random windows equal independent block-averaged reads 
+  [PASS] Australia 60 m (scale 2, offset (0,0)): 6 random windows equal independent block-averaged reads 
+  [PASS] UK 60 m (scale 2, offset (5,5)): 6 random windows equal independent block-averaged reads 
+
+A7. NoData guard: the UK layers have a NoData padding ring; a window that reaches it must be refused
+  [PASS] window reaching the NoData ring is refused 
+  [PASS] the patches the project actually uses are unchanged by the guard (Australia 62 / UK 2 valid patches)
+
+ALL DATA CHECKS PASSED

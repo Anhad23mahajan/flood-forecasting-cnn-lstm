@@ -1,0 +1,19 @@
+% =========================================================== WHO DID WHAT (short)
+\section{Who did what, and where to find everything}\label{ch:who}
+\textbf{Aman Sumeet Saxena} built and ran the Colab work (Part 1) and wrote the three final notebooks (Data exploration, Data preparation, Flood model): data checks, Models A and B, trend forecast, water-balance rule, capsule network, severity rules, Grad-CAM. \textbf{Anhad Mahajan} ran the laptop study (Part 2, about 310 training runs), the baselines, ablations, strict tests and the earlier capsule and Grad-CAM tests. The report is joint. Aman found the ridge baseline mistake (Chapter~\ref{ch:bug}) and the baselines were re-fitted with rescaled inputs, with the original code file left unchanged.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Where things are.}
+\begin{tabularx}{\linewidth}{|>{\bfseries}p{3.6cm}|Y|}
+\hline
+Final report (Word, PDF) & The 28-page report we hand in, the source of the results in this guide.\\ \hline
+Final presentation & The 15-slide deck, with the script in Chapter~\ref{ch:script}.\\ \hline
+Three Colab notebooks & Already run, outputs saved (Chapters~\ref{ch:nb-explore}, \ref{ch:nb-prep}, \ref{ch:nb-model}).\\ \hline
+Laptop study package & The Part 2 code, the roughly 310 result files and the project log.\\ \hline
+Ridge baseline check & Scripts, notes and an erratum for the fix of Chapter~\ref{ch:bug}.\\ \hline
+Website and README & https://amans-06.github.io/FloodCastBench-Project/ and the GitHub repository FloodCastBench-Project.\\ \hline
+\end{tabularx}
+\end{table}
+
+\textbf{Running the notebooks (in this order, outputs are already saved, so for the talk just scroll).} (1) \emph{Data exploration} needs about 30 GB of free disk (Colab showed 62.9 GB), downloads all 14,870 files (about 27 GB, 60 minutes in our run) and saves nothing to Drive. (2) \emph{Data preparation} downloads only 3,822 files (9.1 minutes), writes 5.69 GB of arrays to Colab's disk and compares them with the copy on Drive, which it only reads. (3) \emph{Flood model} needs a T4 GPU runtime and loads the prepared data and saved models from Drive. \cd{TRAIN\_NEW} and \cd{TRAIN\_V2} are False, so nothing is trained again, and True trains again.

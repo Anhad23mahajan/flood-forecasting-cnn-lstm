@@ -1,0 +1,18 @@
+Pakistan: depth 810x441; DEM 13035x7298; margins (rows, cols) = (75, 242) base px; coarse estimate (44,176)
+terrain-structure score, best five offsets (most negative r):
+   ( 42,180)  terrain r=-0.091   water r=+0.099
+   ( 42,182)  terrain r=-0.090   water r=+0.098
+   ( 40,180)  terrain r=-0.090   water r=+0.098
+   ( 40,182)  terrain r=-0.090   water r=+0.097
+   ( 42,178)  terrain r=-0.090   water r=+0.100
+baseline-water score, best five offsets (highest r):
+   ( 46,176)  water r=+0.101   terrain r=-0.087
+   ( 48,176)  water r=+0.101   terrain r=-0.084
+   ( 46,178)  water r=+0.101   terrain r=-0.087
+   ( 44,176)  water r=+0.101   terrain r=-0.089
+   ( 44,178)  water r=+0.101   terrain r=-0.089
+joint (rank-sum of the two independent signals), best five: [(42, 178), (42, 176), (44, 178), (44, 176), (42, 180)]
+
+adopted crop offset for Pakistan: (row, col) = (42, 178) base px  -> cell (i,j) covers base rows [42+16i, 42+16i+16), cols [178+16j, ...)
+DEM NoData pixels: 1934218 (2.03%); inside the adopted crop: 0; outside: 1934218
+   NoData bounding box rows 0..13034, cols 0..7297;  crop rows 42..13002, cols 178..7234

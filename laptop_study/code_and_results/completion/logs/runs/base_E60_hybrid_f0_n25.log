@@ -1,0 +1,17 @@
+Australia: 16 valid tiles -> fold 0/3: 10 train tiles, 6 held-out tiles; wet windows: train pool 791, held-out pool 480; using 25 train / 300 held-out / 120 UK windows
+E60 hybrid fold 0: S1 heldout +0.3322  test +0.3970
+E60 hybrid fold 0: S1c heldout +0.3322  test +0.3970
+E60 hybrid fold 0: S2 heldout +0.2498  test +0.2425
+E60 hybrid fold 0: S2c heldout +0.2506  test +0.2425
+E60 hybrid fold 0: S3 heldout +0.4119  test +0.4269
+E60 hybrid fold 0: S3c heldout +0.4124  test +0.4269
+E60 hybrid fold 0: S5 (2-feature lookup table) heldout +0.6231  test +0.7409
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789934725.052665   15556 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789934729.048352   15556 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789934732.593892   15556 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+E60 hybrid fold 0: S4 heldout +0.6766  test +0.8136
+E60 hybrid fold 0: S4c heldout +0.6772  test +0.8136

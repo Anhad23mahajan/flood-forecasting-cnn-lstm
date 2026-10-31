@@ -1,0 +1,17 @@
+\section{Read this first: how to answer, and the weak spots mam could catch}\label{ch:start}
+
+\textbf{For any code question:}\label{sec:method} read the comment above the line aloud, say what goes in and what comes out, and name the tool and what it is for. If a line is unfamiliar, say what it is for in the story, and do not guess.
+
+\subsection{Things mam could catch, and what to say}\label{sec:risks}
+These are the weak spots we know about. It is better to say them yourself before she asks.
+\begin{enumerate}
+\item \textbf{Slide 10, the linear-model bars (already corrected).} The linear model now shows \textbf{0.818, 0.798 and 0.790}, the numbers in the final report. Our first fit gave 0.32, 0.35 and 0.15 because of a scaling mistake (Chapter~\ref{ch:bug}). If she asks why the number changed, say: ``Our first fit had a bug. After the fix a plain linear formula scores 0.82, 0.80 and 0.79, as good as the lookup table or a little better, and the networks add only 0.01 to 0.05. The conclusion does not change.''
+\item \textbf{The model notebook loads saved models, it does not train.} The switch \cd{TRAIN\_NEW = False} loads the weights we trained earlier. The \cd{fit} cells hold the training code, and True trains again.
+\item \textbf{Part 2 (the 310-run laptop study) is not in the Colab notebooks.} It ran on a laptop CPU, took about 20 hours, and we are not showing its code. Slides 10 and 11 show its results, and the code to show is in the three notebooks.
+\item \textbf{The alignment table says ``Both tests say move it'' for Australia 30 m and UK 30 m.} The best match is only one 30 m square from our position, the smallest possible move. The report says the two checks agree within about one cell, so we kept the positions.
+\item \textbf{In the capsule Grad-CAM figure the four columns of each row look alike.} The four tiles are the four most flooded test tiles, most likely the same place at nearby times. The report also says the capsule heat maps were weak and are pictures, not proof.
+\item \textbf{Red warning text in the outputs} (\cd{NotGeoreferencedWarning}, the Keras \cd{adam} warning, \cd{HTTP Error 429}) is harmless: missing map-position data (saved in \cd{map\_info.json}), a saved optimiser memory, and Hugging Face asking us to slow down.
+\item \textbf{The last cell of the model notebook lists old file names} such as \cd{P1\_skill\_comparison.png}. They are older runs still in the Drive folder. This run's figures are \cd{03\_...} to \cd{06\_...}.
+\item \textbf{Results are single runs.} We did not repeat Part 1 with many seeds, and the limits slide says so.
+\end{enumerate}
+

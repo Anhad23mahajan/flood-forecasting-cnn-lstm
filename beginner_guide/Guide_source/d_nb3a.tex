@@ -1,0 +1,303 @@
+\sloppy
+\section{Notebook 3: The flood model}\label{ch:nb-model}
+
+\textbf{Big picture.} This notebook cuts the prepared flood arrays (Chapter~\ref{ch:nb-prep}) into tiles, builds Model A (CNN-LSTM), loads its saved weights, tests it on whole maps and compares it with simple forecasts. Then it builds Model B, which starts from the trend forecast.
+It reads four prepared floods and six saved models from Drive and writes figures and tables to \cd{model\_outputs}. Nothing is trained again (\cd{TRAIN\_NEW} and \cd{TRAIN\_V2} are \cd{False}). The title cell asks for a T4 GPU. Parts 5 to 8 (capsule network, Grad-CAM, rules, summary) are in the second half.
+
+\subsection{Section 0 and settings}
+
+\textbf{Setup cells.} \cd{import} brings in toolboxes with nicknames: \cd{np} (arrays), \cd{pd} (tables), \cd{plt} (figures), \cd{tf} and \cd{keras} with \cd{layers} (networks), \cd{uniform\_filter} (neighbour average), \cd{drive}. The GPU cell prints a list with one \cd{PhysicalDevice(... 'GPU')} (\cd{[]} would mean none). \cd{drive.mount(...)} prints \cd{Mounted at /content/drive}, then four folders are built from \cd{PROJECT\_DIR} and \cd{os.makedirs(..., exist\_ok=True)} creates missing output folders.
+
+\textbf{Settings cell.} Every number is written once here (names in capitals are constants).
+
+\codelines{model_c6}{1}{5}
+
+\cd{PAIRS} is a list of two dictionaries. The \textbf{30 m model} learns on \cd{Australia\_30m} and is tested on \cd{UK\_30m}. The \textbf{480 m model} learns on \cd{Pakistan\_480m} and is tested on \cd{Mozambique\_480m}. Two networks, because 30 m and 480 m squares behave differently (Chapter~\ref{ch:data}). \cd{REGION\_NAMES} gives table names such as \cd{"UK (30 m)"} and fixes the order.
+
+{\small
+\begin{tabularx}{\linewidth}{@{}p{3.1cm}p{1.35cm}Y@{}}
+\toprule
+\hd{Constant} & \hd{Value} & \hd{Meaning and reason}\\
+\midrule
+\cd{STEP\_HOURS} & 0.5 & Maps are 30 minutes apart. Map number $\times$ 0.5 is hours.\\
+\cd{WET\_DEPTH\_M}, \cd{FLOOD\_DEPTH\_M} & 0.01, 0.30 & Wet: deeper than 1 cm (the water rule takes water away only there). Flooded: deeper than 30 cm (CSI, severity). No reasons given.\\
+\cd{SEVERITY\_LIMITS} & 0.05, 0.15, 0.30 & Cut the flooded share of dry land into None, Minor, Moderate, Severe (capsule network, later).\\
+\cd{TRAIN\_SHARE}, \cd{VALIDATION\_SHARE} & 0.70, 0.15 & Split by \emph{time}: first 70\% train, next 15\% check (validation), last 15\% test. Australia (481 maps): training ends at map 336, checking at 408, testing 408 to 480.\\
+\cd{INPUT\_STEPS}, \cd{CHANNELS} & 4, 3 & 4 maps (1.5 hours), each with 3 layers: depth, rain, local ground height. No reason stated for 4 (general reasoning: enough to see a trend).\\
+\cd{TILE\_SIZE} & 64 & Training pieces are 64 by 64, because whole Australian maps (over a million squares) do not fit GPU memory in large numbers. The network only slides windows, so it works on whole maps too. 64 has no stated reason.\\
+\cd{TRAIN\_TILES}, \cd{VALIDATION\_TILES}, \cd{TEST\_TILES} & 4000, 600, 1000 & Random tiles for training, checking and (capsule network) testing. No reason given.\\
+\cd{CHANGE\_LIMIT\_M}, \cd{CALM\_TILE\_SHARE} & 0.01, 1.0 & A tile ``changes'' if some square moved more than 1 cm in 30 minutes. \cd{CALM\_TILE\_SHARE} is the share of calm tiles kept. At 1.0 nothing is skipped, so the filter is off.\\
+\cd{RAIN\_SCALE} & 10.0 & Rain (mm per hour) divided by 10 to match the scale of the other inputs (comment).\\
+\cd{TERRAIN\_WINDOW} & 15 & Height is compared with the average of the 15 by 15 squares around it. No reason stated.\\
+\cd{EPOCHS}, \cd{BATCH\_SIZE} & 20, 16 & At most 20 passes through the training tiles. Weights are nudged after every 16 tiles, so 4000 tiles give 250 updates per pass.\\
+\cd{LEARNING\_RATE} & 0.001 & Size of each nudge, the usual Adam default (general reasoning). The report lists ``Adam, $10^{-3}$, constant''.\\
+\cd{TRAIN\_NEW}, \cd{TRAIN\_V2} & False & Switches for Model A and B. False loads saved weights.\\
+\bottomrule
+\end{tabularx}}
+
+\cd{keras.utils.set\_random\_seed(42)} fixes Python, numpy and TensorFlow random numbers, so tile positions and starting weights repeat in every run (42 has no meaning). The last lines build the blue colour scale and draw \cd{nan} squares grey. The cell prints nothing.
+
+\qq{Why a time split and not a random split?}{A forecast is about the future, and random mixing would put training maps between test maps, making the test too easy.}{}
+
+\subsection{Helper functions, \cd{load\_region} and loading the data}
+
+\textbf{Helpers} (definitions only). \cd{save\_figure}, \cd{save\_table} write \cd{.png}, \cd{.csv}. \cd{show\_water} draws squares under 1 cm grey, the rest blue. \cd{cut\_into\_tiles} loops \cd{range(0, rows - 64 + 1, 64)} over rows and columns and lists the top-left corners, so every tile fits inside the map. The UK (170 by 275) gives $2\times4 = 8$ tiles, Mozambique (151 by 138) 4, Pakistan 72, Australia 256.
+
+\textbf{\cd{load\_region(dataset)}} loads one flood and returns everything in one dictionary.
+
+Lines 6 and 7: \cd{np.load} reads \cd{depth.npy} and \cd{rain.npy} (maps, rows, columns), and \cd{np.nan\_to\_num(..., copy=False)} turns \cd{nan} into 0 in place (Australian depth alone is about 2.2 GB). Lines 10 and 11: missing terrain gets the average height (\cd{np.nanmean}). Line 14: \cd{uniform\_filter(terrain, size=15)} is the 15 by 15 neighbour average, so \cd{terrain -} average is the \textbf{local height}: positive on a hilltop, negative in a dip or river bed, near 0 on a plain, whatever the height above sea. Line 15 divides by the standard deviation (\cd{max(..., 1e-6)} avoids division by zero).
+
+Line 18 loads \cd{permanent\_water.npy} (True for rivers and lakes) and line 30 flips it with \cd{\textasciitilde}, so \cd{dry\_land} is the normally dry ground. Lines 21 to 32 read \cd{map\_info.json} and fill a dictionary with depth, rain, local height, dry land, info and number of maps. Lines 33 and 34: \cd{train\_end = int(0.70 * 481) = 336}, \cd{validation\_end = int(0.85 * 481) = 408}. Australia has training maps 0 to 335, checking 336 to 407 and test 408 to 480 (73 maps).
+
+\textbf{Load all four floods.} A loop over \cd{REGION\_NAMES} calls \cd{load\_region} and fills \cd{regions} (takes minutes). It prints the shapes (maps, rows, columns): Australia\_30m (481, 1073, 1073), UK\_30m (145, 170, 275), Pakistan\_480m (673, 810, 441), Mozambique\_480m (289, 151, 138), as in Table 2 of the report.
+
+\textbf{First target and split table.} \cd{FIRST\_TARGET = INPUT\_STEPS + 1 = 5}. To forecast map 5 the model needs maps 1 to 4, and map 1 needs the rain stored at number 0, so the first forecastable map is map 5, hour 2.5. The cell turns the split points into hours and saves \cd{01\_data\_split}. Australia: train 2.5 to 168.0 h, validation 168.0 to 204.0, test 204.0 to 240.5. Pakistan: train 2.5 to 235.5, validation 235.5 to 286.0, test 286.0 to 336.5. The UK and Mozambique have dashes for train and validation: they are never used for training or checking, and their whole flood is the test.
+
+\subsection{Tiles: \cd{make\_input}, \cd{make\_training\_tiles}}
+
+\textbf{\cd{make\_input(region, last\_step, top, left, height, width)}} builds one input: the four newest maps up to \cd{last\_step}, three layers each, for a tile or the whole map. The model then forecasts map \cd{last\_step + 1}.
+
+\codelines{model_c13}{5}{23}
+
+Lines 5 to 7: with no \cd{height} the whole map is used, otherwise the tile. Line 11: \cd{range(last\_step - 3, last\_step + 1)} gives the four map numbers, oldest first. Line 12: \cd{depth[step, top:top + height, left:left + width]} cuts the tile. Line 15: rain from \cd{step - 1}, \cd{float32}, divided by \cd{RAIN\_SCALE}. Line 17: local height (no time axis, the ground does not change). Line 20: \cd{np.stack([...], axis=-1)} puts the three maps on top of each other, (64, 64, 3). Line 23: \cd{np.stack(maps)} stacks the four in time order, shape \textbf{(4, height, width, 3)}: (4, 64, 64, 3) for a tile and (4, 1073, 1073, 3) for whole Australia.
+
+\begin{carefulbox}
+Rain file $j$ holds the rain that falls in the 30 minutes \emph{after} depth map $j$. So \cd{rain[step - 1]} is the 30 minutes just before map \cd{step}. The rain after the newest input map, \cd{rain[last\_step]}, is in the future and never given (an earlier ``hybrid input'' version gave it).
+\end{carefulbox}
+
+\textbf{\cd{make\_training\_tiles(region, first\_target, last\_target, count)}} cuts \cd{count} random 64 by 64 tiles at random times, each with its input and its answer (the true depth 30 minutes after the newest input map).
+
+\codelines{model_c14}{12}{26}
+
+Lines 6 to 8 make empty lists and line 10 a \cd{while} loop (a tile may be skipped, then we retry) until \cd{count} tiles exist. Lines 12 to 14: \cd{np.random.randint} picks the target map from \cd{first\_target} to \cd{last\_target - 1}, and a random corner (\cd{+ 1} because the upper limit is excluded) so the tile always fits. Lines 16 and 17: the true tile at target time and the tile one step earlier. Lines 20 to 22: if no square changed more than \cd{CHANGE\_LIMIT\_M}, the tile is calm and is skipped when \cd{np.random.rand()} is above \cd{CALM\_TILE\_SHARE}, which never happens at 1.0. Line 24: \cd{make\_input(region, target\_step - 1, ...)}. Lines 25 and 26: \cd{target[:, :, None]} gives shape (64, 64, 1), and \cd{positions} remembers (time, top, left) for later. Line 28 returns the arrays (count, 4, 64, 64, 3), (count, 64, 64, 1) and the list.
+
+\textbf{Making the tiles} (only the training flood of each pair is used):
+
+Training tiles: 4000 with targets from \cd{FIRST\_TARGET} to \cd{train\_end}. Checking tiles: 600 with targets from \cd{train\_end} to \cd{validation\_end}, used to measure error after each epoch and never to change weights. It stores them in \cd{tiles} and prints \cd{(4000, 4, 64, 64, 3)} and \cd{(600, 4, 64, 64, 3)} for both models.
+
+
+\subsection{Section 2: Model A, \cd{build\_forecaster}}
+
+Two CNN layers find shapes (water edges, slopes, rain patches) in each of the 4 maps, a ConvLSTM reads them in order and remembers how the water moved, and a decoder turns that memory into the change in depth. Next map = last map plus change, never below 0.
+
+\codelines{model_c18}{4}{9}
+
+Line 5: \cd{keras.Input(shape=(4, height, width, 3))} is the input, with the number of examples left free (\cd{None}). Line 8: \cd{Conv2D(16, 3, padding="same", activation="relu")} has \textbf{16 filters}, each a 3 by 3 window sliding over the map. \cd{padding="same"} keeps the size. ReLU sets negatives to 0. \cd{TimeDistributed} applies it to \emph{each of the 4 maps with the same filters}: (4, 64, 64, 3) becomes (4, 64, 64, 16). The notebook gives no reason for 16 (general reasoning: a few small filters detect simple patterns). Line 9: the second CNN layer, on the result. General reasoning (no one-layer version is tested): it combines simple patterns into bigger ones, since its 3 by 3 window sees 5 by 5 original squares.
+
+\codelines{model_c18}{11}{22}
+
+Line 12: \cd{ConvLSTM2D(32, 3, padding="same")} reads the 4 maps oldest first, updates a memory that is itself a map, and returns only the final memory: (4, 64, 64, 16) to (64, 64, 32). No reason for 32 is given (we think twice the 16 gives room). Line 15: decoder, a 3 by 3 convolution with 16 filters and ReLU mixing the 32 memory maps into 16. Line 16: \cd{depth\_change}, \cd{Conv2D(1, 1)}, one 1 by 1 filter that combines the 16 numbers of each square into the predicted change in metres. No activation, so the change may be positive or negative. \cd{kernel\_initializer="zeros"} starts its weights at 0, so the first predicted change is 0 everywhere. Line 19: \cd{inputs[:, -1, :, :, 0:1]} is all examples, the last map, all rows and columns, layer 0 (depth). \cd{0:1} keeps the layer axis, shape (64, 64, 1). Line 20: \cd{layers.Add()} adds last depth and change, \cd{ReLU} removes negatives (water cannot be below 0). Line 22 packs it into a \cd{keras.Model}.
+
+\begin{thinkbox}
+The last layer starts at zero, so before training the output is the last depth. Training starts from ``copy the last map'' and only learns the \emph{difference}, which is easier because most of the map hardly changes in 30 minutes.
+\end{thinkbox}
+
+\textbf{Whole-map copy} (lines 25 to 31). \cd{forecaster\_for\_whole\_map} builds Model A at whole-map size and copies the learned numbers with \cd{get\_weights()} and \cd{set\_weights(...)}. This works because every layer is a sliding window with no flatten or dense layer. We train on tiles (memory) and test on whole maps (a real forecast).
+
+\textbf{Layer summary} (line 35 \cd{summary()}):
+
+{\small
+\begin{center}
+\begin{tabular}{@{}llrl@{}}
+\toprule
+\hd{Layer (type)} & \hd{Output shape} & \hd{Param \#} & \hd{How the number arises}\\
+\midrule
+past\_maps (InputLayer) & (None, 4, 64, 64, 3) & 0 & holds the input\\
+cnn\_1 (TimeDistributed) & (None, 4, 64, 64, 16) & 448 & $16\times(3\cdot3\cdot3+1)$\\
+cnn\_2 (TimeDistributed) & (None, 4, 64, 64, 16) & 2,320 & $16\times(3\cdot3\cdot16+1)$\\
+memory (ConvLSTM2D) & (None, 64, 64, 32) & 55,424 & $4\times32\times(3\cdot3\cdot(16+32)+1)$\\
+decoder (Conv2D) & (None, 64, 64, 16) & 4,624 & $16\times(3\cdot3\cdot32+1)$\\
+get\_item & (None, 64, 64, 1) & 0 & the cut \cd{inputs[:, -1, :, :, 0:1]}\\
+depth\_change (Conv2D) & (None, 64, 64, 1) & 17 & $16+1$\\
+add, next\_depth (ReLU) & (None, 64, 64, 1) & 0 & last depth plus change, no negatives\\
+\bottomrule
+\end{tabular}
+\end{center}}
+Totals: \cd{Total params: 62,833 (245.44 KB)}, all trainable. Per filter a convolution has one weight per window square and input layer, plus one bias. The ConvLSTM has four gates, each looking at the 16 input layers and its own 32 memory layers, so 55,424 of the 62,833 numbers sit there. \cd{cnn\_1} is only 448 because the four maps share filters.
+
+\qq{Why a 1 by 1 filter at the end?}{It only mixes the 16 numbers of each square into one change value and does not look at neighbours.}{}
+
+\subsection{Load (or train) Model A, training curves}
+
+\codelines{model_c19}{9}{27}
+
+Lines 6 and 7: this model's tiles and weights file (\cd{forecaster\_30m.weights.h5} or 480m). Lines 9 and 10: a fresh Model A, \cd{compile} with \cd{Adam(LEARNING\_RATE)} (decides each nudge) and \cd{loss="mse"} (squared forecast minus truth, averaged over squares). Line 12: training runs if \cd{TRAIN\_NEW} is on or the file is missing, so it is skipped here. Line 16: \cd{EarlyStopping(patience=4, restore\_best\_weights=True)} watches \cd{val\_loss} on the checking tiles, stops when it has not improved for 4 epochs in a row and puts back the best epoch's weights (guard against overfitting, no reason for 4 given). Lines 18 to 21: \cd{fit} is the training: inputs and targets, \cd{validation\_data} (measured only), \cd{epochs=20}, \cd{batch\_size=16} (250 updates per epoch), the early-stop helper, \cd{verbose=2} (one line per epoch with \cd{loss} and \cd{val\_loss}). Line 24 \cd{save\_weights}. Lines 25 to 27: otherwise \cd{load\_weights}.
+
+It prints \cd{Loading Model A 30m} and \cd{480m} (nothing trained) and a harmless \cd{UserWarning: Skipping variable loading for optimizer 'adam'...}. The saved file also holds Adam's memory, only needed to continue training.
+
+\textbf{Training curves.} The code starts with \cd{if len(histories) > 0:} and \cd{histories} is empty, so the output is empty. A trained model would draw \cd{100 * np.sqrt(loss)} (RMSE in cm), and a rising checking line with a falling training line means overfitting (for 30 m Model A the checking error was lowest after the second epoch, Chapter~\ref{ch:res1}).
+
+
+\subsection{Section 3 and 3a: the water-balance rule}
+
+\textbf{Scores.} \textbf{RMSE} is the typical error per square (cm). \textbf{Skill} $= 1 - (\text{model error}/\text{copy error})$: 0 is copying, 1 is perfect, below 0 is worse than copying (Chapter~\ref{ch:score}). \textbf{CSI} measures how well flooded areas (above 30 cm) match. \textbf{3a}: almost all rain stays on the ground, so the rise of the average depth in 30 minutes (mm) is about the rain (mm per hour) times 0.5 h. The rule fixes only the \emph{total} water, the network decides where it goes, and only rain that has already fallen is used.
+
+\textbf{The check cell.} Per flood: \cd{depth.mean(axis=(1, 2), dtype="float64")} is the average depth of each map, \cd{1000 *} makes millimetres and \cd{np.diff} the rise per step. \cd{rain\_now\_mm} is average rain times 0.5 h for the same half hour, \cd{rain\_before\_mm} the same shifted by one step, the only rain a forecast knows. \cd{ax.scatter} draws the dots, \cd{np.corrcoef(a, b)[0, 1]} the correlations. 
+
+\nbfig{model_c23_1.jpg}{0.45}{Water balance, one panel per flood. Each dot is one 30-minute step. Across: rain times 0.5 h (mm). Up: rise of the average depth (mm). Red dashed: rise = rain $\times$ 0.5 h.}
+\textbf{Say this:} in all four floods the dots follow the red line, so rain explains the rise of the total water. 
+
+{\small
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\hd{Region} & \hd{Total rise / total rain} & \hd{Corr., same half hour} & \hd{Corr., half hour before}\\
+\midrule
+Australia (30 m) & 0.999 & 1.0 & 0.925\\
+UK (30 m) & 0.946 & 1.0 & 0.945\\
+Pakistan (480 m) & 1.028 & 1.0 & 0.969\\
+Mozambique (480 m) & 1.045 & 1.0 & 0.929\\
+\bottomrule
+\end{tabular}
+\end{center}}
+The balance holds within about 5\% (the report blames water crossing the map edge, and the Indus inflow in Pakistan). With the same half hour's rain the rise is almost perfect, but a forecast cannot know it. With the half hour before, the correlation is 0.925 to 0.969, so the rule is a good but not perfect guess.
+
+\textbf{\cd{apply\_water\_balance(predicted, last, past\_rain)}} shifts a forecast so its total rise matches the rain.
+
+\codelines{model_c24}{7}{24}
+
+Line 4 takes forecast minus last map. Line 7: \cd{allowed\_rise = 0.5 * mean(past\_rain) / 1000}, in metres per square. Line 10: the average predicted change minus the allowed rise, times \cd{predicted.size}, is \cd{extra\_water} of the whole map (positive means too much, negative too little). Lines 12 to 16: if \cd{extra\_water < 0}, the missing water is added equally to every square (rain falls everywhere). Lines 17 to 21: otherwise \cd{wet = corrected > WET\_DEPTH\_M} and the extra water is taken equally from wet squares only. Line 24: \cd{np.maximum(corrected, 0)} removes negative depths, which can add back a little water, so the match is almost always exact but not always.
+
+Example: last map $0, 0, 0.20, 0.40$ m, rain 4 mm per hour, allowed rise $0.002$ m. Forecast changes $+0.001, +0.001, +0.003, +0.005$ (average $0.0025$): extra $0.002$ in total, the two wet squares lose $0.001$ each, average change now exactly $0.002$.
+
+\subsection{Skill, \cd{evaluate\_region} and the Model A results}
+
+\textbf{\cd{critical\_success\_index(predicted, true)}} makes two True/False maps (deeper than 30 cm in forecast and in truth) and counts \cd{hits} (both, \cd{\&}), \cd{misses} (truth only, \cd{\textasciitilde} is not) and \cd{false\_alarms} (forecast only). Result \cd{hits / (hits + misses + false\_alarms)}, \cd{nan} if all are 0. Example: 18 hits, 2 misses, 4 false alarms give $18/24 = 0.75$. Squares dry in both are ignored.
+
+\textbf{\cd{evaluate\_region(forecaster, region, first\_target, last\_target)}} forecasts every whole map of a test period.
+
+Line 24: \cd{make\_input(region, target\_step - 1)} with no tile gives the whole-map input, \cd{[None]} adds a batch axis. Line 25: \cd{forecaster(model\_input, training=False)} runs the network and \cd{[0, :, :, 0]} keeps a plain map. Lines 27 and 28: the true map and the previous real map (the copy forecast). Line 31: the newest rain layer times \cd{RAIN\_SCALE} (back to mm per hour), and line 32 applies the rule. Lines 34 to 43 store, per forecast, the \emph{sum} of squared errors of the model, the model with the rule and copying, the number of squares and three CSI values. Lines 46 to 49 remember the step with the largest water change for the map figure.
+
+\textbf{Running the test.} For each pair it builds whole-map models for both floods, tests the training flood on maps from \cd{validation\_end} to the end (last 15\%, never trained on) and the never-seen flood from \cd{FIRST\_TARGET} to its end. It prints \cd{30m done}, \cd{480m done}. The numbers of forecasts are 73, 140, 101 and 284. The typical error is \cd{100 * np.sqrt(error / cells)} in cm over all squares including dry ones, and skill is \cd{1 - model\_error / copy\_error} on totals.
+
+{\small
+\begin{center}
+\begin{tabular}{@{}llrrrrrr@{}}
+\toprule
+\hd{Region} & \hd{Tested on} & \hd{Fcsts} & \hd{Copy (cm)} & \hd{A (cm)} & \hd{A+rule (cm)} & \hd{Skill A} & \hd{Skill A+rule}\\
+\midrule
+Australia (30 m) & unseen time & 73 & 0.112 & 0.175 & 0.147 & $-1.449$ & $-0.710$\\
+UK (30 m) & never-seen & 140 & 0.520 & 0.433 & 0.429 & 0.305 & 0.320\\
+Pakistan (480 m) & unseen time & 101 & 0.103 & 0.084 & 0.080 & 0.345 & 0.404\\
+Mozambique (480 m) & never-seen & 284 & 0.548 & 0.505 & 0.498 & 0.150 & 0.172\\
+\bottomrule
+\end{tabular}
+\end{center}}
+CSI, copy / A with rule: Australia 0.9995 / 0.9992, UK 0.9888 / 0.9919, Pakistan 0.9993 / 0.9994, Mozambique 0.9678 / 0.9732. All are near 1 because deep squares stay deep for the next half hour.
+
+\textbf{Why Australia is $-1.449$.} Skill is about $1-(0.175/0.112)^2 = 1-2.44$, so Model A's squared error is about 2.4 times that of copying. The errors are tiny (about 1.1 mm for copying, 1.75 mm for A) because late in the Australian flood the water barely moves. Negative skill means worse than copying, not a large error. The report notes Model A probably added a little water almost everywhere (not measured further). The rule helps (0.175 to 0.147 cm) but not enough. On the other three tests A beats copying (0.305 means about 30\% of copying's squared error removed).
+
+\qq{Model A is worse than copying in Australia. Why?}{Late in that flood the water hardly moves, so copying is almost perfect, and Model A adds a little water almost everywhere.}{Skill $-1.449$, about 2.4 times the squared error. Report says not measured further.}
+
+\subsection{Model A figures}
+
+\textbf{Skill bars.} \cd{ax.bar} draws two bars per test (blue A, green A+rule, shifted $\mp0.2$), \cd{ax.axhline(0, color="black")} marks skill 0 (copying), the rest sets labels and saves \cd{03\_skill\_per\_region}. Australia is far below the line ($-1.449$ blue, $-0.710$ green), the others above it, green a little taller. \textbf{Say this:} Model A beats copying in three of four tests, fails in late Australia, and the rule helps every time.
+
+\textbf{Error at every step.} Four panels (figure \cd{model\_c29\_3}, same layout as the later Figure with the trend) plot \cd{100 * np.sqrt(squared error / cells)} per forecast against the hour: grey copy, blue A, green A+rule.
+
+\textbf{Say this:} every forecast is wrong by more when the water changes fastest, and A never gets near zero. Australia: blue stays above grey (about 0.21 to 0.16 cm, copying falls from 0.17 to 0.08). UK: copying peaks near 1.2 cm around hour 25, A about 0.9. Pakistan: A is level with or slightly above copying, but at hour 333 copying peaks at 0.30 and A at 0.15. Mozambique: A is below copying early, the peak near hour 62 is similar for all.
+
+\textbf{Forecast maps.} Each row uses the stored step with the biggest change, and the change maps use a symmetric range so 0 is in the middle. Columns 1 to 3 use \cd{show\_water}, columns 4 and 5 are change in \cd{"RdBu"} (blue rising, red falling), column 6 is predicted minus true in \cd{"PuOr"} (purple too much water, orange too little). 
+
+\nbfig{model_c31_4.jpg}{0.32}{Model A with the water rule, 30 minutes ahead (Australia 204.0 h, UK 24.5 h, Pakistan 333.5 h, Mozambique 53.5 h). Columns: water now, true water in 30 min, predicted water, true change, predicted change, error (predicted minus true).}
+\textbf{Say this:} the first three columns look the same because water changes little in 30 minutes, which is why copying is strong. The predicted change is a fainter version of the true change, so the model finds rising water along rivers but underestimates it. The last three columns have their own scale per row (about $\pm0.01$ m in Australia, $\pm0.06$ m in the UK and Mozambique). The error is mostly orange along rivers in the UK and Mozambique and faintly purple over Australia.
+
+\subsection{Section 4: trend forecast and fitting $\beta$}
+
+The \textbf{trend forecast} lets the water keep changing as it just did, never below 0:
+\[\text{next map} = \text{last map} + \beta\times(\text{last map} - \text{map 30 minutes before}).\]
+$\beta$ is one number fitted on the training part only, and there is no network. Let $p$ be the change in the last 30 minutes and $n$ the change in the next 30, so the trend guesses $n\approx\beta p$. The best $\beta$ makes $\sum(n-\beta p)^2$ smallest (least squares), which gives
+\[ \beta = \frac{\sum p\, n}{\sum p^2}, \]
+with sums over every square and every training step. Example: $p=1,2,3$ and $n=1,2,2$ give $\beta = 11/14 = 0.786$.
+
+\codelines{model_c33}{3}{14}
+
+Lines 3 and 4: the sums \cd{top} and \cd{bottom} start at 0. Lines 6 to 9: \cd{previous\_change} is $p$ (map \cd{step - 1} minus \cd{step - 2}), \cd{next\_change} is $n$ (map \cd{step} minus \cd{step - 1}), in \cd{float64} for precision. Lines 11 and 12 add \cd{np.sum(p * n)} to \cd{top} and \cd{np.sum(p ** 2)} to \cd{bottom}, line 14 returns \cd{top / bottom}.
+
+$\beta$ is fitted for each pair on its \emph{training flood} (Australia, Pakistan) for steps \cd{FIRST\_TARGET} to \cd{train\_end}, so test parts and never-seen floods play no part. It prints \cd{Trend numbers (beta): \{'30m': 0.9207..., '480m': 0.9485...\}}. So $\beta = 0.921$ (30 m) and $0.948$ (480 m): about 92\% and 95\% of the last change carries on. 
+
+\textbf{\cd{score\_simple\_forecasts}} (lines 17 to 44). Line 19: four running totals of squared error (copy, trend, copy + rule, trend + rule). Lines 21 to 24: \cd{true}, \cd{last}, \cd{change}. Line 27: \cd{past\_rain = rain[step - 2]}, the same rain Model A sees. Lines 29 to 36 build the trend \cd{np.maximum(last + trend\_factor * change, 0)} and the four forecasts. Lines 38 to 44 add each squared error to its total, and skill is \cd{1 - errors[name] / errors["copy"]}. The next cell runs it on the same test ranges as Model A, copies A's skills from the results table and saves \cd{04\_simple\_forecasts}. All numbers are skills.
+
+{\small
+\begin{center}
+\begin{tabular}{@{}llrrrrrr@{}}
+\toprule
+\hd{Region} & \hd{Tested on} & \hd{$\beta$} & \hd{Trend} & \hd{Trend+rule} & \hd{Copy+rule} & \hd{Model A} & \hd{A+rule}\\
+\midrule
+Australia (30 m) & unseen time & 0.921 & 0.990 & 0.990 & 0.000 & $-1.449$ & $-0.710$\\
+UK (30 m) & never-seen & 0.921 & 0.947 & 0.947 & 0.053 & 0.305 & 0.320\\
+Pakistan (480 m) & unseen time & 0.948 & 0.908 & 0.905 & 0.142 & 0.345 & 0.404\\
+Mozambique (480 m) & never-seen & 0.948 & 0.942 & 0.942 & 0.051 & 0.150 & 0.172\\
+\bottomrule
+\end{tabular}
+\end{center}}
+This is the key table. One fitted number and no network gives skill 0.990, 0.947, 0.908, 0.942, so it removes 91\% to 99\% of copying's squared error, while Model A reaches only $-1.449$, 0.305, 0.345 and 0.150. The trend is a fair opponent: $\beta$ comes only from the training part of the training flood and the tests are the same as for A (the report says the comparison was checked in two ways). The rule adds almost nothing to the trend, because the last change already contains the rain. Copy with the rule alone is weak (0.000 in Australia, almost no rain late there, we think).
+
+\qq{What is $\beta$ and how did you get it?}{It is the share of the last 30-minute change that carries on. We fitted it by least squares as $\sum pn/\sum p^2$ on the training flood only.}{0.921 for 30 m, 0.948 for 480 m.}
+
+\subsection{Model B: \cd{build\_forecaster\_v2}, \cd{loss\_in\_cm}, zero check}
+
+The code calls Model B ``version 2'' or \emph{v2}. Comment: it counts its correction in centimetres.
+
+\codelines{model_c35}{5}{26}
+
+Line 2: \cd{CHANGE\_UNIT = 0.01}, one unit of correction is 1 cm. Line 5: $\beta$ is built into the model. Lines 11 to 15: input, CNN layers, ConvLSTM and decoder are exactly those of Model A. The last layer \cd{correction} starts at zero and outputs centimetres. Lines 18 to 20: the newest depth (\cd{-1}) and second newest (\cd{-2}) are cut out and \cd{layers.Subtract()} gives the last change. Line 21: \cd{layers.Rescaling(float(trend\_factor))} multiplies by the fixed $\beta$, \cd{Add} puts it on the last depth and \cd{ReLU} removes negatives. This \cd{trend} is the trend forecast built from layers that learn nothing. Line 24: \cd{Rescaling(CHANGE\_UNIT)(correction)} multiplies by 0.01 (cm to m), adds it to \cd{trend} and applies ReLU again. Forecast = trend + small correction. We think cm gives the network a convenient size, since in metres corrections are tiny. The report warns that starting point and unit were changed together, so it cannot say which mattered.
+
+\cd{loss\_in\_cm} divides the difference by \cd{CHANGE\_UNIT} (centimetres), \cd{tf.square} squares it and \cd{tf.reduce\_mean} averages, so a mean squared error in cm$^2$. \cd{v2\_for\_whole\_map} (lines 34 to 38) is the whole-map copy for B.
+
+The check (lines 42 to 51) builds an untrained Model B with the 30 m $\beta$, takes 50 checking tiles, computes the trend by hand in numpy (line 47) and compares it with \cd{check\_model.predict(sample, verbose=0)} (line 48). It prints \cd{Parameters: 62833} (same as A, as Subtract, Rescaling, Add and ReLU learn nothing) and \cd{Biggest difference from the trend forecast: 0.0}. The last layer starts at zero, so before training B is exactly the trend forecast.
+
+\qq{How does B differ from A?}{Same layers. A adds its output (metres) to the last map, B adds its output (centimetres) to the trend forecast, so A starts as copying and B starts as the trend.}{}
+
+\subsection{Load (or train) Model B, and test it}
+
+Same pattern as A (file \cd{forecaster\_v2\_30m.weights.h5}, \cd{compile} with Adam and \cd{loss=loss\_in\_cm}, training only if \cd{TRAIN\_V2} is on or the file is missing). The new part is a safeguard.
+
+\codelines{model_c36}{15}{17}
+
+\codelines{model_c36}{27}{30}
+
+Lines 15 to 17: \cd{evaluate} measures untrained B on the checking tiles, which is the trend's error (\cd{start\_loss}), and \cd{get\_weights()} keeps the starting weights. Lines 19 to 25: same seed, early stopping and \cd{fit} as A. Lines 28 to 30: if the best checking error is not below \cd{start\_loss}, the starting weights are put back, so B is never worse than the trend on the checking tiles. It prints \cd{Loading Model B ...} and the same harmless warning. The report says training lowered the checking error only a little: about 1\% for 30 m (0.1885 to 0.1868 cm) and 5\% for 480 m (0.0243 to 0.0230 cm).
+
+\textbf{Testing Model B.} For each pair the cell builds B at whole-map size, runs \cd{evaluate\_region} on the same test ranges, deletes the big model (\cd{del}, frees memory), computes the trend's error per step for the plot, and saves \cd{04\_model\_B\_results}.
+
+{\small
+\begin{center}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+\hd{Region} & \hd{Tested on} & \hd{Trend} & \hd{Model A} & \hd{Model B} & \hd{Model B + rule}\\
+\midrule
+Australia (30 m) & unseen time & 0.990 & $-1.449$ & 0.989 & 0.989\\
+UK (30 m) & never-seen & 0.947 & 0.305 & 0.948 & 0.949\\
+Pakistan (480 m) & unseen time & 0.908 & 0.345 & 0.908 & 0.901\\
+Mozambique (480 m) & never-seen & 0.942 & 0.150 & 0.943 & 0.941\\
+\bottomrule
+\end{tabular}
+\end{center}}
+Model B is within 0.001 of the trend in every test and far above Model A, but does not clearly beat the trend. The rule changes B by $-0.007$ to $+0.001$, so for a good forecast it adds nothing.
+
+\subsection{Comparison figures}
+
+\textbf{Skill bars.} Bars in orange (trend), blue (A) and green (B), values written by \cd{ax.bar\_label(..., fmt="\%.3f")}, black line at skill 0 (\cd{04\_skill\_comparison}).
+
+\nbfig{model_c38_5.jpg}{0.32}{Skill of the trend forecast (orange, no network), Model A (blue) and Model B (green) in the four tests.}
+\textbf{Say this:} a simple trend does as well as Model B and far better than Model A, so at 30 minutes the network adds almost nothing (little is left to improve).
+
+\textbf{Error at every step.} The same plot with the trend as a thick orange line and B as a green dashed line.
+
+\nbfig{model_c39_6.jpg}{0.38}{Typical error of each 30-minute forecast (lower is better). Grey: copy. Blue: Model A. Orange: trend. Green dashed: Model B.}
+\textbf{Say this:} orange and green lie almost on top of each other and far below grey and blue, so Model B follows the trend. In late Australia copying is 0.08 to 0.17 cm and Model A 0.16 to 0.21, while trend and B are about 0.01. The UK copy error peaks near 1.2 cm and the trend near 0.4, Mozambique 1.5 and 0.6. Exceptions: in Pakistan green sits slightly above orange in the calm early hours, and one spike near hour 329.
+
+\textbf{Error maps.} Columns 2 to 4 share one scale taken from A's example, so colours are comparable. Errors are \cd{predicted - true} without the rule.
+
+\nbfig{model_c40_7.jpg}{0.24}{Where the forecasts go wrong. Rows: Australia, UK, Pakistan, Mozambique. Columns: water now, true change in 30 minutes, error of Model A, error of Model B. Purple is too much water, orange too little.}
+\textbf{Say this:} errors sit where the water changes fastest, and Model B, which starts from the trend, has errors almost invisible at this scale. A has a faint purple tint over Australia, orange along rivers in the UK and Mozambique and an orange block at the top of Pakistan. B keeps only a thin orange line in the UK and small blocks elsewhere.
+
+\subsection{What this part shows}
+
+The notebook summary: at 30 minutes the trend removes 91\% to 99\% of copying's error, A stays far below it and B only matches it. A fair test of the LSTM's memory needs 6 to 24 hour forecasts (future work).
+
+\qq{Is your CNN-LSTM better than a simple method?}{Not at 30 minutes. One fitted number gives a trend forecast as good as Model B and far better than Model A.}{A fair test needs 6 to 24 hour forecasts (future work).}
+\qq{What did you learn?}{Compare a model with the best simple forecast, not only with copying.}{}
+
+\fussy

@@ -1,0 +1,33 @@
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+pool_Pakistan_480_train: 18 tiles of 128px x 80 start times
+  pool_Pakistan_480_train: start 0/80  windows so far 18  (0s)
+  pool_Pakistan_480_train: start 20/80  windows so far 378  (5s)
+  pool_Pakistan_480_train: start 40/80  windows so far 738  (10s)
+  pool_Pakistan_480_train: start 60/80  windows so far 1098  (16s)
+pool_Pakistan_480_train: 1440 wet windows saved
+  Pakistan_480 rainfall 0/672  (3s)
+  Pakistan_480 rainfall 50/672  (110s)
+  Pakistan_480 rainfall 100/672  (210s)
+  Pakistan_480 rainfall 150/672  (290s)
+  Pakistan_480 rainfall 200/672  (362s)
+  Pakistan_480 rainfall 250/672  (435s)
+  Pakistan_480 rainfall 300/672  (504s)
+  Pakistan_480 rainfall 350/672  (558s)
+  Pakistan_480 rainfall 400/672  (615s)
+  Pakistan_480 rainfall 450/672  (668s)
+  Pakistan_480 rainfall 500/672  (712s)
+  Pakistan_480 rainfall 550/672  (766s)
+  Pakistan_480 rainfall 600/672  (818s)
+  Pakistan_480 rainfall 650/672  (872s)
+pool_Mozambique_480_test: 4 tiles of 128px x 60 start times
+  pool_Mozambique_480_test: start 0/60  windows so far 2  (0s)
+  pool_Mozambique_480_test: start 20/60  windows so far 82  (2s)
+  pool_Mozambique_480_test: start 40/60  windows so far 162  (5s)
+pool_Mozambique_480_test: 238 wet windows saved
+  Mozambique_480 rainfall 0/289  (0s)
+  Mozambique_480 rainfall 50/289  (4s)
+  Mozambique_480 rainfall 100/289  (8s)
+  Mozambique_480 rainfall 150/289  (12s)
+  Mozambique_480 rainfall 200/289  (16s)
+  Mozambique_480 rainfall 250/289  (19s)

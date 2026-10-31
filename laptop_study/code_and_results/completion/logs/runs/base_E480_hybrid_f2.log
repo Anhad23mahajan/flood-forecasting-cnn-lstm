@@ -1,0 +1,17 @@
+Pakistan: 18 valid tiles -> fold 2/3: 12 train tiles, 6 held-out tiles; wet windows: train pool 960, held-out pool 480; using 300 train / 300 held-out / 238 Mozambique windows
+E480 hybrid fold 2: S1 heldout +0.1266  test +0.1471
+E480 hybrid fold 2: S1c heldout +0.1267  test +0.1471
+E480 hybrid fold 2: S2 heldout +0.1274  test +0.0996
+E480 hybrid fold 2: S2c heldout +0.1278  test +0.0996
+E480 hybrid fold 2: S3 heldout +0.1955  test +0.1783
+E480 hybrid fold 2: S3c heldout +0.1958  test +0.1783
+E480 hybrid fold 2: S5 (2-feature lookup table) heldout +0.7523  test +0.7580
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789893752.725262   31492 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789893758.298170   31492 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789893765.287373   31492 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+E480 hybrid fold 2: S4 heldout +0.8959  test +0.8278
+E480 hybrid fold 2: S4c heldout +0.8960  test +0.8284

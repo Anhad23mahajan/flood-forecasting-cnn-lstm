@@ -1,0 +1,135 @@
+
+--- cell 2: import subprocess, sys
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789882893.670675   25100 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789882912.419106   25100 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+GPU available: []
+TensorFlow version: 2.21.0
+    ok (68.9s)
+
+--- cell 4: # CONFIG (overridable)
+    ok (0.0s)
+
+--- cell 6: DATA_ROOT = "data/extracted/FloodCastBench"
+local DATA_ROOT: data/extracted/FloodCastBench
+    ok (0.0s)
+
+--- cell 8: import os
+data linked at data/extracted/FloodCastBench
+    ok (0.0s)
+
+--- cell 24: import os, subprocess, sys
+
+selftest E60 train (Australia 60 m): compose == loader / causal / forced OK (max abs diff so far 1.53e-05)
+selftest E60 test (UK 60 m): compose == loader / causal / forced OK (max abs diff so far 1.53e-05)
+selftest: untrained model equals persistence in all three regimes
+SELFTEST PASSED
+C:\Dev\flood-forecast-demo\venv\Lib\site-packages\rasterio\__init__.py:368: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, **kwargs)
+
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+    ok (98.8s)
+
+--- cell 26: if RUN_BASELINES:
+--- baselines E60 hybrid fold 0
+E60 hybrid fold 0: S4 heldout +0.7083  test +0.8124
+E60 hybrid fold 0: S4c heldout +0.7094  test +0.8125
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+--- baselines E60 forced fold 0
+E60 forced fold 0: S4 heldout +0.7219  test +0.8251
+E60 forced fold 0: S4c heldout +0.7234  test +0.8252
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+    ok (923.3s)
+
+--- cell 28: for e in EXPERIMENTS:
+--- E60 hybrid fold 0 model local
+test: skill +0.0017  rmse model 15.69 mm / persistence 15.70 mm; CSI(1 mm) 0.962/0.963; lead skill +0.006 +0.003 +0.002 +0.002 +0.001
+ablation_heldout: none +0.002  rain_removed +0.002  terrain_removed +0.002  depth_hist_scrambled +0.002  depth_hist_frozen +0.001  rain_hist_frozen +0.002  rain_shifted_cells +0.002  rain_shifted_earlier +0.002
+ablation_test: none +0.002  rain_removed +0.002  terrain_removed +0.002  depth_hist_scrambled +0.001  depth_hist_frozen +0.000  rain_hist_frozen +0.002  rain_shifted_cells +0.002  rain_shifted_earlier +0.002
+saved completion\results\runs\E60_local_hybrid_full_f0of3_s1003_ep1.json
+
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+--- E60 hybrid fold 0 model clstm
+test: skill +0.0002  rmse model 15.70 mm / persistence 15.70 mm; CSI(1 mm) 0.963/0.963; lead skill +0.001 +0.000 +0.000 +0.000 +0.000
+ablation_heldout: none +0.000  rain_removed +0.000  terrain_removed +0.000  depth_hist_scrambled +0.000  depth_hist_frozen +0.000  rain_hist_frozen +0.000  rain_shifted_cells +0.000  rain_shifted_earlier +0.000
+ablation_test: none +0.000  rain_removed +0.000  terrain_removed +0.000  depth_hist_scrambled +0.000  depth_hist_frozen +0.000  rain_hist_frozen +0.000  rain_shifted_cells +0.000  rain_shifted_earlier +0.000
+saved completion\results\runs\E60_clstm_hybrid_full_f0of3_s1003_ep1.json
+
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+--- E60 forced fold 0 model local
+test: skill +0.0017  rmse model 15.69 mm / persistence 15.70 mm; CSI(1 mm) 0.962/0.963; lead skill +0.006 +0.003 +0.002 +0.002 +0.001
+ablation_heldout: none +0.002  rain_removed +0.002  terrain_removed +0.002  depth_hist_scrambled +0.003  depth_hist_frozen +0.001  rain_hist_frozen +0.002  future_rain_removed +0.002  rain_shifted_cells +0.002
+ablation_test: none +0.002  rain_removed +0.002  terrain_removed +0.002  depth_hist_scrambled +0.002  depth_hist_frozen +0.001  rain_hist_frozen +0.002  future_rain_removed +0.002  rain_shifted_cells +0.002
+saved completion\results\runs\E60_local_forced_full_f0of3_s1003_ep1.json
+
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+--- E60 forced fold 0 model clstm
+test: skill +0.0002  rmse model 15.70 mm / persistence 15.70 mm; CSI(1 mm) 0.963/0.963; lead skill +0.001 +0.000 +0.000 +0.000 +0.000
+ablation_heldout: none +0.000  rain_removed +0.000  terrain_removed +0.000  depth_hist_scrambled +0.000  depth_hist_frozen +0.000  rain_hist_frozen +0.000  future_rain_removed +0.000  rain_shifted_cells +0.000
+ablation_test: none +0.000  rain_removed +0.000  terrain_removed +0.000  depth_hist_scrambled +0.000  depth_hist_frozen +0.000  rain_hist_frozen +0.000  future_rain_removed +0.000  rain_shifted_cells +0.000
+saved completion\results\runs\E60_clstm_forced_full_f0of3_s1003_ep1.json
+
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+    ok (1464.2s)
+
+--- cell 30: ENV["FINAL_EPOCHS"], ENV["FINAL_NTRAIN"] = str(EPOCHS), str(N_TRAIN)
+# Results report (generated by completion/g_report.py)
+
+## E60: Australia -> UK, 60 m  (skill vs persistence; mean over 3 tile folds; [95% CI]: bootstrap over start times / tiles)
+
+| model | causal: never-seen test | hybrid: never-seen test | forced: never-seen test | causal: held-out tiles (pooled) | hybrid: held-out tiles (pooled) | forced: held-out tiles (pooled) |
+|---|---|---|---|---|---|---|
+| persistence (copy the last frame) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) |
+| linear: depth trend only | - | - | - | - | - | - |
+| linear: rain + state + trend (>=0) | - | - | - | - | - | - |
+| 2-feature lookup table (depth x last change) | - | - | - | - | - | - |
+| per-pixel MLP | - | - | - | - | - | - |
+
+## E30: Australia -> UK, 30 m  (skill vs persistence; mean over 3 tile folds; [95% CI]: bootstrap over start times / tiles)
+
+| model | causal: never-seen test | hybrid: never-seen test | forced: never-seen test | causal: held-out tiles (pooled) | hybrid: held-out tiles (pooled) | forced: held-out tiles (pooled) |
+|---|---|---|---|---|---|---|
+| persistence (copy the last frame) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) |
+| linear: depth trend only | - | - | - | - | - | - |
+| linear: rain + state + trend (>=0) | - | - | - | - | - | - |
+| 2-feature lookup table (depth x last change) | - | - | - | - | - | - |
+| per-pixel MLP | - | - | - | - | - | - |
+
+## E480: Pakistan -> Mozambique, 480 m  (skill vs persistence; mean over 3 tile folds; [95% CI]: bootstrap over start times / tiles)
+
+| model | causal: never-seen test | hybrid: never-seen test | forced: never-seen test | causal: held-out tiles (pooled) | hybrid: held-out tiles (pooled) | forced: held-out tiles (pooled) |
+|---|---|---|---|---|---|---|
+| persistence (copy the last frame) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) | 0 (by definition) |
+| linear: depth trend only | - | - | - | - | - | - |
+| linear: rain + state + trend (>=0) | - | - | - | - | - | - |
+| 2-feature lookup table (depth x last change) | - | - | - | - | - | - |
+| per-pixel MLP | - | - | - | - | - | - |
+
+## Pre-registered hypotheses
+
+* **H1** (local and clstm beat persistence with both intervals above 0, every regime/experiment): 0/0 cells pass.
+* **H2** (beat the best linear baseline S3c on the never-seen region): 0/0 cells pass.
+
+## What the trained models use (test-time ablations, never-seen region, hybrid regime, mean over folds)
+
+| experiment | model | none | rain_removed | terrain_removed | depth_hist_scrambled | depth_hist_frozen | rain_hist_frozen | rain_shifted_cells | rain_shifted_earlier |
+|---|---|---|---|---|---|---|---|---|---|
+
+## Training-time ablations (local model; never-seen region skill, mean over folds)
+
+| experiment | regime | full | nodepthhist | norainhist | nohist | norain | noterrain |
+|---|---|---|---|---|---|---|---|
+
+
+    ok (1.8s)
+
+--- cell 32: if RUN_SEVERITY:
+    ok (0.0s)
+
+--- cell 33: import shutil
+wrote study_results.zip
+    ok (2.6s)
+
+ALL 10 EXECUTABLE CELLS RAN WITHOUT ERROR

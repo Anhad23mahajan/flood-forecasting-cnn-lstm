@@ -1,0 +1,586 @@
+"""Study engine for the completion work: one place that builds windows, composes model inputs for each RAINFALL REGIME, holds out
+whole tiles in K folds, trains a persistence-anchored depth forecaster (architectures v1 = the original CNN-LSTM, local / local1 / local11 = small local CNNs,
+clstm = a small full-resolution ConvLSTM, v2 / v2lin = heavier ConvLSTM variants; all with the same warm-up recipe as depth_experiment.py) and
+scores it against persistence with per-window errors saved (for bootstrap intervals).
+
+RAINFALL REGIMES (why this exists).  A physical test (completion/a_rain_lag.py) showed that rainfall file j is the rain that FALLS during
+the 30-minute interval [1800 j, 1800 (j+1)) of the simulation (domain-mean depth gain = 0.50 x file value, correlation 1.00 at lag 0: the
+files are mm/h intensities).  The original loader gave the frame at time t the file floor(t/1800), i.e. the interval that CONTAINS t - for
+the last observed frame that is rain falling AFTER the observation (up to 30 minutes of it).  Three well-defined regimes:
+  causal : every input frame gets the last COMPLETED interval (file floor(t/1800) - 1). Only rain that has already fallen. A strictly
+           real-time forecast without rainfall forecasts.
+  hybrid : the ORIGINAL setup (file floor(t/1800), the interval containing t; partly future). Kept for comparison with all earlier results.
+  forced : hybrid inputs PLUS the rainfall files j+1 .. j+5 that follow the last observed frame's file as five extra input steps (the minimal complete cover of the
+           2.5 h horizon; at phase 0 the last one starts at the final forecast instant) (depth channel = the last observed frame,
+           i.e. "unknown future depth = persistence", DEM, rain = the file for that step). A rainfall-FORCED surrogate: the setting the
+           FloodCastBench paper's FNO+ operates in (it is given the rainfall series). Rain is treated as a known forecast.
+
+VARIANTS (training-time ablations): full | nodepthhist | norainhist | nohist | norain | noterrain
+
+Run:   python completion/engine.py cache  <EXP>
+       python completion/engine.py run    <EXP> <regime> <fold> [--variant V] [--folds 3] [--epochs 40] [--seed S] [--n-train 400] [--save-weights]
+       python completion/engine.py selftest
+       (more flags: --arch A --batch B --lr L --blocked --augment --blind --no-ablate --no-guard (finish the run even if the dead-network check fires; the run id gets '_noguard'))
+EXP: E480 (Pakistan -> Mozambique), E60 (Australia -> UK), E30 (Australia -> UK), and the reverse directions R480, R60, R30.
+"""
+import argparse
+import hashlib
+import json
+import os
+import sys
+import time
+
+import numpy as np
+import rasterio
+from rasterio.enums import Resampling
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PROJ = os.path.dirname(HERE)
+os.chdir(PROJ)
+sys.path.insert(0, PROJ)
+
+PATCH, T_IN, HORIZON, STRIDE = 128, 5, 5, 6
+ROOT = "data/extracted/FloodCastBench"
+FID = {30: "High-fidelity flood forecasting/30m", 60: "High-fidelity flood forecasting/60m", 480: "Low-fidelity flood forecasting/480m"}
+CACHE = os.path.join("completion", "cache")
+RUNS = os.path.join("completion", "results", "runs")
+WET_M = 0.05
+EXPS = {
+    "E480": dict(train=("Pakistan", 480), test=("Mozambique", 480)),
+    "E60": dict(train=("Australia", 60), test=("UK", 60)),
+    "E30": dict(train=("Australia", 30), test=("UK", 30)),
+    "R480": dict(train=("Mozambique", 480), test=("Pakistan", 480)),
+    "R60": dict(train=("UK", 60), test=("Australia", 60)),
+    "R30": dict(train=("UK", 30), test=("Australia", 30)),
+}
+REGIMES = ("causal", "hybrid", "forced")
+VARIANTS = {
+    "full": {}, "nodepthhist": dict(depth_hist="frozen"), "norainhist": dict(rain_hist="frozen"),
+    "nohist": dict(depth_hist="frozen", rain_hist="frozen"), "norain": dict(rain="none"), "noterrain": dict(terrain="off"),
+}
+
+
+def _region(region, res):
+    from real_data_loader import RegionData
+    return RegionData(root_dir=ROOT, region=region, fidelity_dir=FID[res])
+
+
+# ================================================================================================= region-level arrays
+def region_arrays(region, res, log=print):
+    """DEM (H, W) and the whole rainfall stack (n_files, H, W) at DEPTH-GRID resolution (block mean over scale x scale base pixels,
+    exactly what RegionData._read_layer returns per patch). Built once and cached as .npy (memory-mapped afterwards)."""
+    os.makedirs(CACHE, exist_ok=True)
+    key = f"{region}_{res}"
+    dem_p, rain_p = os.path.join(CACHE, f"{key}_dem.npy"), os.path.join(CACHE, f"{key}_rain.npy")
+    if os.path.exists(dem_p) and os.path.exists(rain_p) and os.path.exists(rain_p + ".done"):
+        return np.load(dem_p, mmap_mode="r"), np.load(rain_p, mmap_mode="r")
+    rd = _region(region, res)
+    H, W, s = rd.grid_height, rd.grid_width, rd.layer_scale
+    dy, dx = rd.layer_offset
+    win = ((dy, dy + s * H), (dx, dx + s * W))
+
+    def read(path):
+        with rasterio.open(path) as src:
+            if s == 1:
+                a = src.read(1, window=win)
+            else:
+                a = src.read(1, window=win, out_shape=(H, W), resampling=Resampling.average)
+        return a.astype(np.float32)
+
+    dem = read(rd.dem_path)
+    assert (dem > -1e30).all() and np.isfinite(dem).all(), f"{key}: NoData inside the depth-covered DEM window"
+    np.save(dem_p, dem)
+    n = len(rd.rain_files)
+    out = np.lib.format.open_memmap(rain_p, mode="w+", dtype=np.float32, shape=(n, H, W))
+    t0 = time.perf_counter()
+    for j, p in enumerate(rd.rain_files):
+        a = read(p)
+        assert (a > -1e30).all() and np.isfinite(a).all(), f"{key}: NoData inside rainfall file {j}"
+        out[j] = a
+        if j % 50 == 0:
+            log(f"  {key} rainfall {j}/{n}  ({time.perf_counter() - t0:.0f}s)")
+    out.flush()
+    del out
+    open(rain_p + ".done", "w").write("ok")
+    return np.load(dem_p, mmap_mode="r"), np.load(rain_p, mmap_mode="r")
+
+
+# ================================================================================================= window pools
+def test_positions(rd):
+    """Test-domain tiles: the non-overlapping grid of valid tiles for a large domain, the four CORNER tiles for a small one
+    (Mozambique 151x138, UK 30 m 170x275: overlapping), and two/one padded square windows if the domain is smaller than a patch (UK 60 m)."""
+    from windows import valid_positions
+    H, W = rd.grid_height, rd.grid_width
+    if min(H, W) < PATCH:
+        size = min(H, W)
+        return [(r, c) for r in sorted({0, H - size}) for c in sorted({0, W - size})], size
+    if H >= 2 * PATCH and W >= 2 * PATCH:
+        return valid_positions(rd, PATCH, 1.0), PATCH
+    return [(r, c) for r in sorted({0, H - PATCH}) for c in sorted({0, W - PATCH})], PATCH
+
+
+def build_pool(region, res, role, log=print):
+    """All WET windows (patch wet at the last observed OR the last forecast frame, >= 0.05 m) for every tile x start.
+    role 'train': every valid non-overlapping tile, 80 start times; role 'test': test_positions(), 60 start times."""
+    from windows import valid_positions, start_indices_for
+    os.makedirs(CACHE, exist_ok=True)
+    key = f"pool_{region}_{res}_{role}"
+    meta_p = os.path.join(CACHE, key + "_meta.npz")
+    if os.path.exists(meta_p):
+        return load_pool(region, res, role)
+    rd = _region(region, res)
+    assert all(sec == 300 * i for i, sec in enumerate(rd.depth_seconds)), "depth files are not at t = 300*index"
+    if role == "train":
+        positions, size = valid_positions(rd, PATCH, 1.0), PATCH
+        starts = start_indices_for(rd, 80, T_IN, HORIZON, STRIDE)
+    else:
+        positions, size = test_positions(rd)
+        starts = start_indices_for(rd, 60, T_IN, HORIZON, STRIDE)
+    log(f"{key}: {len(positions)} tiles of {size}px x {len(starts)} start times")
+    dh_l, df_l, meta = [], [], []
+    t0 = time.perf_counter()
+    for n_done, st in enumerate(starts):
+        hist, fut = rd.window_frame_indices(int(st), T_IN, HORIZON, STRIDE)
+        frames = {}
+        for i in hist + fut:
+            with rasterio.open(rd.depth_files[i]) as s:
+                frames[i] = s.read(1)
+        for (r, c) in positions:
+            sl = (slice(r, r + size), slice(c, c + size))
+            if max(float(frames[hist[-1]][sl].max()), float(frames[fut[-1]][sl].max())) < WET_M:
+                continue
+            dh_l.append(np.stack([frames[i][sl] for i in hist]).astype(np.float32))
+            df_l.append(np.stack([frames[i][sl] for i in fut]).astype(np.float32))
+            meta.append((r, c, int(st)))
+        if n_done % 20 == 0:
+            log(f"  {key}: start {n_done}/{len(starts)}  windows so far {len(meta)}  ({time.perf_counter() - t0:.0f}s)")
+    n = len(meta)
+    dh_p, df_p = os.path.join(CACHE, key + "_dh.npy"), os.path.join(CACHE, key + "_df.npy")
+    dh = np.lib.format.open_memmap(dh_p, mode="w+", dtype=np.float32, shape=(n, T_IN, size, size))
+    df = np.lib.format.open_memmap(df_p, mode="w+", dtype=np.float32, shape=(n, HORIZON, size, size))
+    for i in range(n):
+        dh[i], df[i] = dh_l[i], df_l[i]
+    dh.flush(); df.flush()
+    del dh, df, dh_l, df_l
+    np.savez(meta_p, meta=np.array(meta, dtype=np.int64).reshape(-1, 3), size=np.array(size), n_tiles=np.array(len(positions)))
+    log(f"{key}: {n} wet windows saved")
+    return load_pool(region, res, role)
+
+
+def load_pool(region, res, role):
+    key = f"pool_{region}_{res}_{role}"
+    m = np.load(os.path.join(CACHE, key + "_meta.npz"))
+    dem, rain = region_arrays(region, res)
+    return dict(region=region, res=res, role=role, meta=m["meta"], size=int(m["size"]),
+                dh=np.load(os.path.join(CACHE, key + "_dh.npy"), mmap_mode="r"),
+                df=np.load(os.path.join(CACHE, key + "_df.npy"), mmap_mode="r"), dem=dem, rain=rain)
+
+
+# ================================================================================================= composing inputs
+def rain_intervals(start, regime):
+    """Rainfall-file indices for the input steps of a window that starts at depth index `start` (history frame s at depth index
+    start + 6 s, time 1800 (start/6 + s) s -> interval start//6 + s in the ORIGINAL mapping)."""
+    j = [start // 6 + s for s in range(T_IN)]
+    if regime == "hybrid":
+        return j
+    if regime == "causal":
+        return [k - 1 for k in j]
+    if regime == "forced":
+        return j + [j[-1] + m for m in range(1, HORIZON + 1)]
+    raise ValueError(regime)
+
+
+def compose(pool, i, regime, variant="full", regime_override=None, rain_shift=None):
+    """One window -> (x [T,128,128,3], y [5,128,128], mask [128,128]).  x = [depth, DEM, rain] per step."""
+    r, c, st = (int(v) for v in pool["meta"][i])
+    size = pool["size"]
+    sl = (slice(r, r + size), slice(c, c + size))
+    fl = VARIANTS[variant]
+    dh = np.array(pool["dh"][i])                                   # (5, size, size) observed depth
+    y = np.array(pool["df"][i])
+    dem = np.array(pool["dem"][sl]) if fl.get("terrain") != "off" else np.zeros((size, size), np.float32)
+    idx = rain_intervals(st, regime_override or regime)
+    nf = pool["rain"].shape[0]
+    rain = np.zeros((len(idx), size, size), np.float32)
+    rsl = sl
+    if rain_shift:                                                 # test-time ablation: read the rainfall from a window shifted by whole depth cells
+        Hh, Ww = pool["rain"].shape[1:]
+        rr = int(np.clip(r + rain_shift[0], 0, Hh - size)); cc = int(np.clip(c + rain_shift[1], 0, Ww - size))
+        rsl = (slice(rr, rr + size), slice(cc, cc + size))
+    for k, j in enumerate(idx):
+        if j < 0:
+            continue                                               # before the simulation starts: no rain
+        rain[k] = pool["rain"][min(j, nf - 1), rsl[0], rsl[1]]
+    depth = dh
+    if regime_override == "forced" or regime == "forced":
+        depth = np.concatenate([dh, np.repeat(dh[-1:], HORIZON, axis=0)], axis=0)   # unknown future depth := last observation
+    if fl.get("depth_hist") == "frozen":
+        depth = depth.copy(); depth[:T_IN - 1] = depth[T_IN - 1]
+    if fl.get("rain_hist") == "frozen":
+        rain = rain.copy(); rain[:T_IN - 1] = rain[T_IN - 1]
+    if fl.get("rain") == "none":
+        rain = np.zeros_like(rain)
+    T = depth.shape[0]
+    x = np.stack([depth, np.broadcast_to(dem, depth.shape), rain], axis=-1).astype(np.float32)
+    mask = np.ones((PATCH, PATCH), bool)
+    if size < PATCH:                                               # padded window: depth 0 in the padding; DEM / rain edge-replicated
+        p = PATCH - size
+        x = np.pad(x, ((0, 0), (0, p), (0, p), (0, 0)), mode="edge")
+        x[:, size:, :, 0] = 0.0
+        x[:, :, size:, 0] = 0.0
+        y = np.pad(y, ((0, 0), (0, p), (0, p)))
+        mask = np.zeros((PATCH, PATCH), bool)
+        mask[:size, :size] = True
+    return x, y, mask
+
+
+# ================================================================================================= training / scoring
+def _tf():
+    import tensorflow as tf
+    tf.config.threading.set_intra_op_parallelism_threads(int(os.environ.get("TF_THREADS", "3")))
+    tf.config.threading.set_inter_op_parallelism_threads(1)
+    return tf
+
+
+def build_nets(arch, T):
+    import model as m1
+    import model_v2 as m2
+    if arch == 'v1':
+        return m1.build_encoder(hidden_dim=128, dropout=0.3), m1.build_decoder_step(hidden_dim=128, dropout=0.3), m1.decode_horizon, m1.OPTIMIZERS
+    if arch == 'v2':
+        return m2.build_encoder(T, hidden_dim=64, dropout=0.3), m2.build_decoder(HORIZON, hidden_dim=64, dropout=0.3), m2.decode_horizon, m2.OPTIMIZERS
+    if arch == 'v2lin':
+        return (m2.build_encoder(T, hidden_dim=64, dropout=0.3, local_path=True), m2.build_decoder(HORIZON, hidden_dim=64, dropout=0.3, local_channels=T + 5),
+                m2.decode_horizon, m2.OPTIMIZERS)
+    if arch == 'clstm':
+        enc, dec = m2.build_clstm(T, HORIZON)
+        return enc, dec, m2.decode_horizon_local, m2.OPTIMIZERS
+    if arch == 'clstmf':                                    # ConvLSTM + future rain as side channels (only differs from clstm when T > 5, i.e. forced)
+        enc, dec = m2.build_clstm(T, HORIZON, future_steps=T - T_IN)
+        return enc, dec, m2.decode_horizon_local, m2.OPTIMIZERS
+    if arch in ('local', 'local1', 'local11'):
+        enc, dec = m2.build_local(T, HORIZON, kernel={'local': 5, 'local1': 1, 'local11': 11}[arch])
+        return enc, dec, m2.decode_horizon_local, m2.OPTIMIZERS
+    raise ValueError(arch)
+
+
+def build_and_train(pool_tr, tr_idx, va_idx, regime, variant, epochs, seed, lr=1e-3, clipnorm=1.0, warmup_steps=200, log=print, n_epoch_val=48, arch='v1', augment=False, batch=1, guard=True):
+    tf = _tf()
+    from depth_experiment import WarmupCosine
+    tf.keras.utils.set_random_seed(seed)
+    T = T_IN + (HORIZON if regime == "forced" else 0)
+    encoder, decoder, decode_horizon, OPT = build_nets(arch, T)
+    pers = []
+    for i in tr_idx:
+        pers.append(np.mean((np.array(pool_tr["df"][i]) - np.array(pool_tr["dh"][i][-1])[None]) ** 2))
+    pers_mse = max(float(np.mean(pers)), 1e-12)
+    sched = WarmupCosine(lr, epochs * (len(tr_idx) // batch), warmup_steps)
+    opt = OPT["adam"](learning_rate=sched, clipnorm=clipnorm)
+    vars_ = encoder.trainable_variables + decoder.trainable_variables
+    xs = tf.TensorSpec([batch, T, PATCH, PATCH, 3], tf.float32)
+    ys = tf.TensorSpec([batch, HORIZON, PATCH, PATCH], tf.float32)
+
+    @tf.function(input_signature=[xs, ys])
+    def step(x, y):
+        with tf.GradientTape() as tape:
+            frames = decode_horizon(decoder, encoder(x, training=True), x, HORIZON, training=True)
+            loss = tf.reduce_mean(tf.square(frames - y)) / pers_mse
+        g = tape.gradient(loss, vars_)
+        opt.apply_gradients((gi, v) for gi, v in zip(g, vars_) if gi is not None)
+        return loss
+
+    xs1 = tf.TensorSpec([1, T, PATCH, PATCH, 3], tf.float32)
+
+    @tf.function(input_signature=[xs1])
+    def pred(x):
+        return decode_horizon(decoder, encoder(x, training=False), x, HORIZON, training=False)[0]
+
+    def predict(x):
+        return pred(tf.constant(x[None], tf.float32)).numpy()
+
+    val_small = list(va_idx[:n_epoch_val])
+    val_cache = [compose(pool_tr, i, regime, variant) for i in val_small]
+    guard_idx = [va_idx[k] for k in np.unique(np.linspace(0, len(va_idx) - 1, min(12, len(va_idx))).astype(int))] if len(va_idx) else []   # dead-network check on windows spread over the WHOLE held-out period (the first 48 are the earliest, near-static ones: false alarms)
+    guard_cache = [compose(pool_tr, i, regime, variant) for i in guard_idx]
+
+    def val_skill():
+        sm = sp = 0.0
+        for x, y, m in val_cache:
+            p = predict(x)
+            q = x[T_IN - 1, ..., 0][None]
+            sm += float(((p - y) ** 2)[:, m].sum())
+            sp += float(((q - y) ** 2)[:, m].sum())
+        return 1.0 - sm / sp
+
+    log(f"arch {arch}, regime {regime}, variant {variant}, T={T}, {sum(int(np.prod(v.shape)) for v in vars_):,} trainable params; persistence MSE on training windows {pers_mse:.3e} m^2 (RMSE {np.sqrt(pers_mse) * 1000:.1f} mm); "
+        f"epoch 0 val skill {val_skill():+.4f} (must be 0)")
+    hist = []
+    rng = np.random.default_rng(seed)
+    for ep in range(1, epochs + 1):
+        t0 = time.perf_counter()
+        losses = []
+        perm = rng.permutation(len(tr_idx))
+        for b0 in range(0, len(perm) - batch + 1, batch):
+            xb, yb = [], []
+            for k in perm[b0:b0 + batch]:
+                x, y, _ = compose(pool_tr, tr_idx[k], regime, variant)
+                if augment:                               # one of the 8 dihedral transforms, identical for inputs and targets
+                    q, fl = int(rng.integers(4)), bool(rng.integers(2))
+                    x, y = np.rot90(x, q, axes=(1, 2)), np.rot90(y, q, axes=(1, 2))
+                    if fl:
+                        x, y = x[:, :, ::-1], y[:, :, ::-1]
+                    x, y = np.ascontiguousarray(x), np.ascontiguousarray(y)
+                xb.append(x); yb.append(y)
+            losses.append(float(step(tf.constant(np.stack(xb), tf.float32), tf.constant(np.stack(yb), tf.float32))))
+        sk = val_skill()
+        hist.append((ep, float(np.mean(losses)), sk))
+        if len(guard_cache) >= 2:
+            D = np.stack([predict(x) - x[T_IN - 1, ..., 0][None] for x, _, _ in guard_cache])          # (<=12, 5, H, W) predicted change
+            spread = float(np.std(D, axis=0).mean())        # 0 only if every window gets the identical change map
+        else:
+            spread = 1.0                                     # fewer than 2 check windows: the check cannot be evaluated, never abort
+        if guard and ep * len(tr_idx) >= 400 and ep >= 2 and spread < 1e-5:
+            raise RuntimeError(f"DEAD NETWORK after epoch {ep}: the predicted change map is identical for every validation window (mean per-pixel std {spread:.2e} m)")
+        log(f"epoch {ep:2d}/{epochs}  train/persist {np.mean(losses):.4f}  val skill {sk:+.4f}  ({time.perf_counter() - t0:.1f}s)")
+    return predict, (encoder, decoder), hist, pers_mse
+
+
+def evaluate(predict, pool, idx, regime, variant="full", regime_override=None, transform=None, keep_windows=True, rain_shift=None):
+    """Per-window sums of squared error (model / persistence, per lead) and CSI counts; nothing else is kept in memory."""
+    n = len(idx)
+    sse_m, sse_p, npx = np.zeros((n, HORIZON)), np.zeros((n, HORIZON)), np.zeros(n)
+    csi = np.zeros((n, 2, 2, 3))                              # window, threshold (1 mm, 0.1 m), (model, persistence), (tp, fp, fn)
+    for a, i in enumerate(idx):
+        x, y, m = compose(pool, i, regime, variant, regime_override, rain_shift)
+        xin = x if transform is None else transform(x)
+        p = predict(xin)
+        q = np.repeat(x[T_IN - 1, ..., 0][None], HORIZON, axis=0)
+        mm = np.broadcast_to(m, y.shape)
+        for k in range(HORIZON):
+            sse_m[a, k] = ((p[k] - y[k]) ** 2)[m].sum()
+            sse_p[a, k] = ((q[k] - y[k]) ** 2)[m].sum()
+        npx[a] = m.sum()
+        for ti, thr in enumerate((0.001, 0.1)):
+            for si, arr in enumerate((p, q)):
+                aw, ow = (arr > thr) & mm, (y > thr) & mm
+                csi[a, ti, si] = ((aw & ow).sum(), (aw & ~ow).sum(), (~aw & ow).sum())
+    return dict(sse_m=sse_m, sse_p=sse_p, npx=npx, csi=csi)
+
+
+def summarize(ev):
+    sm, sp, n = ev["sse_m"], ev["sse_p"], ev["npx"]
+    tot_m, tot_p = sm.sum(), sp.sum()
+    lead = [float(1 - sm[:, k].sum() / sp[:, k].sum()) for k in range(HORIZON)]
+    npix = n.sum() * HORIZON
+    out = dict(n_windows=int(len(n)), skill=float(1 - tot_m / tot_p), lead_skill=lead,
+               rmse_model_mm=float(np.sqrt(tot_m / npix) * 1000), rmse_persistence_mm=float(np.sqrt(tot_p / npix) * 1000))
+    c = ev["csi"].sum(axis=0)
+    for ti, name in enumerate(("CSI_1mm", "CSI_0.1m")):
+        out[name] = dict(model=float(c[ti, 0, 0] / max(1, c[ti, 0].sum())), persistence=float(c[ti, 1, 0] / max(1, c[ti, 1].sum())))
+    return out
+
+
+def skill_of(ev):
+    return float(1 - ev["sse_m"].sum() / ev["sse_p"].sum())
+
+
+TEST_ABLATIONS = ("none", "rain_removed", "terrain_removed", "depth_hist_scrambled", "depth_hist_frozen", "rain_hist_frozen", "future_rain_removed", "rain_shifted_cells", "rain_shifted_earlier")
+
+
+def ablation_skills(predict, pool, idx, regime, variant):
+    def rain_removed(x):
+        y = x.copy(); y[..., 2] = 0.0; return y
+
+    def terrain_removed(x):
+        y = x.copy(); y[..., 1] = 0.0; return y
+
+    def scr(x):
+        y = x.copy(); y[:T_IN - 1, ..., 0] = x[:T_IN - 1, ..., 0][::-1]; return y
+
+    def frz(x):
+        y = x.copy(); y[:T_IN - 1, ..., 0] = x[T_IN - 1, ..., 0][None]; return y
+
+    def rfrz(x):
+        y = x.copy(); y[:T_IN - 1, ..., 2] = x[T_IN - 1, ..., 2][None]; return y
+
+    def fut_rain_removed(x):
+        y = x.copy(); y[T_IN:, ..., 2] = 0.0; return y
+
+    out = {}
+    out["none"] = skill_of(evaluate(predict, pool, idx, regime, variant))
+    for name, fn in (("rain_removed", rain_removed), ("terrain_removed", terrain_removed), ("depth_hist_scrambled", scr),
+                     ("depth_hist_frozen", frz), ("rain_hist_frozen", rfrz)):
+        out[name] = skill_of(evaluate(predict, pool, idx, regime, variant, transform=fn))
+    if regime == "forced":
+        out["future_rain_removed"] = skill_of(evaluate(predict, pool, idx, regime, variant, transform=fut_rain_removed))
+    cells = 1 if pool["res"] == 480 else 2                     # 480 m: one cell = 8x the +-2 base-pixel geometry uncertainty; 30/60 m: 2 cells = 60/120 m
+    out["rain_shifted_cells"] = skill_of(evaluate(predict, pool, idx, regime, variant, rain_shift=(cells, cells)))
+    if regime == "hybrid":                                     # what if the input rain were strictly past?  (a model trained on hybrid, fed causal rain)
+        out["rain_shifted_earlier"] = skill_of(evaluate(predict, pool, idx, regime, variant, regime_override="causal"))
+    return out
+
+
+def _ser(ev, pool, idx):
+    meta = pool["meta"][idx]
+    return dict(tile_r=meta[:, 0].tolist(), tile_c=meta[:, 1].tolist(), start=meta[:, 2].tolist(), phase=(meta[:, 2] % 6).tolist(),
+                sse_m=ev["sse_m"].tolist(), sse_p=ev["sse_p"].tolist(), npx=ev["npx"].tolist(), csi=ev["csi"].tolist())
+
+
+def folds_of_tiles(tiles, K, seed=0):
+    perm = np.random.default_rng(seed).permutation(len(tiles))
+    return [sorted(tiles[i] for i in perm[k::K]) for k in range(K)]
+
+
+def split_for(exp, fold, K=3, seed=None, n_train=400, n_val=300, log=print, blocked=False):
+    """Pools and window indices of one fold: train windows from the tiles NOT in the fold, held-out windows from the fold's tiles,
+    every window of the never-seen test region. Deterministic in (exp, fold, K, seed)."""
+    cfg = EXPS[exp]
+    (tr_reg, tr_res), (te_reg, te_res) = cfg["train"], cfg["test"]
+    seed = 1000 + 10 * fold + K if seed is None else seed
+    tr_pool = build_pool(tr_reg, tr_res, "train", log)
+    te_pool = build_pool(te_reg, te_res, "test", log)
+    tiles = sorted({(int(r), int(c)) for r, c, _ in tr_pool["meta"]})
+    folds = folds_of_tiles(tiles, K, seed=0)
+    held = set(map(tuple, folds[fold]))
+    tile_of = [(int(r), int(c)) for r, c, _ in tr_pool["meta"]]
+    starts_of = tr_pool["meta"][:, 2]
+    if blocked:                                            # hold out TILES and a TIME BLOCK: held-out windows are unseen in space AND in time
+        blocks = np.array_split(np.array(sorted(set(starts_of.tolist()))), K)
+        blk = set(blocks[fold].tolist())
+        b_lo, b_hi = min(blk), max(blk)
+        # EMBARGO: a window spans 54 depth steps, so also drop training windows whose span touches the held-out time block (code review F9)
+        tr_all = [i for i, t in enumerate(tile_of) if t not in held and not (b_lo - 54 <= int(starts_of[i]) <= b_hi + 54)]
+        va_all = [i for i, t in enumerate(tile_of) if t in held and int(starts_of[i]) in blk]
+    else:
+        tr_all = [i for i, t in enumerate(tile_of) if t not in held]
+        va_all = [i for i, t in enumerate(tile_of) if t in held]
+    rng = np.random.default_rng(seed)
+    tr_idx = sorted(rng.choice(tr_all, size=min(n_train, len(tr_all)), replace=False).tolist())
+    va_idx = sorted(rng.choice(va_all, size=min(n_val, len(va_all)), replace=False).tolist())
+    te_idx = list(range(len(te_pool["meta"])))
+    log(f"{tr_reg}: {len(tiles)} valid tiles -> fold {fold}/{K}: {len(tiles) - len(held)} train tiles, {len(held)} held-out tiles; wet windows: train pool {len(tr_all)}, "
+        f"held-out pool {len(va_all)}; using {len(tr_idx)} train / {len(va_idx)} held-out / {len(te_idx)} {te_reg} windows")
+    return tr_pool, te_pool, tr_idx, va_idx, te_idx, held, seed
+
+
+def run(exp, regime, fold, variant="full", K=3, epochs=40, seed=None, n_train=400, n_val=300, n_test_ablate=True, save_weights=False, log=print, arch="v1", augment=False, blind=False, blocked=False, batch=1, lr=1e-3, guard=True):
+    cfg = EXPS[exp]
+    (tr_reg, tr_res), (te_reg, te_res) = cfg["train"], cfg["test"]
+    seed = 1000 + 10 * fold + K if seed is None else seed
+    rid = f"{exp}_{arch}_{regime}_{variant}{'_aug' if augment else ''}{'_blind' if blind else ''}{'_blk' if blocked else ''}{'_noguard' if not guard else ''}{'_b%d' % batch if batch > 1 else ''}{'_lr%g' % lr if lr != 1e-3 else ''}_f{fold}of{K}_s{seed}_ep{epochs}"
+    os.makedirs(RUNS, exist_ok=True)
+    out_p = os.path.join(RUNS, rid + ".json")
+    if os.path.exists(out_p):
+        log(f"{rid}: already done"); return json.load(open(out_p))
+    log(f"=== {rid}: {tr_reg} {tr_res} m -> {te_reg} {te_res} m")
+    tr_pool, te_pool, tr_idx, va_idx, te_idx, held, seed = split_for(exp, fold, K, seed, n_train, n_val, log, blocked=blocked)
+    t0 = time.perf_counter()
+    predict, nets, hist, pers = build_and_train(tr_pool, tr_idx, va_idx, regime, variant, epochs, seed, log=log, arch=arch, augment=augment, batch=batch, lr=lr, guard=guard)
+    ev_va = evaluate(predict, tr_pool, va_idx, regime, variant)
+    ev_te = None if blind else evaluate(predict, te_pool, te_idx, regime, variant)      # blind: the never-seen region is not touched (design phase)
+    res = dict(id=rid, exp=exp, arch=arch, augment=augment, blocked=blocked, batch=batch, lr=lr, guard=guard, regime=regime, variant=variant, fold=fold, K=K, seed=seed, epochs=epochs, n_train=len(tr_idx),
+               train_region=tr_reg, test_region=te_reg, held_out_tiles=sorted(held), history=hist, persistence_mse_train=pers,
+               heldout=summarize(ev_va), test=None if blind else summarize(ev_te), blind=blind, train_subset=summarize(evaluate(predict, tr_pool, tr_idx[:100], regime, variant)), heldout_windows=_ser(ev_va, tr_pool, va_idx), test_windows=None if blind else _ser(ev_te, te_pool, te_idx),
+               train_minutes=(time.perf_counter() - t0) / 60,
+               code_md5={f: hashlib.md5(open(f, "rb").read()).hexdigest()[:10] for f in ("completion/engine.py", "model.py", "model_v2.py", "depth_experiment.py")})
+    for nm in ("train_subset", "heldout", "test"):
+        r = res[nm]
+        if r is None:
+            continue
+        log(f"{nm}: skill {r['skill']:+.4f}  rmse model {r['rmse_model_mm']:.2f} mm / persistence {r['rmse_persistence_mm']:.2f} mm; "
+            f"CSI(1 mm) {r['CSI_1mm']['model']:.3f}/{r['CSI_1mm']['persistence']:.3f}; lead skill " + " ".join(f"{v:+.3f}" for v in r["lead_skill"]))
+    if n_test_ablate:
+        res["ablation_heldout"] = ablation_skills(predict, tr_pool, va_idx, regime, variant)
+        res["ablation_test"] = None if blind else ablation_skills(predict, te_pool, te_idx, regime, variant)
+        for nm in ("ablation_heldout", "ablation_test"):
+            if res[nm] is None:
+                continue
+            log(nm + ": " + "  ".join(f"{k} {v:+.3f}" for k, v in res[nm].items()))
+    if save_weights:
+        wd = os.path.join(CACHE, "weights"); os.makedirs(wd, exist_ok=True)
+        nets[0].save_weights(os.path.join(wd, rid + "_enc.weights.h5")); nets[1].save_weights(os.path.join(wd, rid + "_dec.weights.h5"))
+    json.dump(res, open(out_p, "w"), default=float)
+    log("saved " + out_p)
+    return res
+
+
+# ================================================================================================= self-test
+def selftest(log=print):
+    """(1) compose('hybrid') equals RegionData.load_patch_sequence for random windows of every region/resolution (train and test pools);
+    (2) causal = hybrid shifted by one interval, forced future rain equals the loader's file for those intervals;
+    (3) an untrained model equals persistence exactly in every regime (zero-initialised final conv)."""
+    rng = np.random.default_rng(0)
+    worst = 0.0
+    exps = os.environ.get("SELFTEST_EXPS", "E480,E60,E30,R480").split(",")
+    for exp in exps:
+        for role, (reg, res) in (("train", EXPS[exp]["train"]), ("test", EXPS[exp]["test"])):
+            pool = load_pool(reg, res, role) if os.path.exists(os.path.join(CACHE, f"pool_{reg}_{res}_{role}_meta.npz")) else build_pool(reg, res, role, log)
+            rd = _region(reg, res)
+            for i in rng.choice(len(pool["meta"]), size=min(8, len(pool["meta"])), replace=False):
+                r, c, st = (int(v) for v in pool["meta"][i])
+                size = pool["size"]
+                x_ref, y_ref, _, _ = rd.load_patch_sequence(r, c, size, st, T_IN, HORIZON, STRIDE)
+                x, y, m = compose(pool, i, "hybrid")
+                xs = x[:, :size, :size]
+                d = max(float(np.abs(xs[..., 0] - x_ref[..., 0]).max()), float(np.abs(xs[..., 1] - x_ref[..., 1]).max()),
+                        float(np.abs(xs[..., 2] - x_ref[..., 2]).max()), float(np.abs(y[:, :size, :size] - y_ref).max()))
+                worst = max(worst, d)
+                assert d < 1e-3, (exp, role, i, d)
+                # causal / forced intervals against the raw rainfall files
+                j = st // 6
+                xc, _, _ = compose(pool, i, "causal")
+                xf, _, _ = compose(pool, i, "forced")
+                for s in range(T_IN):
+                    raw = rd._read_layer(rd.rain_files[min(max(j + s - 1, 0), len(rd.rain_files) - 1)], r, c, size) if j + s - 1 >= 0 else np.zeros((size, size), np.float32)
+                    assert np.abs(xc[s, :size, :size, 2] - raw).max() < 1e-3, ("causal", exp, role, i, s)
+                assert xf.shape[0] == T_IN + HORIZON and np.array_equal(xf[:T_IN], compose(pool, i, "hybrid")[0])
+                for mm in range(1, HORIZON + 1):
+                    raw = rd._read_layer(rd.rain_files[min(j + T_IN - 1 + mm, len(rd.rain_files) - 1)], r, c, size)
+                    assert np.abs(xf[T_IN - 1 + mm, :size, :size, 2] - raw).max() < 1e-3, ("forced", exp, role, i, mm)
+                    assert np.array_equal(xf[T_IN - 1 + mm, ..., 0], xf[T_IN - 1, ..., 0])
+            log(f"selftest {exp} {role} ({reg} {res} m): compose == loader / causal / forced OK (max abs diff so far {worst:.2e})")
+    # untrained model == persistence
+    tf = _tf()
+    import model as flood_model
+    from model import decode_horizon
+    pool = load_pool(*EXPS[exps[0]]["train"], "train")
+    for arch in ('v1', 'v2', 'v2lin', 'local', 'local1', 'local11', 'clstm', 'clstmf'):
+        for regime in REGIMES:
+            x, y, m = compose(pool, 5, regime)
+            enc, dec, dech, _ = build_nets(arch, x.shape[0])
+            f = dech(dec, enc(tf.constant(x[None]), training=False), tf.constant(x[None]), HORIZON, training=False).numpy()[0]
+            assert np.abs(f - x[T_IN - 1, ..., 0][None]).max() < 1e-6, (arch, regime)
+    log("selftest: untrained model equals persistence in all three regimes")
+    log("SELFTEST PASSED")
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("cmd", choices=["cache", "run", "selftest"])
+    ap.add_argument("exp", nargs="?")
+    ap.add_argument("regime", nargs="?")
+    ap.add_argument("fold", nargs="?", type=int)
+    ap.add_argument("--variant", default="full")
+    ap.add_argument("--arch", default="v1", choices=["v1", "v2", "v2lin", "local", "local1", "local11", "clstm", "clstmf"])
+    ap.add_argument("--augment", action="store_true")
+    ap.add_argument("--batch", type=int, default=1)
+    ap.add_argument("--lr", type=float, default=1e-3)
+    ap.add_argument("--blocked", action="store_true", help="hold out a time block as well as the fold's tiles")
+    ap.add_argument("--blind", action="store_true", help="do not evaluate the never-seen test region (design phase)")
+    ap.add_argument("--folds", type=int, default=3)
+    ap.add_argument("--epochs", type=int, default=40)
+    ap.add_argument("--seed", type=int, default=None)
+    ap.add_argument("--n-train", type=int, default=400)
+    ap.add_argument("--no-ablate", action="store_true")
+    ap.add_argument("--no-guard", action="store_true", help="finish the run even if the dead-network guard fires (post hoc, labelled)")
+    ap.add_argument("--save-weights", action="store_true")
+    a = ap.parse_args()
+    if a.cmd == "cache":
+        for role, key in (("train", "train"), ("test", "test")):
+            reg, res = EXPS[a.exp][key]
+            build_pool(reg, res, role, log=lambda s: print(s, flush=True))
+    elif a.cmd == "selftest":
+        selftest(log=lambda s: print(s, flush=True))
+    else:
+        run(a.exp, a.regime, a.fold, variant=a.variant, K=a.folds, epochs=a.epochs, seed=a.seed, n_train=a.n_train,
+            n_test_ablate=not a.no_ablate, save_weights=a.save_weights, log=lambda s: print(s, flush=True), arch=a.arch, augment=a.augment, blind=a.blind, blocked=a.blocked, batch=a.batch, lr=a.lr, guard=not a.no_guard)

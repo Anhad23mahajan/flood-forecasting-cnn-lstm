@@ -1,0 +1,17 @@
+UK 30 m (time-block folds, no tile folds): fold 1/3: wet windows train pool 136, held-out time-block pool 80; using 136 train / 80 time-held-out / 3670 Australia windows
+R30 causal fold 1: S1 heldout +0.4059  test +0.3492
+R30 causal fold 1: S1c heldout +0.4062  test +0.3508
+R30 causal fold 1: S2 heldout +0.1558  test +0.1313
+R30 causal fold 1: S2c heldout +0.1561  test +0.1528
+R30 causal fold 1: S3 heldout +0.3724  test +0.3239
+R30 causal fold 1: S3c heldout +0.3726  test +0.3398
+R30 causal fold 1: S5 (2-feature lookup table) heldout +0.6410  test +0.6124
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789919299.043753    9008 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789919307.616551    9008 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789919315.949395    9008 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 AVX_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+R30 causal fold 1: S4 heldout +0.7682  test +0.5955
+R30 causal fold 1: S4c heldout +0.7688  test +0.6000
